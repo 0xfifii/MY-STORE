@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Full acceptance run against a throwaway LOCAL database:
+#   1. recreate the test database and migrate it
+#   2. start a local SMTP sink (to verify real email delivery)
+#   3. start the production build on port 3100
+#   4. run the vitest acceptance suite
+# Requires: a local PostgreSQL (postgres user, trust auth) and `npm run build` done first.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+TEST_DB="${TEST_DB:-mystore_test}"
+PORT="${TEST_PORT:-3100}"
+WORK="$(mktemp -d)"
+export TEST_DATABASE_URL="postgres://postgres@127.0.0.1:5432/$TEST_DB"
+export TEST_BASE_URL="http://localhost:$PORT"
+export TEST_CRON_SECRET="test-cron-secret-1234567890"
+export TEST_MAIL_DIR="$WORK/mail"
+
+cleanup() { kill "${APP_PID:-}" "${SMTP_PID:-}" 2>/dev/null || true; }
+trap cleanup EXIT
+
+./scripts/reset-db.sh "$TEST_DB"
+node tests/smtp-sink.mjs 2526 "$TEST_MAIL_DIR" > "$WORK/smtp.log" 2>&1 & SMTP_PID=$!
+
+DISABLE_INTERNAL_SCHEDULER=true DATABASE_URL="$TEST_DATABASE_URL" APP_URL="$TEST_BASE_URL" CRON_SECRET="$TEST_CRON_SECRET" \
+SMTP_HOST=127.0.0.1 SMTP_PORT=2526 SMTP_SECURE=false SMTP_FROM="MY STORE <reports@mystore.test>" \
+  npx next start -p "$PORT" > "$WORK/server.log" 2>&1 & APP_PID=$!
+
+for _ in $(seq 1 40); do curl -sf "$TEST_BASE_URL/api/health" >/dev/null && break; sleep 0.5; done
+npx vitest run "$@"
+echo "Server log: $WORK/server.log"

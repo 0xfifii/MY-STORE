@@ -1,0 +1,20 @@
+# One-click deploy on Render (render.com → New → Blueprint, or the "Deploy to Render" button in README).
+# You only paste DATABASE_URL (from Neon or Supabase). Render generates CRON_SECRET itself.
+services:
+  - type: web
+    name: my-store
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: npm run db:migrate && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Render asks you for this when you create the service
+      - key: CRON_SECRET
+        generateValue: true
+      - key: DATABASE_POOL_MAX
+        value: "5"
+      - key: NODE_VERSION
+        value: "22"

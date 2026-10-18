@@ -1,0 +1,57 @@
+# One-machine deployment: app + PostgreSQL + a tiny scheduler for the daily report.
+#   cp .env.example .env    # set CRON_SECRET (and SMTP_* if you want email)
+#   docker compose up -d --build
+# Then open http://<server>:3000 and create the owner account.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mystore
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-this-password}
+      POSTGRES_DB: mystore
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mystore"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://mystore:${POSTGRES_PASSWORD:-change-this-password}@db:5432/mystore
+      DATABASE_SSL: "false"
+    ports:
+      - "3000:3000"
+
+  # Calls the report endpoint every 15 minutes; the app decides whether a report is due.
+  scheduler:
+    image: curlimages/curl:8.10.1
+    restart: unless-stopped
+    depends_on: [app]
+    env_file: .env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - 'while true; do curl -fsS -X POST -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron/daily-report; echo; sleep 900; done'
+
+  # Nightly database backup kept for 14 days in ./backups
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on: [db]
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-change-this-password}
+    volumes:
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - 'while true; do pg_dump -h db -U mystore -Fc mystore > /backups/mystore-$$(date +%F).dump && find /backups -name "*.dump" -mtime +14 -delete; sleep 86400; done'
+
+volumes:
+  pgdata:
