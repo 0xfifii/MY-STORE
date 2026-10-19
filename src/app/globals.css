@@ -1,31 +1,35 @@
 @import "tailwindcss";
 
 /*
-  MY STORE design tokens
-  Claret sidebar, burgundy actions, white work surface.
-  Bricolage Grotesque for titles and quantity readouts; Public Sans for everything else.
+  MY STORE — "frosted burgundy"
+  Soft warm canvas with blurred burgundy glows, frosted-glass panels, pill controls,
+  near-black pill buttons with a round arrow, light large numerals (Urbanist).
 */
 @theme {
-  --color-claret: #5e1528;
-  --color-claret-deep: #4a0f1f;
+  --color-claret: #4f1022;
+  --color-claret-deep: #3a0b18;
   --color-burgundy: #7a1f35;
-  --color-burgundy-hover: #681a2d;
-  --color-rose: #f7eef1;
-  --color-rose-strong: #eedbe1;
-  --color-ink: #221a1d;
-  --color-muted: #6b6165;
-  --color-line: #e7e1e3;
+  --color-burgundy-hover: #651a2c;
+  --color-glow: #b83a58;
+  --color-rose: #f6ebee;
+  --color-rose-strong: #ecd6dc;
+  --color-ink: #1d1517;
+  --color-night: #1d1517;
+  --color-muted: #77696d;
+  --color-line: #e8e0e2;
   --color-paper: #ffffff;
-  --color-canvas: #faf8f8;
-  --color-ok: #166534;
-  --color-ok-bg: #ecf7ef;
-  --color-warn: #a14a07;
-  --color-warn-bg: #fdf3e6;
+  --color-canvas: #f3efed;
+  --color-ok: #23704a;
+  --color-ok-bg: #e7f3ec;
+  --color-warn: #a35310;
+  --color-warn-bg: #fbefe2;
   --color-bad: #b42318;
-  --color-bad-bg: #fdecea;
+  --color-bad-bg: #fbe9e7;
 
-  --font-sans: "Public Sans Variable", "Public Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Bricolage Grotesque Variable", "Public Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Urbanist Variable", "Urbanist", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Urbanist Variable", "Urbanist", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.5rem;
 }
 
 html {
@@ -33,15 +37,49 @@ html {
 }
 
 body {
-  background: var(--color-canvas);
+  background-color: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: "tnum" 1;
+  font-size: 15px;
+}
+
+/* Soft burgundy light behind the whole app (fixed, behind content). */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38rem 30rem at 92% -6%, rgb(184 58 88 / 0.22), transparent 70%),
+    radial-gradient(30rem 26rem at -8% 108%, rgb(122 31 53 / 0.16), transparent 70%),
+    radial-gradient(24rem 20rem at 55% 55%, rgb(255 255 255 / 0.7), transparent 70%),
+    var(--color-canvas);
+}
+
+/* Frosted glass surface */
+.glass {
+  background: rgb(255 255 255 / 0.62);
+  border: 1px solid rgb(255 255 255 / 0.75);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -18px rgb(79 16 34 / 0.28);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+.glass-strong {
+  background: rgb(255 255 255 / 0.82);
+  border: 1px solid rgb(255 255 255 / 0.9);
+  box-shadow: 0 16px 40px -20px rgb(79 16 34 / 0.3);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+}
+/* The blurred burgundy sphere from the reference */
+.glow-orb {
+  background: radial-gradient(circle at 40% 40%, #d5546f 0%, #9c2a45 38%, rgb(122 31 53 / 0.35) 62%, transparent 72%);
+  filter: blur(6px);
 }
 
 .font-display {
   font-family: var(--font-display);
-  font-optical-sizing: auto;
 }
 
 :focus-visible {
@@ -66,7 +104,7 @@ input[type="number"]::-webkit-outer-spin-button {
   from { transform: translateY(16px); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
-.animate-sheet { animation: sheet-in 160ms ease-out; }
+.animate-sheet { animation: sheet-in 180ms ease-out; }
 
 @keyframes toast-in {
   from { transform: translateY(8px); opacity: 0; }

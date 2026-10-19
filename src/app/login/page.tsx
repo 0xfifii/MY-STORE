@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams;
   const s = await getSettings();
   return (
-    <AuthFrame storeName={s.store_name} title="Sign in" subtitle="Use the email and password your store owner gave you.">
+    <AuthFrame storeName={s.store_name} title="Log in" subtitle="Use the email and password your store owner gave you.">
       <LoginForm next={next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard"} />
     </AuthFrame>
   );

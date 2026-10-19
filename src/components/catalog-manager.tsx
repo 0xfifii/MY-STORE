@@ -65,8 +65,8 @@ export function CatalogManager({
   const archivedCount = rows.filter((r) => r.archived_at).length;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-line bg-white">
-      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
+    <div className="glass overflow-hidden rounded-[var(--radius-card)]">
+      <div className="flex items-center justify-between gap-3 border-b border-white/80 px-4 py-3 sm:px-5">
         <p className="text-sm text-muted">{rows.length - archivedCount} active{archivedCount ? ` · ${archivedCount} archived` : ""}</p>
         <div className="flex items-center gap-3">
           {archivedCount > 0 && (
@@ -80,7 +80,7 @@ export function CatalogManager({
       {visible.length === 0 ? (
         <EmptyState title={`No ${noun.toLowerCase()}s yet`} body={emptyBody} />
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="divide-y divide-white/80">
           {visible.map((r) => (
             <li key={r.id} className={`flex items-center gap-3 px-4 py-3 sm:px-5 ${r.archived_at ? "opacity-60" : ""}`}>
               <div className="min-w-0 flex-1">

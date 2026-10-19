@@ -12,7 +12,7 @@ export default async function UnitsPage() {
   return (
     <div>
       <PageHeader title="Units" description="The units items are counted in, and the only conversions the app is allowed to make." />
-      <UnitsManager units={units} rules={rules} canAdd={can(user.role, "catalog.write")} canRules={can(user.role, "conversion.global")} />
+      <UnitsManager units={units} rules={rules} canAdd={can(user, "catalog.write")} canRules={can(user, "conversion.global")} />
     </div>
   );
 }

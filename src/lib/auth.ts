@@ -15,6 +15,10 @@ export type SessionUser = {
   name: string;
   email: string;
   role: Role;
+  /** Custom permission list set by the owner (null = role defaults). */
+  permissions: string[] | null;
+  /** Categories this user may stock in/out (null = all). */
+  allowed_category_ids: number[] | null;
 };
 
 const hashToken = (t: string) => createHash("sha256").update(t).digest("hex");
@@ -54,7 +58,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   return queryOne<SessionUser>(
-    `SELECT u.id, u.name, u.email, u.role
+    `SELECT u.id, u.name, u.email, u.role, u.permissions, u.allowed_category_ids
        FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = $1 AND s.expires_at > now() AND u.is_active`,
     [hashToken(token)],
@@ -65,7 +69,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 export async function requireApiUser(action: Action = "view"): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) throw new AppError("UNAUTHENTICATED", "Please sign in again.", 401);
-  if (!can(user.role, action)) {
+  if (!can(user, action)) {
     throw new AppError("FORBIDDEN", "You don't have permission to do this.", 403);
   }
   return user;
@@ -75,7 +79,7 @@ export async function requireApiUser(action: Action = "view"): Promise<SessionUs
 export async function requirePageUser(action: Action = "view"): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!can(user.role, action)) redirect("/dashboard?denied=1");
+  if (!can(user, action)) redirect("/dashboard?denied=1");
   return user;
 }
 

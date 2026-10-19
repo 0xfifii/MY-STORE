@@ -74,12 +74,12 @@ export function ItemPicker({
           role="combobox"
           aria-expanded="true"
           aria-controls="item-picker-list"
-          className="h-12 w-full rounded-md border border-line bg-white pl-10 pr-10 text-base focus:border-burgundy focus:outline-none focus:ring-2 focus:ring-burgundy/15"
+          className="h-12 w-full rounded-full border border-white bg-white/70 bg-white pl-10 pr-10 text-base focus:border-burgundy focus:outline-none focus:ring-2 focus:ring-burgundy/15"
         />
         {loading && <Spinner className="absolute right-3 top-1/2 size-5 -translate-y-1/2" />}
       </div>
       {error && <p className="mt-2 text-sm text-bad">{error}</p>}
-      <ul id="item-picker-list" role="listbox" className="mt-2 divide-y divide-line overflow-hidden rounded-md border border-line bg-white">
+      <ul id="item-picker-list" role="listbox" className="mt-2 divide-y divide-white/80 overflow-hidden rounded-full border border-white bg-white/70 bg-white">
         {results.map((it, i) => (
           <li key={it.id} role="option" aria-selected={i === active}>
             <button

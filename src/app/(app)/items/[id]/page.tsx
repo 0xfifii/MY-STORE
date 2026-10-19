@@ -38,7 +38,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
   ]);
   const b = report.balances[0];
   const pages = Math.max(1, Math.ceil(txns.total / 30));
-  const canReverse = can(user.role, "txn.reverse");
+  const canReverse = can(user, "txn.reverse");
   const globalRules = units.filter((u) => !u.is_base && !conversions.some((c) => c.unit_id === u.unit_id)).map((u) => ({ symbol: u.symbol, factor: u.factor }));
 
   const tab = (t: string | null, label: string) => {
@@ -60,21 +60,21 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
         actions={
           <>
             <StockButtons itemId={item.id} name={item.name} size="md" archived={!!item.archived_at} />
-            {can(user.role, "item.write") && <LinkButton href={`/items/${id}/edit`} variant="secondary"><Pencil className="size-4" /> Edit</LinkButton>}
-            {can(user.role, "item.archive") && <ArchiveButton itemId={id} archived={!!item.archived_at} name={item.name} quantity={item.quantity} />}
+            {can(user, "item.write") && <LinkButton href={`/items/${id}/edit`} variant="secondary"><Pencil className="size-4" /> Edit</LinkButton>}
+            {can(user, "item.archive") && <ArchiveButton itemId={id} archived={!!item.archived_at} name={item.name} quantity={item.quantity} />}
           </>
         }
       />
 
-      <section className="grid overflow-hidden rounded-lg border border-line bg-white sm:grid-cols-3">
-        <div className="border-b border-line px-5 py-5 sm:border-b-0 sm:border-r">
+      <section className="grid glass overflow-hidden rounded-[var(--radius-card)] sm:grid-cols-3">
+        <div className="border-b border-white/80 px-5 py-5 sm:border-b-0 sm:border-r">
           <p className="text-sm text-muted">Current balance</p>
           <p className="mt-1 font-display text-4xl font-bold tracking-tight" data-testid="item-balance">
             {formatQty(item.quantity)} <span className="text-xl text-muted">{item.unit_symbol}</span>
           </p>
           <div className="mt-2"><StatusBadge status={item.status} /></div>
         </div>
-        <div className="border-b border-line px-5 py-5 sm:border-b-0 sm:border-r">
+        <div className="border-b border-white/80 px-5 py-5 sm:border-b-0 sm:border-r">
           <p className="text-sm text-muted">Inventory value</p>
           <p className="mt-1 font-display text-3xl font-bold tracking-tight">{formatMoney(item.stock_value, sym)}</p>
           <p className="mt-1 text-sm text-muted">{formatUnitCost(item.avg_cost, sym)} per {item.unit_symbol} (weighted average)</p>
@@ -94,7 +94,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
               <input type="date" name="from" defaultValue={period.from} aria-label="From" className="h-9 rounded-md border border-line px-2" />
               <span className="text-muted">to</span>
               <input type="date" name="to" defaultValue={period.to} max={today} aria-label="To" className="h-9 rounded-md border border-line px-2" />
-              <button className="h-9 rounded-md bg-burgundy px-3 font-semibold text-white">Show</button>
+              <button className="h-9 rounded-2xl bg-burgundy px-3 font-semibold text-white">Show</button>
             </form>
           }
         >
@@ -118,11 +118,11 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
             itemId={id}
             baseSymbol={item.unit_symbol}
             conversions={conversions}
-            canEdit={can(user.role, "item.write")}
+            canEdit={can(user, "item.write")}
             globalRules={globalRules}
             units={allUnits.filter((u) => u.id !== item.unit_id).map((u) => ({ id: u.id, symbol: u.symbol, name: u.name }))}
           />
-          {item.description && <p className="mt-4 border-t border-line pt-3 text-sm">{item.description}</p>}
+          {item.description && <p className="mt-4 border-t border-white/80 pt-3 text-sm">{item.description}</p>}
           {item.notes && <p className="mt-2 text-sm text-muted">{item.notes}</p>}
         </Panel>
       </div>
@@ -133,7 +133,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
-              <thead className="border-b border-line bg-canvas text-left text-muted">
+              <thead className="border-b border-white/80 bg-white/40 text-left text-muted">
                 <tr>
                   <th className="px-4 py-2.5 font-semibold">Date</th>
                   <th className="px-4 py-2.5 font-semibold">Type</th>
@@ -145,7 +145,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
                   <th className="px-4 py-2.5" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
+              <tbody className="divide-y divide-white/80">
                 {txns.rows.map((t) => (
                   <tr key={t.id} className={t.reversed_by_txn_no ? "text-muted" : ""}>
                     <td className="whitespace-nowrap px-4 py-2.5">
@@ -181,7 +181,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
           </div>
         )}
         {pages > 1 && (
-          <div className="flex justify-between border-t border-line px-4 py-3 text-sm">
+          <div className="flex justify-between border-t border-white/80 px-4 py-3 text-sm">
             <span className="text-muted">Page {page} of {pages}</span>
             <div className="flex gap-3 font-semibold text-burgundy">
               {page > 1 && <Link href={`/items/${id}?${new URLSearchParams({ ...sp, page: String(page - 1) } as Record<string, string>)}`}>Previous</Link>}

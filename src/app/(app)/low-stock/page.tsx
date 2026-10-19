@@ -28,17 +28,17 @@ export default async function LowStockPage({ searchParams }: { searchParams: Pro
         title="Low Stock"
         description="Items at or below their minimum level, with items that have run out first."
         actions={
-          <a href="/api/reports/export?kind=balance&preset=today&format=pdf" className="inline-flex h-10 items-center gap-2 rounded-md border border-line bg-white px-4 text-sm font-semibold hover:bg-rose">
+          <a href="/api/reports/export?kind=balance&preset=today&format=pdf" className="inline-flex h-10 items-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-white">
             <Download className="size-4" /> Balance report
           </a>
         }
       />
       <div className="mb-4 flex gap-2">{pill("attention", "Low or out")}{pill("out", "Out of stock")}{pill("low", "Low only")}</div>
-      <div className="overflow-hidden rounded-lg border border-line bg-white">
+      <div className="glass overflow-hidden rounded-[var(--radius-card)]">
         {data.rows.length === 0 ? (
           <EmptyState icon={<CheckCircle2 className="size-6" />} title="Nothing needs restocking" body="Items appear here when their balance reaches the minimum level you set." />
         ) : (
-          <ul className="divide-y divide-line">
+          <ul className="divide-y divide-white/80">
             {data.rows.map((it) => {
               const pct = Number(it.min_stock_level) > 0 ? Math.min(100, (Number(it.quantity) / Number(it.min_stock_level)) * 100) : 0;
               return (

@@ -89,6 +89,7 @@ export const stockOutSchema = z.object({
     message: "Choose a reason",
   }),
   recipient: optText(200),
+  worker_id: optInt,
   reference: optText(120),
   notes: optText(1000),
   request_id: uuid,
@@ -163,4 +164,16 @@ export const settingsSchema = z.object({
   auto_report_formats: z.array(z.enum(["pdf", "xlsx", "csv"])).min(1, "Pick at least one format"),
   email_enabled: z.boolean(),
   email_recipients: z.array(z.string().trim().email("Invalid recipient email")).max(20),
+});
+
+export const workerSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(120),
+  department: optText(120),
+  phone: optText(50),
+  notes: optText(500),
+});
+
+export const userPermissionsSchema = z.object({
+  permissions: z.array(z.string()).max(30).nullable(),
+  allowed_category_ids: z.array(z.coerce.number().int().positive()).max(200).nullable(),
 });

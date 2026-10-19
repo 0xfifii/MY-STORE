@@ -75,7 +75,7 @@ export function ReportControls({
   };
 
   return (
-    <div className="rounded-lg border border-line bg-white p-4 sm:p-5">
+    <div className="glass rounded-[var(--radius-card)] p-4 sm:p-5">
       <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Period">
         {PRESETS.map((p) => (
           <button key={p.v} role="tab" aria-selected={preset === p.v} onClick={() => choosePreset(p.v)}
@@ -90,7 +90,7 @@ export function ReportControls({
           <label className="text-sm">
             <span className="mb-1 block font-medium">Week containing</span>
             <input type="date" value={sp.get("week") ?? resolved.from} onChange={(e) => update({ week: e.target.value })}
-              className="h-11 w-full rounded-md border border-line px-3" />
+              className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
             <span className="mt-1 block text-xs text-muted">Monday to Sunday</span>
           </label>
         )}
@@ -98,18 +98,18 @@ export function ReportControls({
           <label className="text-sm">
             <span className="mb-1 block font-medium">Month</span>
             <input type="month" value={sp.get("month") ?? resolved.from.slice(0, 7)} onChange={(e) => update({ month: e.target.value })}
-              className="h-11 w-full rounded-md border border-line px-3" />
+              className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
           </label>
         )}
         {preset === "custom" && (
           <>
             <label className="text-sm">
               <span className="mb-1 block font-medium">From</span>
-              <input type="date" value={sp.get("from") ?? resolved.from} onChange={(e) => update({ from: e.target.value })} className="h-11 w-full rounded-md border border-line px-3" />
+              <input type="date" value={sp.get("from") ?? resolved.from} onChange={(e) => update({ from: e.target.value })} className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
             </label>
             <label className="text-sm">
               <span className="mb-1 block font-medium">To</span>
-              <input type="date" value={sp.get("to") ?? resolved.to} onChange={(e) => update({ to: e.target.value })} className="h-11 w-full rounded-md border border-line px-3" />
+              <input type="date" value={sp.get("to") ?? resolved.to} onChange={(e) => update({ to: e.target.value })} className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
             </label>
           </>
         )}
@@ -135,15 +135,15 @@ export function ReportControls({
         </label>
       </div>
 
-      <div className="mt-5 flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="mt-5 flex flex-col gap-2 border-t border-white/80 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
         <span className="flex items-center gap-1.5 text-sm font-medium text-muted"><Download className="size-4" /> Download</span>
-        <a href={`/api/reports/export?${exportQuery}&format=pdf`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-burgundy px-4 text-sm font-semibold text-white hover:bg-burgundy-hover">
+        <a href={`/api/reports/export?${exportQuery}&format=pdf`} className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-burgundy px-4 text-sm font-semibold text-white hover:bg-burgundy-hover">
           <FileText className="size-4" /> PDF
         </a>
-        <a href={`/api/reports/export?${exportQuery}&format=xlsx`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-white px-4 text-sm font-semibold hover:bg-rose">
+        <a href={`/api/reports/export?${exportQuery}&format=xlsx`} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-white">
           <FileSpreadsheet className="size-4" /> Excel (.xlsx)
         </a>
-        <a href={`/api/reports/export?${exportQuery}&format=csv`} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-white px-4 text-sm font-semibold hover:bg-rose">
+        <a href={`/api/reports/export?${exportQuery}&format=csv`} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-white">
           <Sheet className="size-4" /> CSV
         </a>
         {app.can("report.generate") && (

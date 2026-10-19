@@ -5,7 +5,7 @@ import { requirePageUser } from "@/lib/auth";
 export const metadata = { title: "Stock Out" };
 
 export default async function StockOutPage({ searchParams }: { searchParams: Promise<{ item?: string }> }) {
-  await requirePageUser("stock.move");
+  await requirePageUser("stock.out");
   const { item } = await searchParams;
   return (
     <div className="mx-auto max-w-2xl">

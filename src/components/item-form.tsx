@@ -133,7 +133,7 @@ export function ItemForm({
 
   return (
     <form onSubmit={submit} noValidate className="space-y-6">
-      <section className="rounded-lg border border-line bg-white p-4 sm:p-6">
+      <section className="glass rounded-[var(--radius-card)] p-4 sm:p-6">
         <h2 className="font-semibold">Item details</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Item name" htmlFor="name" required error={errors.name} className="sm:col-span-2">
@@ -177,7 +177,7 @@ export function ItemForm({
         </div>
       </section>
 
-      <section className="rounded-lg border border-line bg-white p-4 sm:p-6">
+      <section className="glass rounded-[var(--radius-card)] p-4 sm:p-6">
         <h2 className="font-semibold">Measurement and stock control</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Measurement unit" htmlFor="unit" required error={errors.unit_id}
@@ -217,7 +217,7 @@ export function ItemForm({
         </div>
 
         {mode === "create" && (
-          <div className="mt-6 border-t border-line pt-5">
+          <div className="mt-6 border-t border-white/80 pt-5">
             <h3 className="text-sm font-semibold">Other units for this item</h3>
             <p className="mt-0.5 text-xs text-muted">
               Only if you receive or issue it in another unit, e.g. 1 bag = 50 kg. Units are never converted unless you define it here
@@ -252,7 +252,7 @@ export function ItemForm({
       </section>
 
       {mode === "create" && (
-        <section className="rounded-lg border border-line bg-white p-4 sm:p-6">
+        <section className="glass rounded-[var(--radius-card)] p-4 sm:p-6">
           <h2 className="font-semibold">Opening stock</h2>
           <p className="mt-0.5 text-sm text-muted">What you have on hand right now. It&apos;s recorded as the first Stock In, so the history starts correctly.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -270,7 +270,7 @@ export function ItemForm({
         </section>
       )}
 
-      {formError && <p role="alert" className="rounded-md bg-bad-bg px-4 py-3 text-sm text-bad">{formError}</p>}
+      {formError && <p role="alert" className="rounded-2xl bg-bad-bg px-4 py-3 text-sm text-bad">{formError}</p>}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Link href={v.id ? `/items/${v.id}` : "/inventory"} className={buttonClass("secondary", "lg")}>Cancel</Link>

@@ -26,6 +26,17 @@ export function reportToCsv(r: ReportData): Buffer {
   lines.push(["Currency", cur]);
   blank();
 
+  if (r.days.length) {
+    lines.push(["STOCK SHEET (each day's closing balance is the next day's opening stock)"]);
+    const hasAdj = r.days.some((d) => d.rows.some((x) => x.adj !== "0"));
+    for (const d of r.days) {
+      lines.push([d.day]);
+      lines.push(["S/N", "Item name", "Item code", "Unit", "Opening stock", "Stock in", "Stock out", ...(hasAdj ? ["Corrections"] : []), "Closing (Bal)"]);
+      d.rows.forEach((x, i) => lines.push([i + 1, x.name, x.sku, x.unit, x.opening, x.in, x.out, ...(hasAdj ? [x.adj] : []), x.closing]));
+      blank();
+    }
+  }
+
   lines.push(["SUMMARY"]);
   lines.push(["Opening inventory value", money(r.summary.opening_value)]);
   lines.push(["Total stock-in value", money(r.summary.in_value)]);
@@ -52,10 +63,10 @@ export function reportToCsv(r: ReportData): Buffer {
 
   if (sec.stockOut) {
     lines.push(["STOCK OUT"]);
-    lines.push(["Txn ID", "Date & time", "Item", "Item code", "Quantity", "Unit", `Cost per unit applied (${cur})`, `Total value (${cur})`, "Reason", "Recipient / destination", "Reference", "Notes", "Recorded by"]);
+    lines.push(["Txn ID", "Date & time", "Item", "Item code", "Quantity", "Unit", `Cost per unit applied (${cur})`, `Total value (${cur})`, "Reason", "Taken by (worker)", "Destination", "Reference", "Notes", "Recorded by"]);
     for (const t of r.stockOut) {
       lines.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, plainQty(t.entered_quantity), t.entered_unit_symbol,
-        cost(t.entered_unit_cost), money(t.total_value), reasonLabel(t.reason), t.recipient, t.reference, t.notes, t.user_name]);
+        cost(t.entered_unit_cost), money(t.total_value), reasonLabel(t.reason), t.worker_name, t.recipient, t.reference, t.notes, t.user_name]);
     }
     if (!r.stockOut.length) lines.push(["No stock issued in this period"]);
     lines.push(["", "", "", "", "", "", "Total", money(r.summary.out_value)]);
@@ -90,6 +101,13 @@ export function reportToCsv(r: ReportData): Buffer {
     lines.push(["Item", "Item code", "Unit", "Closing balance", "Minimum level", "Status"]);
     for (const b of r.lowStock) lines.push([b.name, b.sku, b.unit, plainQty(b.closing_qty), plainQty(b.min_stock_level), statusText(b.status)]);
     if (!r.lowStock.length) lines.push(["None"]);
+  }
+
+  if (r.byWorker.length) {
+    blank();
+    lines.push(["STOCK TAKEN BY WORKER"]);
+    lines.push(["S/N", "Worker", "Times taken", "Different items", `Value taken (${cur})`]);
+    r.byWorker.forEach((w, i) => lines.push([i + 1, w.name, w.takes, w.items, money(w.value)]));
   }
 
   if (sec.highlights) {

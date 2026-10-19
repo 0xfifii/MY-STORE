@@ -4,25 +4,26 @@ import { forwardRef } from "react";
 import { Loader2 } from "lucide-react";
 import type { StockStatus } from "@/lib/format";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline-danger";
+type Variant = "primary" | "accent" | "secondary" | "ghost" | "danger" | "outline-danger";
 type Size = "sm" | "md" | "lg";
 
 const variantClass: Record<Variant, string> = {
-  primary: "bg-burgundy text-white hover:bg-burgundy-hover disabled:bg-burgundy/50",
-  secondary: "bg-white text-ink border border-line hover:border-burgundy/40 hover:bg-rose disabled:opacity-60",
-  ghost: "text-burgundy hover:bg-rose disabled:opacity-50",
+  primary: "bg-night text-white hover:bg-claret disabled:bg-night/40",
+  accent: "bg-burgundy text-white hover:bg-burgundy-hover disabled:bg-burgundy/50",
+  secondary: "bg-white/80 text-ink border border-white shadow-sm hover:bg-white hover:text-burgundy disabled:opacity-60",
+  ghost: "text-burgundy hover:bg-rose/70 disabled:opacity-50",
   danger: "bg-bad text-white hover:bg-bad/90 disabled:opacity-60",
-  "outline-danger": "border border-bad/40 text-bad bg-white hover:bg-bad-bg disabled:opacity-60",
+  "outline-danger": "border border-bad/30 text-bad bg-white/80 hover:bg-bad-bg disabled:opacity-60",
 };
 const sizeClass: Record<Size, string> = {
-  sm: "h-8 px-3 text-sm gap-1.5",
-  md: "h-10 px-4 text-sm gap-2",
-  lg: "h-12 px-5 text-base gap-2",
+  sm: "h-8 px-3.5 text-[13px] gap-1.5",
+  md: "h-10 px-5 text-sm gap-2",
+  lg: "h-12 px-6 text-[15px] gap-2",
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", extra?: string) {
   return clsx(
-    "inline-flex items-center justify-center rounded-md font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed",
+    "inline-flex items-center justify-center rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed",
     variantClass[variant],
     sizeClass[size],
     extra,
@@ -72,7 +73,7 @@ export function Field({
 }
 
 export const inputClass =
-  "h-11 w-full rounded-md border border-line bg-white px-3 text-[15px] text-ink placeholder:text-muted/70 focus:border-burgundy focus:outline-none focus:ring-2 focus:ring-burgundy/15 disabled:bg-canvas disabled:text-muted";
+  "h-12 w-full rounded-2xl border border-white bg-white/75 px-4 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(79_16_34/0.06)] placeholder:text-muted/70 focus:border-burgundy/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10 disabled:bg-canvas disabled:text-muted";
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className, ...rest },
@@ -114,10 +115,10 @@ export function StatusBadge({ status }: { status: StockStatus }) {
 }
 
 export function TxnTypeBadge({ type, direction }: { type: string; direction: number }) {
-  if (type === "stock_in") return <span className="rounded bg-ok-bg px-2 py-0.5 text-xs font-semibold text-ok">Stock in</span>;
-  if (type === "stock_out") return <span className="rounded bg-rose px-2 py-0.5 text-xs font-semibold text-burgundy">Stock out</span>;
+  if (type === "stock_in") return <span className="rounded-full bg-ok-bg px-2.5 py-0.5 text-xs font-semibold text-ok">Stock in</span>;
+  if (type === "stock_out") return <span className="rounded-full bg-rose px-2.5 py-0.5 text-xs font-semibold text-burgundy">Stock out</span>;
   return (
-    <span className="rounded bg-warn-bg px-2 py-0.5 text-xs font-semibold text-warn">
+    <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn">
       Correction {direction > 0 ? "(+)" : "(−)"}
     </span>
   );
@@ -134,7 +135,7 @@ export function PageHeader({
             ← {back.label}
           </Link>
         )}
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-[28px]">{title}</h1>
+        <h1 className="font-display text-[28px] font-medium leading-tight tracking-tight text-ink sm:text-[34px]">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -146,14 +147,14 @@ export function Panel({ title, actions, children, className, bodyClass }: {
   title?: React.ReactNode; actions?: React.ReactNode; children: React.ReactNode; className?: string; bodyClass?: string;
 }) {
   return (
-    <section className={clsx("rounded-lg border border-line bg-white", className)}>
+    <section className={clsx("glass rounded-[var(--radius-card)]", className)}>
       {(title || actions) && (
-        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
-          {title && <h2 className="text-[15px] font-semibold text-ink">{title}</h2>}
+        <div className="flex items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-6">
+          {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}
           {actions}
         </div>
       )}
-      <div className={bodyClass ?? "p-4 sm:p-5"}>{children}</div>
+      <div className={bodyClass ?? "p-5 sm:p-6"}>{children}</div>
     </section>
   );
 }
@@ -161,7 +162,7 @@ export function Panel({ title, actions, children, className, bodyClass }: {
 export function EmptyState({ icon, title, body, action }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center px-6 py-12 text-center">
-      {icon && <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-rose text-burgundy">{icon}</div>}
+      {icon && <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white/80 text-burgundy shadow-sm">{icon}</div>}
       <p className="font-semibold text-ink">{title}</p>
       {body && <p className="mt-1 max-w-sm text-sm text-muted">{body}</p>}
       {action && <div className="mt-4">{action}</div>}

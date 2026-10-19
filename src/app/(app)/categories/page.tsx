@@ -16,8 +16,8 @@ export default async function CategoriesPage() {
         rows={rows.map((r) => ({ ...r, title: r.name, subtitle: [`${r.item_count} item${r.item_count === 1 ? "" : "s"}`, r.description].filter(Boolean).join(" · ") }))}
         endpoint="/api/categories"
         noun="Category"
-        canWrite={can(user.role, "catalog.write")}
-        canArchive={can(user.role, "item.archive")}
+        canWrite={can(user, "catalog.write")}
+        canArchive={can(user, "item.archive")}
         fields={[{ key: "name", label: "Name", required: true }, { key: "description", label: "Description", type: "textarea" }]}
         emptyBody="Add categories like Grains, Beverages, Cleaning or Kitchen supplies."
       />

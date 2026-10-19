@@ -1,7 +1,7 @@
 import "server-only";
 import type { PoolClient } from "pg";
 import type { z } from "zod";
-import { db, query, queryOne, withTransaction } from "./db";
+import { query, queryOne, withTransaction } from "./db";
 import { audit } from "./audit";
 import { AppError } from "./errors";
 import type { itemCreateSchema, itemUpdateSchema, stockInSchema, stockOutSchema } from "./validation";
@@ -65,6 +65,9 @@ export type TxnRow = {
   occurred_at: string;
   created_at: string;
   user_name: string | null;
+  worker_id: number | null;
+  worker_name: string | null;
+  category_name: string | null;
 };
 
 const ITEM_SELECT = `
@@ -90,13 +93,16 @@ export const TXN_SELECT = `
          t.balance_after::text, t.value_after::text,
          t.reason, coalesce(sp.name, t.supplier_name) AS supplier_label, t.recipient, t.reference, t.notes,
          t.reverses_id::text, ot.txn_no AS reverses_txn_no, rv.txn_no AS reversed_by_txn_no,
-         t.correction_reason, t.occurred_at, t.created_at, us.name AS user_name
+         t.correction_reason, t.occurred_at, t.created_at, us.name AS user_name,
+         t.worker_id, wk.name AS worker_name, c.name AS category_name
     FROM stock_transactions t
     JOIN items i ON i.id = t.item_id
     JOIN units eu ON eu.id = t.entered_unit_id
     JOIN units bu ON bu.id = t.unit_id
     LEFT JOIN suppliers sp ON sp.id = t.supplier_id
     LEFT JOIN users us ON us.id = t.created_by
+    LEFT JOIN workers wk ON wk.id = t.worker_id
+    LEFT JOIN categories c ON c.id = i.category_id
     LEFT JOIN stock_transactions ot ON ot.id = t.reverses_id
     LEFT JOIN stock_transactions rv ON rv.reverses_id = t.id`;
 
@@ -394,12 +400,29 @@ export async function recordStockIn(input: z.infer<typeof stockInSchema>, userId
 }
 
 export async function recordStockOut(input: z.infer<typeof stockOutSchema>, userId: string) {
-  const { rows } = await (await db()).query(
-    "SELECT id::text, txn_no FROM stock_out($1,$2,$3,$4,$5,$6,$7,$8,$9)",
-    [input.item_id, input.quantity, input.unit_id, input.reason, input.recipient, input.reference, input.notes,
-     userId, input.request_id],
-  );
-  return rows[0] as { id: string; txn_no: string };
+  return withTransaction(async (client) => {
+    if (input.worker_id) {
+      const w = await client.query("SELECT 1 FROM workers WHERE id = $1 AND archived_at IS NULL", [input.worker_id]);
+      if (!w.rowCount) throw new AppError("INVALID_WORKER", "Choose a worker from the list.");
+      // Picked up by the attach_worker trigger when the ledger row is inserted.
+      await client.query("SELECT set_config('mystore.worker_id', $1, true)", [String(input.worker_id)]);
+    }
+    const { rows } = await client.query(
+      "SELECT id::text, txn_no FROM stock_out($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+      [input.item_id, input.quantity, input.unit_id, input.reason, input.recipient, input.reference, input.notes,
+       userId, input.request_id],
+    );
+    return rows[0] as { id: string; txn_no: string };
+  });
+}
+
+/** Category restriction set by the owner for a user (null = all categories allowed). */
+export async function assertCategoryAllowed(itemId: string, allowed: number[] | null) {
+  if (!allowed) return;
+  const row = await queryOne<{ category_id: number | null }>("SELECT category_id FROM items WHERE id = $1", [itemId]);
+  if (row && (row.category_id === null || !allowed.includes(row.category_id))) {
+    throw new AppError("CATEGORY_NOT_ALLOWED", "You are not allowed to move stock for items in this category. Ask the store owner.", 403);
+  }
 }
 
 export async function reverseTransaction(txnId: string, reason: string, requestId: string, userId: string) {

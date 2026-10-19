@@ -20,7 +20,7 @@ export const PATCH = handle<Ctx>(async (req, { params }) => {
       if (owners.rows[0].n === 0) throw new AppError("LAST_OWNER", "There must always be at least one active owner.", 409);
     }
     await c.query(
-      `UPDATE users SET name = coalesce($2, name), role = coalesce($3, role), is_active = coalesce($4, is_active),
+      `UPDATE users SET name = coalesce($2, name), role = coalesce($3, role), permissions = CASE WHEN $3 IS NOT NULL AND $3 <> role THEN NULL ELSE permissions END, is_active = coalesce($4, is_active),
               password_hash = coalesce($5, password_hash), updated_at = now() WHERE id = $1`,
       [id, u.name ?? null, u.role ?? null, u.is_active ?? null, u.password ? await hashPassword(u.password) : null],
     );

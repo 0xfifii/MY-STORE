@@ -46,7 +46,7 @@ export function UnitsManager({ units, rules, canAdd, canRules }: { units: Unit[]
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
       <Panel title="Measurement units" bodyClass="">
-        <ul className="divide-y divide-line">
+        <ul className="divide-y divide-white/80">
           {units.map((u) => (
             <li key={u.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm sm:px-5">
               <span><strong>{u.name}</strong> <span className="text-muted">({u.symbol})</span></span>
@@ -57,7 +57,7 @@ export function UnitsManager({ units, rules, canAdd, canRules }: { units: Unit[]
           ))}
         </ul>
         {canAdd && (
-          <form onSubmit={addUnit} className="grid gap-3 border-t border-line p-4 sm:grid-cols-[1fr_8rem_auto] sm:items-end sm:p-5">
+          <form onSubmit={addUnit} className="grid gap-3 border-t border-white/80 p-4 sm:grid-cols-[1fr_8rem_auto] sm:items-end sm:p-5">
             <Field label="New unit name" htmlFor="u-name" required><Input id="u-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Trays" /></Field>
             <Field label="Symbol" htmlFor="u-sym" required><Input id="u-sym" value={symbol} onChange={(e) => setSymbol(e.target.value)} placeholder="trays" /></Field>
             <Button type="submit" loading={busy} disabled={!name.trim()} className="h-11"><Plus className="size-4" /> Add unit</Button>
@@ -73,7 +73,7 @@ export function UnitsManager({ units, rules, canAdd, canRules }: { units: Unit[]
           Used for any item whose unit is on one side of the rule. Units are never mixed otherwise — a bag only converts to kg when you set
           that on the item itself (e.g. Rice: 1 bag = 50 kg).
         </p>
-        <ul className="mt-3 divide-y divide-line rounded-md border border-line">
+        <ul className="mt-3 divide-y divide-white/80 rounded-md border border-line">
           {rules.map((r) => (
             <li key={r.id} className="flex items-center justify-between px-3 py-2 text-sm">
               <span>1 {r.from_symbol} = <strong>{formatQty(r.factor)} {r.to_symbol}</strong></span>

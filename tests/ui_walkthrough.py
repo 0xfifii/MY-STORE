@@ -96,8 +96,8 @@ with sync_playwright() as p:
     # ---- Inventory + Stock Out from a row (dialog)
     page.goto(BASE + "/inventory")
     shot(page, "05-inventory-desktop")
-    row = page.locator("tr", has_text="Rice (50kg bag)")
-    row.get_by_role("button", name="Stock Out").click()
+    row = page.locator("li", has_text="Rice (50kg bag)").first
+    row.get_by_role("button", name="Stock out Rice (50kg bag)").click()
     dialog = page.get_by_role("dialog")
     expect(dialog.get_by_text("Available now")).to_be_visible()
     dialog.locator("#qty").fill("2.5")
@@ -114,7 +114,7 @@ with sync_playwright() as p:
     shot(page, "08-stockout-done")
     page.keyboard.press("Escape")
     page.reload()
-    expect(page.locator("tr", has_text="Rice (50kg bag)")).to_contain_text("7.5")
+    expect(page.locator("li", has_text="Rice (50kg bag)").first).to_contain_text("7.5")
 
     # ---- Over-issue blocked on the Stock Out page (search flow)
     page.goto(BASE + "/stock-out")
@@ -185,7 +185,56 @@ with sync_playwright() as p:
     page.goto(BASE + "/users")
     shot(page, "19-users")
 
-    for path in ["/dashboard", "/inventory", "/reports", "/transactions", f"/items/{sugar}"]:
+    # Workers + stock out with worker
+    api(page, "POST", "/api/workers", {"name": "Chef Bola", "department": "Kitchen"})
+    api(page, "POST", "/api/workers", {"name": "Musa Ibrahim", "department": "Bar"})
+    page.goto(BASE + "/workers")
+    shot(page, "34-workers")
+    page.goto(BASE + f"/stock-out?item={coke}")
+    page.fill("#qty", "6")
+    page.get_by_role("radio", name="Sale").click()
+    page.select_option("#worker", label="Musa Ibrahim (Bar)")
+    shot(page, "35-stockout-worker")
+    page.get_by_role("button", name="Review stock out").click()
+    expect(page.get_by_text("taken by Musa Ibrahim")).to_be_visible()
+    page.get_by_test_id("confirm-stock").click()
+    expect(page.get_by_text("Stock issued")).to_be_visible()
+    page.goto(BASE + f"/stock-out?item={sugar}")
+    page.fill("#qty", "2")
+    page.get_by_role("radio", name="Kitchen usage").click()
+    page.select_option("#worker", label="Chef Bola (Kitchen)")
+    page.get_by_role("button", name="Review stock out").click()
+    page.get_by_test_id("confirm-stock").click()
+    expect(page.get_by_text("Stock issued")).to_be_visible()
+
+    # Staff user + permissions modal
+    api(page, "POST", "/api/users", {"name": "Sam Staff", "email": "staff@mystore.test", "role": "staff", "password": "staff-pass-123"})
+    page.goto(BASE + "/users")
+    page.locator("li", has_text="Sam Staff").get_by_role("button", name="Permissions").click()
+    expect(page.get_by_role("dialog")).to_be_visible()
+    page.get_by_role("dialog").get_by_text("Record Stock In").click()
+    shot(page, "36-permissions")
+    page.get_by_role("button", name="Save permissions").click()
+    expect(page.get_by_text("Permissions saved")).to_be_visible()
+
+    page.goto(BASE + "/dashboard")
+    shot(page, "12-dashboard-desktop")
+    page.goto(BASE + "/inventory")
+    shot(page, "05-inventory-desktop")
+    page.goto(BASE + "/audit")
+    shot(page, "37-usage")
+    page.goto(BASE + "/audit?tab=changes")
+    shot(page, "38-changes")
+    page.goto(BASE + "/reports")
+    shot(page, "15-reports")
+    with page.expect_download() as d:
+        page.click("a:has-text('PDF')")
+    d.value.save_as(f"{OUT}/sample-report.pdf")
+    with page.expect_download() as d:
+        page.click("a:has-text('Excel (.xlsx)')")
+    d.value.save_as(f"{OUT}/sample-report.xlsx")
+
+    for path in ["/dashboard", "/inventory", "/reports", "/transactions", f"/items/{sugar}", "/audit", "/workers", "/users"]:
         page.goto(BASE + path)
         no_hscroll(page, f"desktop {path}")
 
@@ -200,7 +249,7 @@ with sync_playwright() as p:
     # ---- Small laptop (sidebar visible, narrow content)
     lap = browser.new_context(viewport={"width": 1024, "height": 768}, storage_state=ctx.storage_state())
     lpg = lap.new_page()
-    for path in ["/dashboard", "/inventory", "/transactions", "/reports", f"/items/{sugar}", "/low-stock"]:
+    for path in ["/dashboard", "/inventory", "/transactions", "/reports", f"/items/{sugar}", "/low-stock", "/audit"]:
         lpg.goto(BASE + path)
         no_hscroll(lpg, f"1024 {path}")
     lpg.goto(BASE + "/inventory")
@@ -210,7 +259,8 @@ with sync_playwright() as p:
     phone = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, storage_state=ctx.storage_state())
     pp = phone.new_page()
     for path, name in [("/dashboard", "22-dashboard-phone"), ("/inventory", "23-inventory-phone"), ("/reports", "24-reports-phone"),
-                       (f"/items/{sugar}", "25-item-phone"), ("/transactions", "26-transactions-phone"), ("/low-stock", "27-lowstock-phone")]:
+                       (f"/items/{sugar}", "25-item-phone"), ("/transactions", "26-transactions-phone"), ("/low-stock", "27-lowstock-phone"),
+                       ("/audit", "39-usage-phone"), ("/workers", "40-workers-phone")]:
         pp.goto(BASE + path)
         no_hscroll(pp, f"phone {path}")
         shot(pp, name)
@@ -230,7 +280,7 @@ with sync_playwright() as p:
     shot(pp, "29-stockout-done-phone")
     # Phone dialog from inventory card
     pp.goto(BASE + "/inventory")
-    pp.locator("li", has_text="Vegetable oil").get_by_role("button", name="Stock In").click()
+    pp.get_by_role("button", name="Stock in Vegetable oil").click()
     expect(pp.get_by_role("dialog")).to_be_visible()
     shot(pp, "30-stockin-sheet-phone")
     # Phone menu drawer
@@ -240,7 +290,7 @@ with sync_playwright() as p:
 
     # Sign out / login page
     page.goto(BASE + "/dashboard")
-    page.click("text=Sign out")
+    page.get_by_role("button", name="Sign out").click()
     expect(page).to_have_url(re.compile("/login"))
     shot(page, "32-login")
     login_phone = browser.new_context(viewport={"width": 390, "height": 844})

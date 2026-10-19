@@ -19,6 +19,35 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
   const qtyFmt = "#,##0.######";
   const sec = sectionsFor(r.params.kind);
 
+  // ---- Stock Sheet: one block per day — S/N, item, opening, in, out, closing (bal)
+  if (r.days.length) {
+    const ws = wb.addWorksheet("Stock Sheet", { views: [{ showGridLines: false }] });
+    const hasAdj = r.days.some((d) => d.rows.some((x) => x.adj !== "0"));
+    ws.columns = [
+      { width: 6 }, { width: 32 }, { width: 13 }, { width: 8 }, { width: 15 }, { width: 13 }, { width: 13 },
+      ...(hasAdj ? [{ width: 13 }] : []), { width: 17 },
+    ];
+    const t = ws.addRow([r.settings.store_name]);
+    t.font = { bold: true, size: 16, color: { argb: BURGUNDY } };
+    ws.addRow([`Stock sheet · ${r.periodLabel}`]).font = { bold: true, size: 12 };
+    ws.addRow(["Each day's closing balance is the next day's opening stock."]).font = { italic: true, size: 9, color: { argb: "FF666666" } };
+    const lastCol = hasAdj ? 9 : 8;
+    for (const d of r.days) {
+      ws.addRow([]);
+      const dh = ws.addRow([new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })]);
+      ws.mergeCells(dh.number, 1, dh.number, lastCol);
+      dh.font = { bold: true, size: 12, color: { argb: BURGUNDY } };
+      dh.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: LIGHT } };
+      styleHeader(ws.addRow(["S/N", "Item name", "Item code", "Unit", "Opening stock", "Stock in", "Stock out", ...(hasAdj ? ["Corrections"] : []), "Closing (Bal)"]));
+      d.rows.forEach((x, i) => {
+        const row = ws.addRow([i + 1, x.name, x.sku, x.unit, Number(x.opening), Number(x.in), Number(x.out), ...(hasAdj ? [Number(x.adj)] : []), Number(x.closing)]);
+        for (let c = 5; c <= lastCol; c++) row.getCell(c).numFmt = qtyFmt;
+        row.getCell(lastCol).font = { bold: true };
+        row.eachCell((c) => (c.border = { bottom: { style: "hair", color: { argb: "FFDDDDDD" } } }));
+      });
+    }
+  }
+
   // ---- Summary
   const s = wb.addWorksheet("Summary", { views: [{ showGridLines: false }] });
   s.columns = [{ width: 38 }, { width: 28 }];
@@ -74,11 +103,11 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
   if (sec.stockOut) {
     const ws = table(wb, "Stock Out", [
       ["Txn ID", 12], ["Date & time", 19], ["Item", 28], ["Item code", 13], ["Quantity", 11, qtyFmt], ["Unit", 8],
-      ["Cost per unit applied", 16, costFmt], ["Total value", 16, moneyFmt], ["Reason", 15], ["Recipient / destination", 22],
+      ["Cost per unit applied", 16, costFmt], ["Total value", 16, moneyFmt], ["Reason", 15], ["Taken by (worker)", 20], ["Destination", 18],
       ["Reference", 16], ["Notes", 28], ["Recorded by", 16],
     ], r.stockOut.map((t) => [
       t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, Number(t.entered_quantity), t.entered_unit_symbol,
-      Number(t.entered_unit_cost), Number(t.total_value), reasonLabel(t.reason), t.recipient, t.reference, t.notes, t.user_name,
+      Number(t.entered_unit_cost), Number(t.total_value), reasonLabel(t.reason), t.worker_name, t.recipient, t.reference, t.notes, t.user_name,
     ]));
     totalRow(ws, 8, Number(r.summary.out_value), moneyFmt, r.stockOut.length);
   }
@@ -115,6 +144,11 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
   if (sec.lowStock) {
     table(wb, "Low Stock", [["Item", 28], ["Item code", 13], ["Unit", 8], ["Closing balance", 15, qtyFmt], ["Minimum level", 15, qtyFmt], ["Status", 14]],
       r.lowStock.map((b) => [b.name, b.sku, b.unit, Number(b.closing_qty), Number(b.min_stock_level), statusText(b.status)]));
+  }
+
+  if (r.byWorker.length) {
+    table(wb, "By Worker", [["S/N", 6], ["Worker", 28], ["Times taken", 13], ["Different items", 15], ["Value taken", 16, moneyFmt]],
+      r.byWorker.map((w, i) => [i + 1, w.name, w.takes, w.items, Number(w.value)]));
   }
 
   if (sec.highlights) {

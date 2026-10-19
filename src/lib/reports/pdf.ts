@@ -83,6 +83,47 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   const right = (t: string, extra: Record<string, unknown> = {}): Cell => ({ text: t, alignment: "right", ...extra });
   const empty = (cols: number, msg: string) => [[{ text: msg, colSpan: cols, italics: true, color: "#777" }, ...Array(cols - 1).fill("")]];
 
+  // ---- Stock sheet first: S/N, item, opening, in, out, closing (bal) for the period
+  if (sec.balances) {
+    content.push({ text: r.periodType === "day" ? "Stock sheet" : "Stock sheet — whole period", style: "h2" });
+    content.push({ text: "Each item's closing balance (Bal) is carried forward as its opening stock for the next day.", fontSize: 8, color: "#555", margin: [0, -2, 0, 6] });
+    const adj = r.summary.adj_count > 0;
+    const body: Cell[][] = [[h("S/N"), h("Item name"), h("Unit"), h("Opening stock", "right"), h("Stock in", "right"), h("Stock out", "right"),
+      ...(adj ? [h("Corrections", "right")] : []), h("Closing (Bal)", "right"), h("Cost / unit", "right"), h("Closing worth", "right"), h("Status")]];
+    r.balances.forEach((b, i) => {
+      body.push([String(i + 1), `${b.name}  (${b.sku})`, b.unit, right(formatQty(b.opening_qty)), right(formatQty(b.in_qty)), right(formatQty(b.out_qty)),
+        ...(adj ? [right(formatQty(b.adj_qty))] : []),
+        right(formatQty(b.closing_qty), { bold: true }), right(c(b.closing_cost)), right(m(b.closing_value)),
+        { text: statusText(b.status), color: b.status === "out" ? "#B91C1C" : b.status === "low" ? "#B45309" : "#166534", bold: b.status !== "in_stock" }]);
+    });
+    const cols = body[0].length;
+    if (!r.balances.length) body.push(...empty(cols, "No items."));
+    body.push([{ text: "Total closing inventory worth", bold: true, colSpan: cols - 2, alignment: "right" }, ...Array(cols - 3).fill(""),
+      right(m(r.summary.closing_value), { bold: true }), ""]);
+    const widths = adj ? [24, "*", 34, 60, 52, 52, 56, 62, 62, 72, 58] : [24, "*", 36, 64, 58, 58, 66, 70, 78, 62];
+    content.push(tableBlock(body, widths));
+
+    // Day-by-day blocks for short periods (the Excel file always has every day).
+    if (r.days.length > 1 && r.days.length <= 7) {
+      for (const d of r.days) {
+        content.push({ text: new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }), style: "h3" });
+        const db: Cell[][] = [[h("S/N"), h("Item name"), h("Unit"), h("Opening stock", "right"), h("Stock in", "right"), h("Stock out", "right"), h("Closing (Bal)", "right")]];
+        d.rows.forEach((x, i) => db.push([String(i + 1), x.name, x.unit, right(formatQty(x.opening)), right(formatQty(x.in)), right(formatQty(x.out)),
+          right(formatQty(x.closing), { bold: true })]));
+        content.push(tableBlock(db, [24, "*", 40, 80, 70, 70, 90]));
+      }
+    } else if (r.days.length > 7) {
+      content.push({ text: "The day-by-day stock sheet for every day in this period is in the Excel download (Stock Sheet tab).", fontSize: 8, italics: true, color: "#555", margin: [0, 6, 0, 0] });
+    }
+  }
+
+  if (r.byWorker.length && sec.stockOut) {
+    content.push({ text: "Stock taken by worker", style: "h2" });
+    const wb: Cell[][] = [[h("S/N"), h("Worker"), h("Times taken", "right"), h("Different items", "right"), h("Value taken", "right")]];
+    r.byWorker.forEach((w, i) => wb.push([String(i + 1), w.name, right(String(w.takes)), right(String(w.items)), right(m(w.value))]));
+    content.push(tableBlock(wb, [24, "*", 80, 90, 100]));
+  }
+
   if (sec.stockIn) {
     content.push({ text: "Stock In", style: "h2" });
     const body: Cell[][] = [[h("Txn"), h("Date & time"), h("Item"), h("Code"), h("Quantity", "right"), h("Cost / unit", "right"), h("Total value", "right"), h("Supplier"), h("Reference / notes")]];
@@ -98,11 +139,11 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
 
   if (sec.stockOut) {
     content.push({ text: "Stock Out", style: "h2" });
-    const body: Cell[][] = [[h("Txn"), h("Date & time"), h("Item"), h("Code"), h("Quantity", "right"), h("Cost / unit", "right"), h("Total value", "right"), h("Reason"), h("Recipient"), h("Reference / notes")]];
+    const body: Cell[][] = [[h("Txn"), h("Date & time"), h("Item"), h("Code"), h("Quantity", "right"), h("Cost / unit", "right"), h("Total value", "right"), h("Reason"), h("Taken by"), h("Reference / notes")]];
     for (const t of r.stockOut) {
       body.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku,
         right(`${formatQty(t.entered_quantity)} ${t.entered_unit_symbol}`), right(c(t.entered_unit_cost)), right(m(t.total_value)),
-        reasonLabel(t.reason), t.recipient ?? "", [t.reference, t.notes].filter(Boolean).join(" — ")]);
+        reasonLabel(t.reason), [t.worker_name, t.recipient].filter(Boolean).join(" → "), [t.reference, t.notes].filter(Boolean).join(" — ")]);
     }
     if (!r.stockOut.length) body.push(...empty(10, "No stock issued in this period."));
     body.push([{ text: "Total", bold: true, colSpan: 6, alignment: "right" }, "", "", "", "", "", right(m(r.summary.out_value), { bold: true }), "", "", ""]);
@@ -118,25 +159,6 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
         right(`${sign}${formatQty(t.quantity)} ${t.unit_symbol}`), right(`${sign}${m(t.total_value)}`), t.correction_reason ?? "", t.user_name ?? ""]);
     }
     content.push(tableBlock(body, [52, 76, "*", 52, 70, 70, 150, 60]));
-  }
-
-  if (sec.balances) {
-    content.push({ text: "Closing Inventory — balance left per item", style: "h2", pageBreak: sec.stockIn || sec.stockOut ? "before" : undefined });
-    content.push({ text: "Each item's closing balance is carried forward as its opening stock for the next day.", fontSize: 8, color: "#555", margin: [0, -2, 0, 6] });
-    const body: Cell[][] = [[h("Item"), h("Code"), h("Unit"), h("Opening", "right"), h("Received", "right"), h("Issued", "right"),
-      ...(r.summary.adj_count ? [h("Corrections", "right")] : []), h("Closing (next opening)", "right"), h("Cost / unit", "right"), h("Closing worth", "right"), h("Status")]];
-    for (const b of r.balances) {
-      body.push([b.name, b.sku, b.unit, right(formatQty(b.opening_qty)), right(formatQty(b.in_qty)), right(formatQty(b.out_qty)),
-        ...(r.summary.adj_count ? [right(formatQty(b.adj_qty))] : []),
-        right(formatQty(b.closing_qty), { bold: true }), right(c(b.closing_cost)), right(m(b.closing_value)),
-        { text: statusText(b.status), color: b.status === "out" ? "#B91C1C" : b.status === "low" ? "#B45309" : "#166534", bold: b.status !== "in_stock" }]);
-    }
-    const cols = body[0].length;
-    if (!r.balances.length) body.push(...empty(cols, "No items."));
-    body.push([{ text: "Total closing inventory worth", bold: true, colSpan: cols - 2, alignment: "right" }, ...Array(cols - 3).fill(""),
-      right(m(r.summary.closing_value), { bold: true }), ""]);
-    const widths = r.summary.adj_count ? ["*", 52, 34, 52, 52, 52, 56, 56, 62, 72, 58] : ["*", 56, 36, 58, 58, 58, 58, 66, 80, 62];
-    content.push(tableBlock(body, widths));
   }
 
   if (sec.lowStock) {
@@ -178,6 +200,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
       brand: { fontSize: 20, bold: true, color: BURGUNDY },
       title: { fontSize: 12, bold: true, margin: [0, 2, 0, 0] },
       h2: { fontSize: 11, bold: true, color: BURGUNDY, margin: [0, 16, 0, 6] },
+      h3: { fontSize: 9.5, bold: true, color: "#333", margin: [0, 10, 0, 4] },
       th: { bold: true, color: "#FFFFFF", fillColor: BURGUNDY, fontSize: 8 },
     },
     content,

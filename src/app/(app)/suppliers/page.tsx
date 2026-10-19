@@ -16,8 +16,8 @@ export default async function SuppliersPage() {
         rows={rows.map((r) => ({ ...r, title: r.name, subtitle: [r.contact_person, r.phone, r.email, `${r.receipt_count} receipts`].filter(Boolean).join(" · ") }))}
         endpoint="/api/suppliers"
         noun="Supplier"
-        canWrite={can(user.role, "catalog.write")}
-        canArchive={can(user.role, "item.archive")}
+        canWrite={can(user, "catalog.write")}
+        canArchive={can(user, "item.archive")}
         fields={[
           { key: "name", label: "Supplier name", required: true },
           { key: "contact_person", label: "Contact person" },

@@ -37,7 +37,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
     from, to, limit: pageSize, offset: (page - 1) * pageSize,
   });
   const sym = s.currency_symbol;
-  const canReverse = can(user.role, "txn.reverse");
+  const canReverse = can(user, "txn.reverse");
 
   return (
     <div>
@@ -54,14 +54,14 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
         <DateRange />
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-line bg-white">
+      <div className="mt-4 glass overflow-hidden rounded-[var(--radius-card)]">
         {data.rows.length === 0 ? (
           <EmptyState icon={<History className="size-6" />} title="No transactions found" body="Stock movements appear here as soon as they're recorded." />
         ) : (
           <>
             <div className="hidden overflow-x-auto xl:block">
               <table className="w-full text-sm">
-                <thead className="border-b border-line bg-canvas text-left text-muted">
+                <thead className="border-b border-white/80 bg-white/40 text-left text-muted">
                   <tr>
                     <th className="px-4 py-3 font-semibold">Date & time</th>
                     <th className="px-4 py-3 font-semibold">Item</th>
@@ -74,7 +74,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line">
+                <tbody className="divide-y divide-white/80">
                   {data.rows.map((t) => (
                     <tr key={t.id} className={t.reversed_by_txn_no ? "bg-canvas/60 text-muted" : ""}>
                       <td className="whitespace-nowrap px-4 py-2.5">{formatDateTime(t.occurred_at, s.timezone)}<span className="block text-xs text-muted">{t.txn_no}</span></td>
@@ -107,7 +107,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
             </div>
           </>
         )}
-        <div className="border-t border-line">
+        <div className="border-t border-white/80">
           <Pagination page={page} pages={Math.max(1, Math.ceil(data.total / pageSize))} total={data.total} label="transactions" />
         </div>
       </div>

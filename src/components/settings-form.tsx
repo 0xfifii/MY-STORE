@@ -109,7 +109,7 @@ export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { ini
           </span>
         </label>
         {!cronReady && (
-          <p className="mt-3 rounded-md bg-warn-bg px-3 py-2 text-sm text-warn">
+          <p className="mt-3 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">
             The server&apos;s scheduler isn&apos;t set up yet (CRON_SECRET is missing). See “Automatic daily reports” in the README.
           </p>
         )}
@@ -139,7 +139,7 @@ export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { ini
 
       <Panel title="Email delivery">
         {!smtpReady && (
-          <p className="mb-4 rounded-md bg-canvas px-3 py-2 text-sm text-muted ring-1 ring-line">
+          <p className="mb-4 rounded-2xl bg-canvas px-3 py-2 text-sm text-muted ring-1 ring-line">
             The server has no mail account configured, so reports are only saved to Report History. To email them, add the SMTP settings described in the README.
           </p>
         )}
@@ -160,7 +160,7 @@ export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { ini
         </Button>
       </Panel>
 
-      {err && <p role="alert" className="rounded-md bg-bad-bg px-4 py-3 text-sm text-bad">{err}</p>}
+      {err && <p role="alert" className="rounded-2xl bg-bad-bg px-4 py-3 text-sm text-bad">{err}</p>}
       <div className="flex justify-end"><Button type="submit" size="lg" loading={busy}>Save settings</Button></div>
     </form>
   );

@@ -5,7 +5,7 @@ import type { Action, Role } from "@/lib/permissions";
 import { can as canRole } from "@/lib/permissions";
 
 export type AppCtx = {
-  user: { id: string; name: string; email: string; role: Role };
+  user: { id: string; name: string; email: string; role: Role; permissions: string[] | null; allowed_category_ids: number[] | null };
   storeName: string;
   currencySymbol: string;
   currencyCode: string;
@@ -21,5 +21,5 @@ export function AppProvider({ value, children }: { value: AppCtx; children: Reac
 export function useApp() {
   const v = useContext(Ctx);
   if (!v) throw new Error("useApp outside AppProvider");
-  return { ...v, can: (a: Action) => canRole(v.user.role, a) };
+  return { ...v, can: (a: Action) => canRole(v.user, a) };
 }

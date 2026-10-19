@@ -75,7 +75,14 @@ export type ReportData = {
   /** Ranked by value (units differ between items, so value is the fair comparison). */
   topIn: Highlight[];
   topOut: Highlight[];
+  /** Day-by-day stock sheet (S/N, item, opening, in, out, closing) — each day's closing is the next day's opening. */
+  days: DaySheet[];
+  /** Stock taken per worker during the period. */
+  byWorker: { name: string; takes: number; value: string; items: number }[];
 };
+
+export type DaySheetRow = { item_id: string; name: string; sku: string; unit: string; opening: string; in: string; out: string; adj: string; closing: string };
+export type DaySheet = { day: string; rows: DaySheetRow[] };
 
 export const KIND_LABEL: Record<ReportKind, string> = {
   full: "Inventory Report",
@@ -242,6 +249,71 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
       AND ($4::uuid IS NULL OR t.item_id = $4::uuid)
       AND ($5::int IS NULL OR i.category_id = $5::int)`;
   const txns = await query<TxnRow>(`${TXN_SELECT} ${txnWhere} ORDER BY t.occurred_at, t.id`, args);
+  // Day-by-day sheet: start from each item's opening balance and roll forward one day at a time.
+  const days: DaySheet[] = [];
+  const dayList: string[] = [];
+  for (let d = params.from; d <= params.to && dayList.length < 92; d = addDays(d, 1)) dayList.push(d);
+  if (balances.length) {
+    const moves = await query<{ item_id: string; day: string; in_q: string; out_q: string; adj_q: string }>(
+      `SELECT t.item_id, to_char((t.occurred_at AT TIME ZONE $3)::date, 'YYYY-MM-DD') AS day,
+              coalesce(sum(t.quantity) FILTER (WHERE t.txn_type='stock_in'), 0)::text AS in_q,
+              coalesce(sum(t.quantity) FILTER (WHERE t.txn_type='stock_out'), 0)::text AS out_q,
+              coalesce(sum(t.direction * t.quantity) FILTER (WHERE t.txn_type='reversal'), 0)::text AS adj_q
+         FROM stock_transactions t JOIN items i ON i.id = t.item_id
+        WHERE t.occurred_at >= ($1::date)::timestamp AT TIME ZONE $3
+          AND t.occurred_at <  ($2::date)::timestamp AT TIME ZONE $3
+          AND ($4::uuid IS NULL OR t.item_id = $4::uuid)
+          AND ($5::int IS NULL OR i.category_id = $5::int)
+        GROUP BY 1, 2`,
+      args,
+    );
+    const key = (id: string, d: string) => `${id}|${d}`;
+    const mv = new Map(moves.map((m) => [key(m.item_id, m.day), m]));
+    // Exact decimal arithmetic at 6 dp (quantities are numeric(20,6) in the database).
+    const S = 1000000n;
+    const toN = (v: string) => {
+      const neg = v.startsWith("-");
+      const [a, b = ""] = (neg ? v.slice(1) : v).split(".");
+      const n = BigInt(a || "0") * S + BigInt((b + "000000").slice(0, 6));
+      return neg ? -n : n;
+    };
+    const toS = (n: bigint) => {
+      const neg = n < 0n;
+      const x = neg ? -n : n;
+      const f = (x % S).toString().padStart(6, "0").replace(/0+$/, "");
+      return `${neg ? "-" : ""}${x / S}${f ? "." + f : ""}`;
+    };
+    const running = new Map(balances.map((b) => [b.item_id, toN(b.opening_qty)]));
+    for (const d of dayList) {
+      const rows: DaySheetRow[] = [];
+      for (const b of balances) {
+        const open = running.get(b.item_id) ?? 0n;
+        const m = mv.get(key(b.item_id, d));
+        const i = m ? toN(m.in_q) : 0n;
+        const o = m ? toN(m.out_q) : 0n;
+        const a = m ? toN(m.adj_q) : 0n;
+        const close = open + i - o + a;
+        running.set(b.item_id, close);
+        rows.push({ item_id: b.item_id, name: b.name, sku: b.sku, unit: b.unit, opening: toS(open), in: toS(i), out: toS(o), adj: toS(a), closing: toS(close) });
+      }
+      days.push({ day: d, rows });
+    }
+  }
+
+  const byWorker = await query<{ name: string; takes: number; value: string; items: number }>(
+    `SELECT coalesce(w.name, 'Not recorded') AS name, count(*)::int AS takes, sum(t.total_value)::numeric(20,2)::text AS value,
+            count(DISTINCT t.item_id)::int AS items
+       FROM stock_transactions t JOIN items i ON i.id = t.item_id LEFT JOIN workers w ON w.id = t.worker_id
+      WHERE t.txn_type = 'stock_out'
+        AND t.occurred_at >= ($1::date)::timestamp AT TIME ZONE $3
+        AND t.occurred_at <  ($2::date)::timestamp AT TIME ZONE $3
+        AND ($4::uuid IS NULL OR t.item_id = $4::uuid)
+        AND ($5::int IS NULL OR i.category_id = $5::int)
+        AND NOT EXISTS (SELECT 1 FROM stock_transactions rv WHERE rv.reverses_id = t.id)
+      GROUP BY coalesce(w.name, 'Not recorded') ORDER BY sum(t.total_value) DESC`,
+    args,
+  );
+
   const stockIn = txns.filter((t) => t.txn_type === "stock_in");
   const stockOut = txns.filter((t) => t.txn_type === "stock_out");
   const corrections = txns.filter((t) => t.txn_type === "reversal");
@@ -304,6 +376,8 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
     lowStock: balances.filter((b) => !b.archived && b.status !== "in_stock"),
     topIn: rank("in"),
     topOut: rank("out"),
+    days,
+    byWorker,
   };
 }
 

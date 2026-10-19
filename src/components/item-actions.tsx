@@ -37,7 +37,7 @@ export function ArchiveButton({ itemId, archived, name, quantity }: { itemId: st
             : "Archived items are hidden from the inventory list and can't be stocked in or out. Their history stays in reports, and you can restore them later."}
         </p>
         {!archived && Number(quantity) > 0 && (
-          <p className="mt-3 rounded-md bg-warn-bg px-3 py-2 text-sm text-warn">This item still has {formatQty(quantity)} in stock.</p>
+          <p className="mt-3 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">This item still has {formatQty(quantity)} in stock.</p>
         )}
       </Modal>
     </>

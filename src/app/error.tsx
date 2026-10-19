@@ -9,7 +9,7 @@ export default function RootError({ error, reset }: { error: Error & { digest?: 
         Open <a className="font-semibold text-burgundy underline" href="/api/health">/api/health</a> on this site — it says exactly what is wrong.
       </p>
       {error.digest && <p className="mt-2 text-xs text-muted">Error reference: {error.digest}</p>}
-      <button onClick={reset} className="mt-4 rounded-md bg-burgundy px-4 py-2 text-sm font-semibold text-white">Try again</button>
+      <button onClick={reset} className="mt-4 rounded-2xl bg-burgundy px-4 py-2 text-sm font-semibold text-white">Try again</button>
     </div>
   );
 }

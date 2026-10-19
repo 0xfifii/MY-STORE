@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/public-sans";
-import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/urbanist";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 
@@ -21,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-dvh antialiased">
+        <div className="app-backdrop" aria-hidden />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

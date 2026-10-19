@@ -41,8 +41,8 @@ export function SetupForm({ defaultStoreName }: { defaultStoreName: string }) {
       <Field label="Confirm password" htmlFor="pw2" required>
         <Input id="pw2" type="password" autoComplete="new-password" value={f.confirm} onChange={set("confirm")} />
       </Field>
-      {error && <p role="alert" className="rounded-md bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
-      <Button type="submit" size="lg" className="w-full" loading={busy}>
+      {error && <p role="alert" className="rounded-2xl bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
+      <Button type="submit" size="lg" className="mt-2 w-full" loading={busy}>
         Create owner account
       </Button>
     </form>

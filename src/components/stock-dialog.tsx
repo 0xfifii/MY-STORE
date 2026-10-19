@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useState } from "react";
 import { Modal } from "./ui/dialog";
 import { StockMoveForm } from "./stock-move-form";
 import { useApp } from "./app-context";
+import { StockInIcon, StockOutIcon } from "./icons";
 
 type Open = (mode: "in" | "out", itemId: string, itemName?: string) => void;
 const Ctx = createContext<Open | null>(null);
@@ -35,16 +36,26 @@ export function useStockDialog() {
 export function StockButtons({ itemId, name, size = "sm", archived }: { itemId: string; name: string; size?: "sm" | "md"; archived?: boolean }) {
   const open = useStockDialog();
   const app = useApp();
-  if (archived || !app.can("stock.move")) return null;
-  const cls = size === "sm" ? "h-8 px-2.5 text-xs" : "h-10 px-4 text-sm";
+  if (archived) return null;
+  const canIn = app.can("stock.in");
+  const canOut = app.can("stock.out");
+  if (!canIn && !canOut) return null;
+  const cls = size === "sm" ? "h-8 pl-2.5 pr-3 text-xs gap-1" : "h-10 pl-3.5 pr-4 text-sm gap-1.5";
+  const ic = size === "sm" ? "size-4" : "size-[18px]";
   return (
     <div className="flex gap-1.5">
-      <button type="button" onClick={() => open("in", itemId, name)} className={`${cls} rounded-md border border-line bg-white font-semibold text-ok hover:bg-ok-bg`}>
-        Stock In
-      </button>
-      <button type="button" onClick={() => open("out", itemId, name)} className={`${cls} rounded-md bg-burgundy font-semibold text-white hover:bg-burgundy-hover`}>
-        Stock Out
-      </button>
+      {canIn && (
+        <button type="button" onClick={() => open("in", itemId, name)} aria-label={`Stock in ${name}`}
+          className={`${cls} inline-flex items-center rounded-full bg-white font-semibold text-ok shadow-sm ring-1 ring-white hover:bg-ok-bg`}>
+          <StockInIcon className={ic} /> In
+        </button>
+      )}
+      {canOut && (
+        <button type="button" onClick={() => open("out", itemId, name)} aria-label={`Stock out ${name}`}
+          className={`${cls} inline-flex items-center rounded-full bg-burgundy font-semibold text-white hover:bg-burgundy-hover`}>
+          <StockOutIcon className={ic} /> Out
+        </button>
+      )}
     </div>
   );
 }

@@ -17,7 +17,7 @@ export TEST_CRON_SECRET="test-cron-secret-1234567890"
 export TEST_MAIL_DIR="$WORK/mail"
 
 # Kill the whole process group so the Next.js child server doesn't outlive the run.
-cleanup() { kill -- -"${APP_PID:-0}" 2>/dev/null; kill "${APP_PID:-}" "${SMTP_PID:-}" 2>/dev/null || true; }
+cleanup() { [ -n "${APP_PID:-}" ] && kill -- -"$APP_PID" 2>/dev/null; kill "${APP_PID:-}" "${SMTP_PID:-}" 2>/dev/null || true; }
 trap cleanup EXIT
 
 ./scripts/reset-db.sh "$TEST_DB"

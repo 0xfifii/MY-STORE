@@ -30,9 +30,9 @@ export default async function ReportHistoryPage({ searchParams }: { searchParams
     <div>
       <PageHeader title="Report History" back={{ href: "/reports", label: "Daily Reports" }}
         description="Saved and automatically generated reports. Each file is kept exactly as it was generated."
-        actions={can(user.role, "report.generate") ? <GenerateNow /> : undefined} />
+        actions={can(user, "report.generate") ? <GenerateNow /> : undefined} />
 
-      <div className="mb-4 flex items-start gap-3 rounded-lg border border-line bg-white px-4 py-3 text-sm">
+      <div className="mb-4 flex items-start gap-3 glass rounded-[var(--radius-card)] px-4 py-3 text-sm">
         <Clock className="mt-0.5 size-5 shrink-0 text-burgundy" />
         {s.auto_report_enabled || s.auto_weekly_enabled || s.auto_monthly_enabled ? (
           <p>
@@ -42,21 +42,21 @@ export default async function ReportHistoryPage({ searchParams }: { searchParams
               s.auto_monthly_enabled && "monthly (1st, previous month)"].filter(Boolean).join(", ")}
             , generated after {s.auto_report_time.slice(0, 5)} ({s.timezone}) as {s.auto_report_formats.map((f) => f.toUpperCase()).join(", ")}.
             {s.email_enabled && (smtpConfigured() ? ` Emailed to ${s.email_recipients.join(", ")}.` : " Email is switched on but the mail server isn't configured, so nothing is emailed.")}
-            {can(user.role, "settings.write") && <> <Link href="/settings" className="font-semibold text-burgundy hover:underline">Change</Link></>}
+            {can(user, "settings.write") && <> <Link href="/settings" className="font-semibold text-burgundy hover:underline">Change</Link></>}
           </p>
         ) : (
           <p>
             Automatic reports are <strong>off</strong>.{" "}
-            {can(user.role, "settings.write") ? <Link href="/settings" className="font-semibold text-burgundy hover:underline">Turn them on in Store Settings</Link> : "The owner can turn them on in Store Settings."}
+            {can(user, "settings.write") ? <Link href="/settings" className="font-semibold text-burgundy hover:underline">Turn them on in Store Settings</Link> : "The owner can turn them on in Store Settings."}
           </p>
         )}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-line bg-white">
+      <div className="glass overflow-hidden rounded-[var(--radius-card)]">
         {rows.length === 0 ? (
           <EmptyState icon={<Archive className="size-6" />} title="No saved reports yet" body="Generate a report now, or turn on automatic daily reports in Store Settings." />
         ) : (
-          <ul className="divide-y divide-line">
+          <ul className="divide-y divide-white/80">
             {rows.map((r) => (
               <li key={r.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:px-5">
                 <span className={`w-12 shrink-0 rounded px-1.5 py-0.5 text-center text-xs font-bold ${r.format === "pdf" ? "bg-rose text-burgundy" : r.format === "xlsx" ? "bg-ok-bg text-ok" : "bg-canvas text-muted ring-1 ring-line"}`}>
@@ -83,7 +83,7 @@ export default async function ReportHistoryPage({ searchParams }: { searchParams
             ))}
           </ul>
         )}
-        <div className="border-t border-line">
+        <div className="border-t border-white/80">
           <Pagination page={page} pages={Math.max(1, Math.ceil(total / 30))} total={total} label="files" />
         </div>
       </div>

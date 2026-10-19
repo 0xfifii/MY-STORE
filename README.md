@@ -215,6 +215,20 @@ contains the complete history.
 
 ---
 
+## 5b. Workers, permissions and usage analysis
+
+- **Workers** (Setup → Workers): the names of people who collect items. Pick a name under "Taken by" on
+  every Stock Out; reports and Usage & Audit then show who took what.
+- **Permissions** (Users → Permissions): for each staff or viewer account, tick exactly what they may do
+  (Stock In, Stock Out, add items, manage workers, see usage analysis, …) and optionally limit Stock In/Out
+  to certain categories. Enforced on the server.
+- **Usage & Audit**: most and least taken items (pie chart), items taken most-to-least, who took what,
+  stock out per day, reasons, categories, which staff account recorded what, and a filterable log of every
+  change. Downloadable as CSV.
+- **Reports** start with the stock sheet: S/N, item name, opening stock, stock in, stock out and closing
+  balance (Bal). Weekly/monthly reports also have a day-by-day sheet (Excel "Stock Sheet" tab) where each
+  day's closing is the next day's opening.
+
 ## 6. Roles
 
 | | Owner / Admin | Staff | Viewer / Manager |

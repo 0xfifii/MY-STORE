@@ -1,9 +1,12 @@
 "use client";
+import { StockInIcon, StockOutIcon } from "@/components/icons";
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle2, PackageMinus, PackagePlus, RefreshCcw } from "lucide-react";
+import {
+  ArrowRight, CheckCircle2, RefreshCcw,
+} from "lucide-react";
 import clsx from "clsx";
 import { ItemPicker, type PickerItem } from "./item-picker";
 import { Button, Field, Input, Select, Spinner, StatusBadge, Textarea, buttonClass } from "./ui/primitives";
@@ -55,6 +58,8 @@ export function StockMoveForm({
   const [dateTouched, setDateTouched] = useState(false);
   const [reason, setReason] = useState("");
   const [recipient, setRecipient] = useState("");
+  const [workerId, setWorkerId] = useState("");
+  const [workers, setWorkers] = useState<{ id: number; name: string; department: string | null }[]>([]);
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -89,6 +94,11 @@ export function StockMoveForm({
     if (itemId) loadItem(itemId);
     else { setItem(null); setUnits([]); }
   }, [itemId, loadItem]);
+
+  useEffect(() => {
+    if (mode !== "out") return;
+    api<{ workers: { id: number; name: string; department: string | null }[] }>("/api/workers").then((d) => setWorkers(d.workers)).catch(() => {});
+  }, [mode]);
 
   useEffect(() => {
     if (mode !== "in") return;
@@ -152,6 +162,7 @@ export function StockMoveForm({
             }
           : {
               item_id: item.id, quantity: qty, unit_id: unit.unit_id, reason, recipient, reference, notes, request_id: requestId,
+              worker_id: workerId || null,
             };
       const res = await api<{ txn: { txn_no: string }; item: FullItem }>(`/api/stock/${mode}`, { method: "POST", json: body });
       setItem(res.item);
@@ -180,11 +191,11 @@ export function StockMoveForm({
     setDateTouched(false);
     setRequestId(newRequestId());
     setStep("edit");
-    if (!keepItem) { setItemId(null); setReason(""); }
+    if (!keepItem) { setItemId(null); setReason(""); setWorkerId(""); }
   };
 
   const verb = mode === "in" ? "Receive" : "Issue";
-  const Icon = mode === "in" ? PackagePlus : PackageMinus;
+  const Icon = mode === "in" ? StockInIcon : StockOutIcon;
 
   // ---------------------------------------------------------------- no item yet
   if (!itemId) {
@@ -208,7 +219,7 @@ export function StockMoveForm({
 
   if (item.archived_at) {
     return (
-      <div className="rounded-md bg-warn-bg p-4 text-sm text-warn">
+      <div className="rounded-2xl bg-warn-bg p-4 text-sm text-warn">
         <strong>{item.name}</strong> is archived, so stock can&apos;t be moved. An owner can restore it from the item page.
         <div className="mt-3"><Button variant="secondary" size="sm" onClick={() => setItemId(null)}>Choose another item</Button></div>
       </div>
@@ -222,7 +233,7 @@ export function StockMoveForm({
         <CheckCircle2 className="mx-auto size-12 text-ok" />
         <p className="mt-3 font-display text-xl font-bold">{mode === "in" ? "Stock received" : "Stock issued"}</p>
         <p className="mt-1 text-sm text-muted">Transaction {lastTxn?.txn_no}</p>
-        <div className="mx-auto mt-5 max-w-xs rounded-lg border border-line bg-canvas p-4">
+        <div className="mx-auto mt-5 max-w-xs rounded-3xl bg-white/80 p-5 shadow-sm">
           <p className="text-sm text-muted">{item.name} — balance now</p>
           <p className="font-display text-4xl font-bold tracking-tight">
             {formatQty(item.quantity)} <span className="text-xl text-muted">{base}</span>
@@ -242,8 +253,8 @@ export function StockMoveForm({
   return (
     <form onSubmit={review} noValidate>
       {/* Ledger slip: the balance before and after this movement */}
-      <div className="rounded-lg border border-line bg-canvas">
-        <div className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
+      <div className="overflow-hidden rounded-3xl bg-white/80 shadow-sm ring-1 ring-white">
+        <div className="flex items-start justify-between gap-3 border-b border-white/80 px-4 py-3">
           <div className="min-w-0">
             <p className="truncate font-semibold">{item.name}</p>
             <p className="text-xs text-muted">{item.sku}{item.category_name ? ` · ${item.category_name}` : ""}</p>
@@ -270,7 +281,7 @@ export function StockMoveForm({
           </div>
         </div>
         {baseQty && unit && !unit.is_base && (
-          <p className="border-t border-line px-4 py-2 text-xs text-muted">
+          <p className="border-t border-white/80 px-4 py-2 text-xs text-muted">
             {formatQty(qty)} {unit.symbol} = {formatQty(baseQty)} {base} (1 {unit.symbol} = {formatQty(unit.factor)} {base})
           </p>
         )}
@@ -278,10 +289,11 @@ export function StockMoveForm({
 
       {step === "confirm" ? (
         <div className="mt-5">
-          <div className="rounded-lg border-2 border-burgundy/30 bg-rose p-4">
+          <div className="rounded-3xl bg-rose p-5 ring-1 ring-burgundy/15">
             <p className="font-semibold">
               {verb} {formatQty(qty)} {unit?.symbol} of {item.name}
               {mode === "out" ? ` for ${reasonLabel(reason).toLowerCase()}` : ""}
+              {mode === "out" && workerId ? ` taken by ${workers.find((w) => String(w.id) === workerId)?.name ?? ""}` : ""}
               {mode === "out" && recipient ? ` to ${recipient}` : ""}?
             </p>
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
@@ -298,10 +310,10 @@ export function StockMoveForm({
               <dd className="text-right font-semibold">{lineValue !== null ? formatMoney(lineValue, sym) : "—"}</dd>
             </dl>
           </div>
-          {error && <p role="alert" className="mt-3 rounded-md bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
+          {error && <p role="alert" className="mt-3 rounded-2xl bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button type="button" variant="secondary" size="lg" onClick={() => setStep("edit")} disabled={busy}>Back</Button>
-            <Button type="button" size="lg" onClick={submit} loading={busy} data-testid="confirm-stock">
+            <Button type="button" variant={mode === "out" ? "accent" : "primary"} size="lg" onClick={submit} loading={busy} data-testid="confirm-stock">
               <Icon className="size-5" /> Confirm {mode === "in" ? "stock in" : "stock out"}
             </Button>
           </div>
@@ -327,7 +339,7 @@ export function StockMoveForm({
             </Field>
           </div>
           {exceeds && (
-            <p role="alert" className="mt-2 rounded-md bg-bad-bg px-3 py-2 text-sm font-medium text-bad">
+            <p role="alert" className="mt-2 rounded-2xl bg-bad-bg px-3 py-2 text-sm font-medium text-bad">
               Not enough stock. Only {formatQty(item.quantity)} {base} available.
             </p>
           )}
@@ -363,8 +375,8 @@ export function StockMoveForm({
                     key={r.value} type="button" role="radio" aria-checked={reason === r.value}
                     onClick={() => setReason(r.value)}
                     className={clsx(
-                      "h-11 rounded-md border text-sm font-semibold",
-                      reason === r.value ? "border-burgundy bg-burgundy text-white" : "border-line bg-white hover:border-burgundy/40 hover:bg-rose",
+                      "h-11 rounded-full border text-sm font-semibold",
+                      reason === r.value ? "border-night bg-night text-white" : "border-white bg-white/75 hover:bg-white hover:text-burgundy",
                     )}
                   >
                     {r.label}
@@ -373,9 +385,18 @@ export function StockMoveForm({
               </div>
               {touched && !reason && <p className="mt-1.5 text-sm text-bad">Choose a reason.</p>}
               <div className="mt-4">
-                <Field label="Recipient or destination" htmlFor="recipient" hint="e.g. Kitchen, Branch 2, customer name">
-                  <Input id="recipient" value={recipient} onChange={(e) => setRecipient(e.target.value)} />
-                </Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Taken by (worker)" htmlFor="worker"
+                    hint={workers.length ? "Who collected the items" : app.can("workers.manage") ? <>No workers yet — <a href="/workers" className="font-semibold text-burgundy underline">add workers</a></> : "No workers added yet"}>
+                    <Select id="worker" value={workerId} onChange={(e) => setWorkerId(e.target.value)}>
+                      <option value="">— Not recorded —</option>
+                      {workers.map((w) => <option key={w.id} value={w.id}>{w.name}{w.department ? ` (${w.department})` : ""}</option>)}
+                    </Select>
+                  </Field>
+                  <Field label="Destination" htmlFor="recipient" hint="e.g. Kitchen, Branch 2, customer name">
+                    <Input id="recipient" value={recipient} onChange={(e) => setRecipient(e.target.value)} />
+                  </Field>
+                </div>
               </div>
             </div>
           )}
@@ -390,7 +411,7 @@ export function StockMoveForm({
             </Field>
           </div>
 
-          {error && <p role="alert" className="mt-4 rounded-md bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
+          {error && <p role="alert" className="mt-4 rounded-2xl bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
           {touched && problems.length > 0 && !error && (
             <p className="mt-4 text-sm text-bad">{problems[0]}</p>
           )}

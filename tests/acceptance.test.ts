@@ -465,7 +465,9 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
     expect(text).toContain("MY STORE");
     expect(text).toContain("Inventory Report");
     expect(text).toMatch(/Page 1 of \d+/);
-    expect(text).toContain("Closing Inventory");
+    expect(text).toContain("Stock sheet");
+    expect(text).toContain("S/N");
+    expect(text).toContain("Closing (Bal)");
     expect(text).toContain("₦");
     expect(text).toContain("Rice (50kg bag)");
     expect(text).toContain("Most stocked out");
@@ -540,9 +542,86 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
   });
 });
 
+describe("15. Workers, permissions and usage analysis", () => {
+  let chef: number;
+  let grains: number;
+  it("records which worker took the stock", async () => {
+    const w = await owner.post("/api/workers", { name: "Chef Bola", department: "Kitchen" });
+    expect(w.status).toBe(201);
+    chef = w.data.worker.id;
+    const it = await createItem("Garri (white)", "kg", { opening_quantity: "50", opening_unit_cost: "900" });
+    const r = await stockOut(staff, it, "4.5", "kg", { worker_id: chef, recipient: "Main kitchen" });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    const { rows } = await db.query("SELECT worker_id FROM stock_transactions WHERE txn_no = $1", [r.data.txn.txn_no]);
+    expect(rows[0].worker_id).toBe(chef);
+    // A stock out without a worker stays unassigned (the setting does not leak between requests)
+    const r2 = await stockOut(staff, it, "1", "kg");
+    const { rows: r2rows } = await db.query("SELECT worker_id FROM stock_transactions WHERE txn_no = $1", [r2.data.txn.txn_no]);
+    expect(r2rows[0].worker_id).toBeNull();
+    expect((await stockOut(staff, it, "1", "kg", { worker_id: 999999 })).data.code).toBe("INVALID_WORKER");
+  });
+
+  it("owner can limit a staff member to Stock Out only, and to one category", async () => {
+    grains = (await owner.post("/api/categories", { name: "Grains test" })).data.category.id;
+    const staffId = (await db.query("SELECT id FROM users WHERE email='staff@mystore.test'")).rows[0].id;
+    const p = await owner.req("PUT", `/api/users/${staffId}/permissions`, { permissions: ["stock.out"], allowed_category_ids: [grains] });
+    expect(p.status, JSON.stringify(p.data)).toBe(200);
+    // Stock In is now refused
+    expect((await stockIn(staff, sugar, "1", "kg", "1000")).status).toBe(403);
+    // Stock Out of an item outside the allowed category is refused
+    expect((await stockOut(staff, sugar, "0.1", "kg")).data.code).toBe("CATEGORY_NOT_ALLOWED");
+    // Inside the category it works
+    const inGrains = await createItem("Beans (brown)", "kg", { opening_quantity: "10", opening_unit_cost: "1500", category_id: grains });
+    expect((await stockOut(staff, inGrains, "2", "kg", { worker_id: chef })).status).toBe(201);
+    // Staff can no longer add items
+    expect((await staff.post("/api/items", { name: "x", unit_id: units.pcs, request_id: randomUUID() })).status).toBe(403);
+    // The change is audited; restore defaults
+    expect((await db.query("SELECT 1 FROM audit_logs WHERE action='user.permissions'")).rowCount).toBe(1);
+    expect((await owner.req("PUT", `/api/users/${staffId}/permissions`, { permissions: null, allowed_category_ids: null })).status).toBe(200);
+    expect((await stockIn(staff, sugar, "1", "kg", "1000")).status).toBe(201);
+  });
+
+  it("staff can't change permissions", async () => {
+    const staffId = (await db.query("SELECT id FROM users WHERE email='staff@mystore.test'")).rows[0].id;
+    expect((await staff.req("PUT", `/api/users/${staffId}/permissions`, { permissions: ["audit.view"], allowed_category_ids: null })).status).toBe(403);
+  });
+
+  it("report has an S/N stock sheet per day where closing carries to the next day's opening", async () => {
+    const { rows } = await db.query("SELECT ((now() AT TIME ZONE 'Africa/Lagos')::date - 1)::text y, (now() AT TIME ZONE 'Africa/Lagos')::date::text t");
+    const csv = ((await owner.get(`/api/reports/export?format=csv&from=${rows[0].y}&to=${rows[0].t}`)).data as Buffer).toString();
+    const lines = csv.split("\r\n");
+    expect(lines.some((l) => l.startsWith("S/N,Item name,Item code,Unit,Opening stock,Stock in,Stock out"))).toBe(true);
+    const block = (day: string) => {
+      const i = lines.indexOf(day);
+      const out: Record<string, string[]> = {};
+      for (let j = i + 2; j < lines.length && lines[j]; j++) { const c = lines[j].split(","); out[c[2]] = c; }
+      return out;
+    };
+    const y = block(rows[0].y), t = block(rows[0].t);
+    expect(Object.keys(t).length).toBeGreaterThan(0);
+    for (const code of Object.keys(t)) {
+      const c = t[code];
+      expect(Number(c[c.length - 1])).toBeCloseTo(Number(c[4]) + Number(c[5]) - Number(c[6]) + (c.length === 9 ? Number(c[7]) : 0), 6);
+      if (y[code]) expect(c[4]).toBe(y[code][y[code].length - 1]);
+    }
+    expect(csv).toContain("STOCK TAKEN BY WORKER");
+    expect(csv).toContain("Chef Bola");
+  });
+
+  it("usage analysis ranks most and least taken items and who took what", async () => {
+    const page = await owner.get("/audit");
+    expect(page.status).toBe(200);
+    const csv = ((await owner.get("/api/usage/export")).data as Buffer).toString();
+    expect(csv).toContain("ITEMS TAKEN (most to least)");
+    expect(csv).toMatch(/WHO TOOK WHAT[\s\S]*Chef Bola,Garri \(white\),4\.5,kg/);
+    expect((await viewer.get("/api/usage/export")).status).toBe(403);
+    expect((await owner.get("/audit?tab=changes")).status).toBe(200);
+  });
+});
+
 describe("14. Pages render (no dead pages)", () => {
   const pages = ["/dashboard", "/inventory", "/items/new", "/stock-in", "/stock-out", "/transactions", "/reports", "/reports/history",
-    "/low-stock", "/categories", "/suppliers", "/units", "/users", "/settings", "/audit"];
+    "/low-stock", "/categories", "/suppliers", "/units", "/users", "/settings", "/audit", "/workers"];
   it("every page loads for the owner", async () => {
     for (const p of pages) {
       const r = await owner.get(p);

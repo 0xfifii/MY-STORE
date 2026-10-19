@@ -11,7 +11,7 @@ export default async function SetupPage() {
   if (await hasAnyUser()) redirect("/login");
   const s = await getSettings();
   return (
-    <AuthFrame storeName={s.store_name} title="Create the owner account" subtitle="This runs once. The owner can add staff accounts afterwards.">
+    <AuthFrame storeName={s.store_name} title="Set up your store" subtitle="Create the owner account. You can add staff afterwards.">
       <SetupForm defaultStoreName={s.store_name} />
     </AuthFrame>
   );

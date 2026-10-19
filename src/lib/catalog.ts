@@ -35,3 +35,15 @@ export const listGlobalConversions = () =>
        FROM unit_conversions c JOIN units f ON f.id = c.from_unit_id JOIN units t ON t.id = c.to_unit_id
       ORDER BY f.symbol`,
   );
+
+export type Worker = {
+  id: number; name: string; department: string | null; phone: string | null; notes: string | null;
+  archived_at: string | null; takes: number; last_take: string | null;
+};
+
+export const listWorkers = (includeArchived = false) =>
+  query<Worker>(
+    `SELECT w.*, (SELECT count(*)::int FROM stock_transactions t WHERE t.worker_id = w.id AND t.txn_type = 'stock_out') AS takes,
+            (SELECT max(t.occurred_at) FROM stock_transactions t WHERE t.worker_id = w.id) AS last_take
+       FROM workers w ${includeArchived ? "" : "WHERE w.archived_at IS NULL"} ORDER BY lower(w.name)`,
+  );

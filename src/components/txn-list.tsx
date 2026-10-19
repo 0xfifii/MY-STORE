@@ -6,17 +6,17 @@ import { TxnTypeBadge } from "./ui/primitives";
 /** Compact stacked list of stock movements, readable on phones. */
 export function TxnList({ rows, symbol, timeZone, showItem = true }: { rows: TxnRow[]; symbol: string; timeZone: string; showItem?: boolean }) {
   return (
-    <ul className="divide-y divide-line">
+    <ul className="divide-y divide-white/80">
       {rows.map((t) => {
         const sign = t.direction > 0 ? "+" : "−";
         const detail =
           t.txn_type === "stock_out"
-            ? [reasonLabel(t.reason), t.recipient].filter(Boolean).join(" → ")
+            ? [reasonLabel(t.reason), t.worker_name ? `by ${t.worker_name}` : null, t.recipient].filter(Boolean).join(" · ")
             : t.txn_type === "stock_in"
               ? t.is_opening ? "Opening stock" : t.supplier_label ?? ""
               : `Reverses ${t.reverses_txn_no}`;
         return (
-          <li key={t.id} className="flex items-start gap-3 px-4 py-3 sm:px-5">
+          <li key={t.id} className="flex items-start gap-3 px-5 py-3 sm:px-6">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <TxnTypeBadge type={t.txn_type} direction={t.direction} />
