@@ -12,6 +12,8 @@ export type ReportParams = {
   kind: ReportKind;
   itemId?: string | null;
   categoryId?: number | null;
+  /** What the user asked for (a Monday's "this week" is still a weekly report). */
+  periodType?: PeriodType;
 };
 
 export type BalanceRow = {
@@ -90,7 +92,8 @@ export function weekStart(isoDate: string) {
   return addDays(isoDate, -((dow + 6) % 7));
 }
 
-export function periodTypeOf(from: string, to: string): PeriodType {
+export function periodTypeOf(from: string, to: string, explicit?: PeriodType): PeriodType {
+  if (explicit) return explicit;
   if (from === to) return "day";
   // A week (Mon–Sun) or month, including "week to date" / "month to date".
   if (weekStart(from) === from && to <= addDays(from, 6)) return "week";
@@ -138,7 +141,12 @@ export function normaliseParams(raw: Record<string, string | null | undefined>, 
   const kind = (["full", "stock_in", "stock_out", "balance"].includes(raw.kind ?? "") ? raw.kind : "full") as ReportKind;
   const itemId = raw.item && /^[0-9a-f-]{36}$/i.test(raw.item) ? raw.item : null;
   const categoryId = raw.category && /^\d+$/.test(raw.category) ? Number(raw.category) : null;
-  return { from, to, kind, itemId, categoryId };
+  const periodType: PeriodType | undefined =
+    raw.period_type === "week" || raw.period_type === "month" ? raw.period_type
+    : ["week", "this_week", "last_week"].includes(raw.preset ?? "") ? "week"
+    : ["month", "this_month", "last_month"].includes(raw.preset ?? "") ? "month"
+    : undefined;
+  return { from, to, kind, itemId, categoryId, periodType };
 }
 
 /**
@@ -247,7 +255,7 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
     scopeLabel = `Category: ${c?.name ?? "(not found)"}`;
   }
 
-  const periodType = periodTypeOf(params.from, params.to);
+  const periodType = periodTypeOf(params.from, params.to, params.periodType);
   const periodLabel =
     periodType === "month"
       ? `${new Date(params.from + "T12:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })} (${formatDate(params.from)} – ${formatDate(params.to)})`
@@ -305,7 +313,7 @@ export function titleFor(kind: ReportKind, periodType: PeriodType) {
 }
 
 export function reportFileName(p: ReportParams, ext: string) {
-  const pt = periodTypeOf(p.from, p.to);
+  const pt = periodTypeOf(p.from, p.to, p.periodType);
   const kind = (pt === "week" ? "weekly-" : pt === "month" ? "monthly-" : "") + (p.kind === "full" ? "report" : p.kind.replace("_", "-"));
   const period = p.from === p.to ? p.from : `${p.from}_to_${p.to}`;
   return `mystore-${kind}-${period}.${ext}`;

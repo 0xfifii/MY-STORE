@@ -51,7 +51,7 @@ export async function generateAndStore(
   format: ReportFormat,
   opts: { trigger: "manual" | "scheduled"; userId?: string | null; settings?: StoreSettings },
 ) {
-  const periodType = periodTypeOf(params.from, params.to);
+  const periodType = periodTypeOf(params.from, params.to, params.periodType);
   const title = titleFor(params.kind, periodType);
   try {
     const { content, fileName } = await buildAndRender(params, format, opts.settings);
@@ -100,15 +100,15 @@ export async function runScheduledReports(now = new Date()) {
   const periods: { type: "day" | "week" | "month"; params: ReportParams }[] = [];
   if (settings.auto_report_enabled) {
     const day = settings.auto_report_covers === "previous_day" ? addDays(today, -1) : today;
-    periods.push({ type: "day", params: { from: day, to: day, kind: "full" } });
+    periods.push({ type: "day", params: { from: day, to: day, kind: "full", periodType: "day" } });
   }
   if (settings.auto_weekly_enabled) {
     const from = addDays(weekStart(today), -7);
-    periods.push({ type: "week", params: { from, to: addDays(from, 6), kind: "full" } });
+    periods.push({ type: "week", params: { from, to: addDays(from, 6), kind: "full", periodType: "week" } });
   }
   if (settings.auto_monthly_enabled) {
     const lastOfPrev = addDays(today.slice(0, 8) + "01", -1);
-    periods.push({ type: "month", params: { from: lastOfPrev.slice(0, 8) + "01", to: lastOfPrev, kind: "full" } });
+    periods.push({ type: "month", params: { from: lastOfPrev.slice(0, 8) + "01", to: lastOfPrev, kind: "full", periodType: "month" } });
   }
 
   const generated: { id: string; fileName: string; content: Buffer; format: ReportFormat; type: string }[] = [];

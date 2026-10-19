@@ -414,7 +414,7 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
 
   it("weekly and monthly reports cover the right dates and are named accordingly", async () => {
     const w = await owner.get("/api/reports/export?format=csv&preset=this_week");
-    expect(w.headers.get("content-disposition")).toMatch(/mystore-weekly-report-\d{4}-\d{2}-\d{2}_to_/);
+    expect(w.headers.get("content-disposition")).toMatch(/mystore-weekly-report-\d{4}-\d{2}-\d{2}(_to_\d{4}-\d{2}-\d{2})?\.csv/);
     const wText = (w.data as Buffer).toString();
     expect(wText).toContain("Weekly Inventory Report");
     const m = await owner.get(`/api/reports/export?format=csv&preset=month&month=${today.slice(0, 7)}`);

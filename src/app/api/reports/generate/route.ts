@@ -16,6 +16,7 @@ const schema = z.object({
   kind: z.string().optional(),
   item: z.string().optional().nullable(),
   category: z.union([z.string(), z.number()]).optional().nullable(),
+  period_type: z.enum(["week", "month"]).optional().nullable(),
   formats: z.array(z.enum(["pdf", "xlsx", "csv"])).min(1, "Choose at least one format"),
 });
 
@@ -25,7 +26,7 @@ export const POST = handle(async (req) => {
   const body = schema.parse(await readJson(req));
   const settings = await getSettings();
   const params = normaliseParams(
-    { ...body, category: body.category != null ? String(body.category) : null, formats: undefined } as Record<string, string | null | undefined>,
+    { ...body, category: body.category != null ? String(body.category) : null, period_type: body.period_type ?? null, formats: undefined } as Record<string, string | null | undefined>,
     settings.timezone,
   );
   const results = [];

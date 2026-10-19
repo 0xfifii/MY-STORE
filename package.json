@@ -12,7 +12,9 @@
     "db:seed-demo": "tsx scripts/seed-demo.ts",
     "reports:run": "tsx scripts/run-scheduled-reports.ts",
     "test": "vitest run",
-    "test:e2e": "bash scripts/test-e2e.sh"
+    "test:e2e": "bash scripts/test-e2e.sh",
+    "prebuild": "node scripts/embed-migrations.mjs",
+    "predev": "node scripts/embed-migrations.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",

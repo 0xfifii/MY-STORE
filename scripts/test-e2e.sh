@@ -16,7 +16,8 @@ export TEST_BASE_URL="http://localhost:$PORT"
 export TEST_CRON_SECRET="test-cron-secret-1234567890"
 export TEST_MAIL_DIR="$WORK/mail"
 
-cleanup() { kill "${APP_PID:-}" "${SMTP_PID:-}" 2>/dev/null || true; }
+# Kill the whole process group so the Next.js child server doesn't outlive the run.
+cleanup() { kill -- -"${APP_PID:-0}" 2>/dev/null; kill "${APP_PID:-}" "${SMTP_PID:-}" 2>/dev/null || true; }
 trap cleanup EXIT
 
 ./scripts/reset-db.sh "$TEST_DB"
@@ -24,7 +25,11 @@ node tests/smtp-sink.mjs 2526 "$TEST_MAIL_DIR" > "$WORK/smtp.log" 2>&1 & SMTP_PI
 
 DISABLE_INTERNAL_SCHEDULER=true DATABASE_URL="$TEST_DATABASE_URL" APP_URL="$TEST_BASE_URL" CRON_SECRET="$TEST_CRON_SECRET" \
 SMTP_HOST=127.0.0.1 SMTP_PORT=2526 SMTP_SECURE=false SMTP_FROM="MY STORE <reports@mystore.test>" \
-  npx next start -p "$PORT" > "$WORK/server.log" 2>&1 & APP_PID=$!
+  setsid npx next start -p "$PORT" > "$WORK/server.log" 2>&1 & APP_PID=$!
+sleep 0.5
+if curl -sf "$TEST_BASE_URL/api/health" >/dev/null 2>&1 && ! kill -0 "$APP_PID" 2>/dev/null; then
+  echo "Port $PORT is already in use by another server — stop it first." >&2; exit 1
+fi
 
 for _ in $(seq 1 40); do curl -sf "$TEST_BASE_URL/api/health" >/dev/null && break; sleep 0.5; done
 npx vitest run "$@"

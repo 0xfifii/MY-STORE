@@ -1,7 +1,7 @@
 import "server-only";
 import type { PoolClient } from "pg";
 import type { z } from "zod";
-import { pool, query, queryOne, withTransaction } from "./db";
+import { db, query, queryOne, withTransaction } from "./db";
 import { audit } from "./audit";
 import { AppError } from "./errors";
 import type { itemCreateSchema, itemUpdateSchema, stockInSchema, stockOutSchema } from "./validation";
@@ -394,7 +394,7 @@ export async function recordStockIn(input: z.infer<typeof stockInSchema>, userId
 }
 
 export async function recordStockOut(input: z.infer<typeof stockOutSchema>, userId: string) {
-  const { rows } = await pool().query(
+  const { rows } = await (await db()).query(
     "SELECT id::text, txn_no FROM stock_out($1,$2,$3,$4,$5,$6,$7,$8,$9)",
     [input.item_id, input.quantity, input.unit_id, input.reason, input.recipient, input.reference, input.notes,
      userId, input.request_id],

@@ -51,8 +51,10 @@ export function ReportControls({
     else update({ preset: v, from: null, to: null, month: null });
   };
 
+  const periodType = preset === "week" ? "week" : preset === "month" ? "month" : null;
   const exportQuery = new URLSearchParams({
     from: resolved.from, to: resolved.to, kind: resolved.kind,
+    ...(periodType ? { period_type: periodType } : {}),
     ...(resolved.item ? { item: resolved.item } : {}), ...(resolved.category ? { category: resolved.category } : {}),
   });
 
@@ -61,7 +63,7 @@ export function ReportControls({
     try {
       await api("/api/reports/generate", {
         method: "POST",
-        json: { from: resolved.from, to: resolved.to, kind: resolved.kind, item: resolved.item, category: resolved.category, formats: ["pdf", "xlsx", "csv"] },
+        json: { from: resolved.from, to: resolved.to, kind: resolved.kind, item: resolved.item, category: resolved.category, period_type: periodType, formats: ["pdf", "xlsx", "csv"] },
       });
       toast.success("Report saved", "PDF, Excel and CSV copies are in Report History.");
       router.refresh();
