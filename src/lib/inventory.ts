@@ -366,6 +366,37 @@ export async function setItemArchived(id: string, archived: boolean, userId: str
   await audit(userId, archived ? "item.archive" : "item.restore", "item", id);
 }
 
+/**
+ * Permanently deletes an item and every stock movement recorded for it. Other items are not
+ * affected (balances are per item). The deletion itself is kept in the audit log with a summary.
+ */
+export async function deleteItem(id: string, userId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) throw new AppError("ITEM_NOT_FOUND", "Item not found.", 404);
+  return withTransaction(async (client) => {
+    const { rows } = await client.query<{ name: string; sku: string; quantity: string; stock_value: string }>(
+      "SELECT name, sku, quantity::text, stock_value::text FROM items WHERE id = $1 FOR UPDATE",
+      [id],
+    );
+    if (!rows[0]) throw new AppError("ITEM_NOT_FOUND", "Item not found.", 404);
+    const stats = await client.query<{ n: string; qin: string; qout: string }>(
+      `SELECT count(*)::text AS n,
+              coalesce(sum(quantity) FILTER (WHERE direction = 1), 0)::text AS qin,
+              coalesce(sum(quantity) FILTER (WHERE direction = -1), 0)::text AS qout
+         FROM stock_transactions WHERE item_id = $1`,
+      [id],
+    );
+    await client.query("SELECT set_config('mystore.deleting_item', $1, true)", [id]);
+    await client.query("DELETE FROM stock_transactions WHERE item_id = $1", [id]);
+    await client.query("SELECT set_config('mystore.deleting_item', '', true)");
+    await client.query("DELETE FROM items WHERE id = $1", [id]);
+    await audit(userId, "item.delete", "item", id, {
+      name: rows[0].name, sku: rows[0].sku, balance: rows[0].quantity, value: rows[0].stock_value,
+      transactions_removed: Number(stats.rows[0].n), total_in: stats.rows[0].qin, total_out: stats.rows[0].qout,
+    }, client);
+    return { name: rows[0].name, transactions_removed: Number(stats.rows[0].n) };
+  });
+}
+
 export async function upsertItemConversion(itemId: string, unitId: number, factor: string, userId: string) {
   const item = await queryOne<{ unit_id: number }>("SELECT unit_id FROM items WHERE id = $1", [itemId]);
   if (!item) throw new AppError("ITEM_NOT_FOUND", "Item not found.", 404);

@@ -223,6 +223,10 @@ with sync_playwright() as p:
     shot(page, "05-inventory-desktop")
     page.goto(BASE + "/audit")
     shot(page, "37-usage")
+    page.goto(BASE + "/audit?group=week&range=12w&spend=category")
+    shot(page, "37b-usage-week")
+    page.goto(BASE + "/audit?group=month&range=12m&spend=supplier")
+    shot(page, "37c-usage-month")
     page.goto(BASE + "/audit?tab=changes")
     shot(page, "38-changes")
     page.goto(BASE + "/reports")
@@ -237,6 +241,17 @@ with sync_playwright() as p:
     for path in ["/dashboard", "/inventory", "/reports", "/transactions", f"/items/{sugar}", "/audit", "/workers", "/users"]:
         page.goto(BASE + path)
         no_hscroll(page, f"desktop {path}")
+
+    # Delete an item from its card (owner): confirm box must be ticked first
+    page.goto(BASE + "/inventory")
+    page.get_by_label("Delete Liquid detergent").click() if page.get_by_label("Delete Liquid detergent").count() else None
+    if page.get_by_role("dialog").count():
+        shot(page, "40-delete-dialog")
+        expect(page.get_by_role("button", name="Delete for good")).to_be_disabled()
+        page.get_by_role("dialog").get_by_role("checkbox").check()
+        page.get_by_role("button", name="Delete for good").click()
+        expect(page.get_by_text("deleted").first).to_be_visible()
+        shot(page, "41-after-delete")
 
     # ---- Tablet
     tab = browser.new_context(viewport={"width": 820, "height": 1180}, storage_state=ctx.storage_state())

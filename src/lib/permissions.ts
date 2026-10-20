@@ -7,6 +7,7 @@ export type Action =
   | "stock.move"          // either stock in or stock out (derived)
   | "item.write"          // add / edit items
   | "item.archive"
+  | "item.delete"         // permanently delete items and their history
   | "catalog.write"       // categories, suppliers, custom units
   | "workers.manage"      // add / edit the workers list
   | "conversion.global"   // global unit conversion rules
@@ -27,11 +28,12 @@ export const TOGGLEABLE: { action: Exclude<Action, "view" | "stock.move" | "sett
   { action: "audit.view", label: "See usage analysis and audit log", hint: "Who took what, when, and every change made" },
   { action: "txn.reverse", label: "Reverse wrong transactions", hint: "Corrections are recorded with a reason" },
   { action: "item.archive", label: "Archive items, categories and suppliers", hint: "" },
+  { action: "item.delete", label: "Delete items permanently", hint: "Removes the item and all its stock history" },
 ];
 
 export const ROLE_DEFAULTS: Record<Role, Action[]> = {
   owner: [
-    "view", "stock.in", "stock.out", "item.write", "item.archive", "catalog.write", "workers.manage", "conversion.global",
+    "view", "stock.in", "stock.out", "item.write", "item.archive", "item.delete", "catalog.write", "workers.manage", "conversion.global",
     "txn.reverse", "report.generate", "audit.view", "settings.write", "users.manage",
   ],
   staff: ["view", "stock.in", "stock.out", "item.write", "catalog.write", "workers.manage", "report.generate"],

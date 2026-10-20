@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight, CheckCircle2, RefreshCcw,
+  CheckCircle2, RefreshCcw,
 } from "lucide-react";
 import clsx from "clsx";
 import { ItemPicker, type PickerItem } from "./item-picker";
@@ -265,15 +265,14 @@ export function StockMoveForm({
             </button>
           )}
         </div>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-4">
+        <div className="grid grid-cols-2 items-center divide-x divide-white/80 px-4 py-4">
           <div>
             <p className="text-xs text-muted">Available now</p>
             <p className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
               {formatQty(item.quantity)}<span className="ml-1 text-base font-semibold text-muted">{base}</span>
             </p>
           </div>
-          <ArrowRight className={clsx("size-6", after ? "text-burgundy" : "text-line")} aria-hidden />
-          <div className="text-right">
+          <div className="pl-4 text-right">
             <p className="text-xs text-muted">After this {mode === "in" ? "receipt" : "issue"}</p>
             <p className={clsx("font-display text-3xl font-bold tracking-tight sm:text-4xl", exceeds ? "text-bad" : after ? "text-burgundy" : "text-line")}>
               {after && !exceeds ? formatQty(after) : "—"}<span className="ml-1 text-base font-semibold text-muted">{base}</span>

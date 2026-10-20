@@ -121,7 +121,7 @@ export async function categoryUsage(r: Range) {
 export type PieSlice = { label: string; value: number; detail: string; href?: string };
 
 /** Top N items by value plus an "Other items" slice. */
-export function toSlices(items: ItemUsage[], symbol: string, n = 5): PieSlice[] {
+export function toSlices(items: ItemUsage[], symbol: string, n = 6): PieSlice[] {
   const fmt = (v: number) => `${symbol}${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
   const top: PieSlice[] = items.slice(0, n).map((i) => ({
     label: i.name,
@@ -170,7 +170,7 @@ export async function auditEntries(r: Range, f: { userId?: string | null; area?:
   const args = [r.from, r.to, r.tz, f.userId ?? null, f.area ?? null];
   const rows = await query<AuditEntry>(
     `SELECT a.id::text, a.action, a.entity_type, a.entity_id, a.details, a.created_at, u.name AS user_name,
-            CASE WHEN a.entity_type = 'item' THEN (SELECT name || ' (' || sku || ')' FROM items WHERE id::text = a.entity_id)
+            CASE WHEN a.entity_type = 'item' THEN coalesce((SELECT name || ' (' || sku || ')' FROM items WHERE id::text = a.entity_id), (a.details->>'name') || ' (deleted)')
                  WHEN a.entity_type = 'stock_transaction' THEN (SELECT st.txn_no || ' · ' || i.name FROM stock_transactions st JOIN items i ON i.id = st.item_id WHERE st.id::text = a.entity_id)
                  WHEN a.entity_type = 'user' THEN (SELECT name FROM users WHERE id::text = a.entity_id)
                  WHEN a.entity_type = 'worker' THEN (SELECT name FROM workers WHERE id::text = a.entity_id)
@@ -183,4 +183,92 @@ export async function auditEntries(r: Range, f: { userId?: string | null; area?:
   );
   const total = await queryOne<{ n: number }>(`SELECT count(*)::int AS n FROM audit_logs a WHERE ${where}`, args);
   return { rows, total: total?.n ?? 0 };
+}
+
+export type Grouping = "day" | "week" | "month";
+export type PeriodMoney = { period: string; in_value: string; out_value: string; in_count: number; out_count: number };
+type MoneyFilter = { itemId?: string | null; categoryId?: number | null; workerId?: number | null };
+
+/**
+ * Amount stocked in and stocked out per day, week (Monday start) or month. Reversed transactions are
+ * left out on both sides, so a mistake and its correction cancel.
+ */
+export async function moneyByPeriod(r: Range, group: Grouping, f: MoneyFilter = {}) {
+  const step = { day: "1 day", week: "1 week", month: "1 month" }[group];
+  return query<PeriodMoney>(
+    `WITH p AS (
+       SELECT generate_series(date_trunc('${group}', $1::date::timestamp), date_trunc('${group}', $2::date::timestamp), interval '${step}')::date AS start
+     ),
+     t AS (
+       SELECT date_trunc('${group}', (t.occurred_at AT TIME ZONE $3))::date AS start, t.txn_type, t.total_value
+         FROM stock_transactions t JOIN items i ON i.id = t.item_id
+        WHERE t.txn_type IN ('stock_in','stock_out')
+          AND t.occurred_at >= ($1::date)::timestamp AT TIME ZONE $3 AND t.occurred_at < (($2::date) + 1)::timestamp AT TIME ZONE $3
+          AND NOT EXISTS (SELECT 1 FROM stock_transactions rv WHERE rv.reverses_id = t.id)
+          AND ($4::uuid IS NULL OR t.item_id = $4::uuid)
+          AND ($5::int IS NULL OR i.category_id = $5::int)
+          AND ($6::int IS NULL OR t.txn_type = 'stock_in' OR t.worker_id = $6::int)
+     )
+     SELECT to_char(p.start, 'YYYY-MM-DD') AS period,
+            coalesce(sum(t.total_value) FILTER (WHERE t.txn_type='stock_in'), 0)::numeric(20,2)::text AS in_value,
+            coalesce(sum(t.total_value) FILTER (WHERE t.txn_type='stock_out'), 0)::numeric(20,2)::text AS out_value,
+            count(t.*) FILTER (WHERE t.txn_type='stock_in')::int AS in_count,
+            count(t.*) FILTER (WHERE t.txn_type='stock_out')::int AS out_count
+       FROM p LEFT JOIN t ON t.start = p.start
+      GROUP BY p.start ORDER BY p.start`,
+    [r.from, r.to, r.tz, f.itemId ?? null, f.categoryId ?? null, f.workerId ?? null],
+  );
+}
+
+export type SpendBy = "item" | "category" | "supplier";
+export type SpendRow = { key: string; label: string; value: string; count: number; qty: string | null; unit: string | null; href: string | null };
+
+/** Where the money went: stock bought (stock in, excluding opening stock and reversed entries). */
+export async function spendAnalysis(r: Range, by: SpendBy, f: MoneyFilter = {}) {
+  const group = {
+    item: { key: "i.id::text", label: "i.name", extra: "trim_scale(sum(t.quantity))::text AS qty, min(u.symbol) AS unit, '/items/' || i.id::text AS href", by: "i.id, i.name" },
+    category: { key: "coalesce(c.id::text, '0')", label: "coalesce(c.name, 'Uncategorised')", extra: "NULL::text AS qty, NULL::text AS unit, NULL::text AS href", by: "c.id, c.name" },
+    supplier: { key: "coalesce(t.supplier_id::text, coalesce(t.supplier_name, ''))", label: "coalesce(s.name, t.supplier_name, 'No supplier recorded')", extra: "NULL::text AS qty, NULL::text AS unit, NULL::text AS href", by: "t.supplier_id, s.name, t.supplier_name" },
+  }[by];
+  const where = `t.txn_type = 'stock_in' AND NOT t.is_opening
+          AND t.occurred_at >= ($1::date)::timestamp AT TIME ZONE $3 AND t.occurred_at < (($2::date) + 1)::timestamp AT TIME ZONE $3
+          AND NOT EXISTS (SELECT 1 FROM stock_transactions rv WHERE rv.reverses_id = t.id)
+          AND ($4::uuid IS NULL OR t.item_id = $4::uuid)
+          AND ($5::int IS NULL OR i.category_id = $5::int)`;
+  const args = [r.from, r.to, r.tz, f.itemId ?? null, f.categoryId ?? null];
+  const [rows, totals] = await Promise.all([
+    query<SpendRow>(
+      `SELECT ${group.key} AS key, ${group.label} AS label, sum(t.total_value)::numeric(20,2)::text AS value, count(*)::int AS count, ${group.extra}
+         FROM stock_transactions t JOIN items i ON i.id = t.item_id JOIN units u ON u.id = i.unit_id
+         LEFT JOIN categories c ON c.id = i.category_id LEFT JOIN suppliers s ON s.id = t.supplier_id
+        WHERE ${where}
+        GROUP BY ${group.by} ORDER BY sum(t.total_value) DESC, 2`,
+      args,
+    ),
+    queryOne<{ spent: string; receipts: number; opening: string }>(
+      `SELECT coalesce(sum(t.total_value) FILTER (WHERE NOT t.is_opening), 0)::numeric(20,2)::text AS spent,
+              count(*) FILTER (WHERE NOT t.is_opening)::int AS receipts,
+              coalesce(sum(t.total_value) FILTER (WHERE t.is_opening), 0)::numeric(20,2)::text AS opening
+         FROM stock_transactions t JOIN items i ON i.id = t.item_id
+        WHERE t.txn_type = 'stock_in'
+          AND t.occurred_at >= ($1::date)::timestamp AT TIME ZONE $3 AND t.occurred_at < (($2::date) + 1)::timestamp AT TIME ZONE $3
+          AND NOT EXISTS (SELECT 1 FROM stock_transactions rv WHERE rv.reverses_id = t.id)
+          AND ($4::uuid IS NULL OR t.item_id = $4::uuid)
+          AND ($5::int IS NULL OR i.category_id = $5::int)`,
+      args,
+    ),
+  ]);
+  return { rows, spent: totals!.spent, receipts: totals!.receipts, opening: totals!.opening };
+}
+
+/** Top N rows by value plus an "Other" slice — for any money breakdown. */
+export function moneySlices(rows: { label: string; value: string; detail?: string; href?: string | null }[], symbol: string, n = 6): PieSlice[] {
+  const fmt = (v: number) => `${symbol}${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  const top: PieSlice[] = rows.slice(0, n).map((x) => ({ label: x.label, value: Number(x.value), detail: x.detail ?? fmt(Number(x.value)), href: x.href ?? undefined }));
+  const rest = rows.slice(n);
+  if (rest.length) {
+    const v = rest.reduce((a, x) => a + Number(x.value), 0);
+    top.push({ label: `Other items (${rest.length})`, value: v, detail: fmt(v) });
+  }
+  return top;
 }

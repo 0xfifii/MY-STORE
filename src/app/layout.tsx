@@ -6,7 +6,10 @@ import { ToastProvider } from "@/components/ui/toast";
 export const metadata: Metadata = {
   title: { default: "MY STORE", template: "%s · MY STORE" },
   description: "Inventory management for MY STORE",
-  icons: { icon: "/icon.svg" },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: "/apple-touch-icon.png",
+  },
   manifest: "/manifest.webmanifest",
 };
 

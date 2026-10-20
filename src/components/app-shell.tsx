@@ -10,6 +10,7 @@ import {
   HardHat, ChartPie,
 } from "lucide-react";
 import { useApp } from "./app-context";
+import { LogoMark } from "./logo";
 import { StockDialogProvider } from "./stock-dialog";
 import { api } from "@/lib/client";
 import { ROLE_LABELS, type Action } from "@/lib/permissions";
@@ -71,7 +72,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile top bar */}
       <header className="glass-strong sticky top-2 z-30 mx-3 mt-2 flex h-14 items-center justify-between rounded-full pl-5 pr-2 lg:hidden">
-        <Link href="/dashboard" className="text-lg font-bold tracking-tight text-claret">
+        <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold tracking-tight text-claret">
+          <LogoMark className="size-8" />
           {app.storeName}
         </Link>
         <button onClick={() => setDrawer(true)} className="flex size-10 items-center justify-center rounded-full bg-night text-white" aria-label="Open menu">
@@ -162,9 +164,12 @@ function SidebarNav({ pathname }: { pathname: string }) {
   };
   return (
     <div className="flex h-full flex-col overflow-y-auto px-3 py-5">
-      <Link href="/dashboard" className="px-3">
-        <span className="text-2xl font-bold tracking-tight">{app.storeName}</span>
-        <span className="block text-xs text-white/55">Inventory</span>
+      <Link href="/dashboard" className="flex items-center gap-3 px-2">
+        <LogoMark className="size-11 shrink-0 rounded-2xl ring-1 ring-white/25" />
+        <span className="min-w-0">
+          <span className="block truncate text-xl font-bold leading-tight tracking-tight">{app.storeName}</span>
+          <span className="block text-xs text-white/55">Inventory</span>
+        </span>
       </Link>
       {group("Daily work", MAIN)}
       {group("Reports", REPORTS)}

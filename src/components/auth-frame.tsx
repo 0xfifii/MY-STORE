@@ -2,6 +2,8 @@
  * Sign-in / set-up layout in the style of the reference: a frosted-glass form card, a white
  * "today" card with a soft burgundy orb, and a dark card underneath.
  */
+import { LogoMark } from "./logo";
+
 export function AuthFrame({
   storeName, title, subtitle, corner, children,
 }: {
@@ -28,7 +30,7 @@ export function AuthFrame({
         <div className="flex flex-col gap-4">
           <section className="glass rounded-[28px] p-6 sm:p-8">
             <div className="flex items-center justify-between">
-              <span className="text-[15px] font-medium text-muted">{storeName}</span>
+              <span className="flex items-center gap-2 text-[15px] font-semibold text-ink"><LogoMark className="size-8" />{storeName}</span>
               {corner}
             </div>
             <h1 className="mt-10 text-[32px] font-medium leading-none tracking-tight">{title}</h1>
@@ -61,11 +63,7 @@ export function AuthFrame({
                 at 7:00
               </p>
               <div className="mt-8 flex flex-col items-center gap-1 text-xs font-semibold">
-                <svg viewBox="0 0 24 24" className="size-6 text-ink" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden>
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <path key={i} d="M12 12 L12 3" transform={`rotate(${i * 30} 12 12)`} />
-                  ))}
-                </svg>
+                <LogoMark className="size-7" />
                 {storeName}
               </div>
             </div>

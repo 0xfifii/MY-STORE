@@ -1,7 +1,7 @@
 import { handle, ok, readJson } from "@/lib/api";
 import { requireApiUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
-import { getItem, getItemUnits, updateItem } from "@/lib/inventory";
+import { deleteItem, getItem, getItemUnits, updateItem } from "@/lib/inventory";
 import { itemUpdateSchema } from "@/lib/validation";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -20,4 +20,10 @@ export const PATCH = handle<Ctx>(async (req, { params }) => {
   const input = itemUpdateSchema.parse(await readJson(req));
   await updateItem(id, input, user.id);
   return ok();
+});
+
+export const DELETE = handle<Ctx>(async (_req, { params }) => {
+  const user = await requireApiUser("item.delete");
+  const { id } = await params;
+  return ok(await deleteItem(id, user.id));
 });

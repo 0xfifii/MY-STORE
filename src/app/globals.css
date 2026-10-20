@@ -111,3 +111,9 @@ input[type="number"]::-webkit-outer-spin-button {
   to { transform: none; opacity: 1; }
 }
 .animate-toast { animation: toast-in 180ms ease-out; }
+
+/* No disclosure arrows on expandable rows, and no native dropdown arrows. */
+summary { list-style: none; }
+summary::-webkit-details-marker { display: none; }
+select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none; }
+select::-ms-expand { display: none; }

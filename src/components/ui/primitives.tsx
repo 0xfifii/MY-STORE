@@ -87,7 +87,7 @@ export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<H
   ref,
 ) {
   return (
-    <select ref={ref} className={clsx(inputClass, "pr-8", className)} {...rest}>
+    <select ref={ref} className={clsx(inputClass, "appearance-none pr-4", className)} {...rest}>
       {children}
     </select>
   );
@@ -130,11 +130,6 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {back && (
-          <Link href={back.href} className="mb-2 inline-block text-sm font-medium text-burgundy hover:underline">
-            ← {back.label}
-          </Link>
-        )}
         <h1 className="font-display text-[28px] font-medium leading-tight tracking-tight text-ink sm:text-[34px]">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
@@ -149,7 +144,7 @@ export function Panel({ title, actions, children, className, bodyClass }: {
   return (
     <section className={clsx("glass rounded-[var(--radius-card)]", className)}>
       {(title || actions) && (
-        <div className="flex items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-6">
           {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}
           {actions}
         </div>

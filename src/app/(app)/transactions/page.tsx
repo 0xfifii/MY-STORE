@@ -84,7 +84,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                       <td className="whitespace-nowrap px-4 py-2.5 text-right">{formatUnitCost(t.entered_unit_cost, sym)}</td>
                       <td className="whitespace-nowrap px-4 py-2.5 text-right">{formatMoney(t.total_value, sym)}</td>
                       <td className="max-w-56 px-4 py-2.5 text-xs">
-                        {t.txn_type === "stock_out" && <>{reasonLabel(t.reason)}{t.recipient ? ` → ${t.recipient}` : ""}</>}
+                        {t.txn_type === "stock_out" && <>{reasonLabel(t.reason)}{t.recipient ? ` · to ${t.recipient}` : ""}</>}
                         {t.txn_type === "stock_in" && (t.is_opening ? "Opening stock" : t.supplier_label ?? "")}
                         {t.txn_type === "reversal" && <>Reverses {t.reverses_txn_no}: {t.correction_reason}</>}
                         {t.reference && <span className="block text-muted">Ref {t.reference}</span>}

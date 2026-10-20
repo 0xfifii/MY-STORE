@@ -26,50 +26,74 @@ export function reportToCsv(r: ReportData): Buffer {
   lines.push(["Currency", cur]);
   blank();
 
-  if (r.days.length) {
-    lines.push(["STOCK SHEET (each day's closing balance is the next day's opening stock)"]);
-    const hasAdj = r.days.some((d) => d.rows.some((x) => x.adj !== "0"));
-    for (const d of r.days) {
-      lines.push([d.day]);
-      lines.push(["S/N", "Item name", "Item code", "Unit", "Opening stock", "Stock in", "Stock out", ...(hasAdj ? ["Corrections"] : []), "Closing (Bal)"]);
-      d.rows.forEach((x, i) => lines.push([i + 1, x.name, x.sku, x.unit, x.opening, x.in, x.out, ...(hasAdj ? [x.adj] : []), x.closing]));
-      blank();
-    }
-  }
-
-  lines.push(["SUMMARY"]);
-  lines.push(["Opening inventory value", money(r.summary.opening_value)]);
-  lines.push(["Total stock-in value", money(r.summary.in_value)]);
-  lines.push(["Total stock-out value", money(r.summary.out_value)]);
+  const st = r.stockStatus;
+  lines.push(["GENERAL REPORT — TOTAL STOCK"]);
+  lines.push(["Total stock value (closing)", money(r.summary.closing_value)]);
+  lines.push(["Opening stock value", money(r.summary.opening_value)]);
+  lines.push(["Cost of stock in", money(r.summary.in_value)]);
+  lines.push(["Cost of stock out", money(r.summary.out_value)]);
   if (r.summary.adj_count) lines.push(["Net corrections (reversals)", money(r.summary.adj_value)]);
-  lines.push(["Closing inventory value", money(r.summary.closing_value)]);
+  lines.push(["Net change in stock value", money(Number(r.summary.closing_value) - Number(r.summary.opening_value))]);
+  lines.push(["Items in store", st.items]);
+  lines.push(["Items in stock / low / out", `${st.in_stock} / ${st.low} / ${st.out}`]);
   lines.push(["Stock-in transactions", r.summary.in_count]);
   lines.push(["Stock-out transactions", r.summary.out_count]);
   if (r.summary.adj_count) lines.push(["Correction transactions", r.summary.adj_count]);
   lines.push(["Unique items received or issued", r.summary.items_moved]);
   blank();
 
-  if (sec.stockIn) {
-    lines.push(["STOCK IN"]);
-    lines.push(["Txn ID", "Date & time", "Item", "Item code", "Quantity", "Unit", `Cost per unit (${cur})`, `Total value (${cur})`, "Supplier", "Reference", "Notes", "Recorded by"]);
-    for (const t of r.stockIn) {
-      lines.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, plainQty(t.entered_quantity), t.entered_unit_symbol,
-        cost(t.entered_unit_cost), money(t.total_value), t.is_opening ? "Opening stock" : t.supplier_label, t.reference, t.notes, t.user_name]);
-    }
-    if (!r.stockIn.length) lines.push(["No stock received in this period"]);
-    lines.push(["", "", "", "", "", "", "Total", money(r.summary.in_value)]);
+  const adjAll = r.summary.adj_count > 0;
+  if (sec.balances) {
+    lines.push(["STOCK SHEET — OPENING STOCK / STOCK IN / STOCK OUT AND THEIR COST IN ONE TABLE (closing balance is the next day's opening stock)"]);
+    lines.push(["S/N", "Item name", "Item code", "Category", "Unit", "Opening stock", "Stock in", `Cost of stock in (${cur})`, "Stock out",
+      `Cost of stock out (${cur})`, ...(adjAll ? ["Corrections"] : []), "Closing (Bal)", `Cost per unit (${cur})`, `Closing worth (${cur})`, "Status"]);
+    r.balances.forEach((b, i) => lines.push([i + 1, b.name, b.sku, b.category, b.unit, plainQty(b.opening_qty), plainQty(b.in_qty), money(b.in_value),
+      plainQty(b.out_qty), money(b.out_value), ...(adjAll ? [plainQty(b.adj_qty)] : []), plainQty(b.closing_qty), cost(b.closing_cost),
+      money(b.closing_value), statusText(b.status)]));
+    lines.push(["", "TOTAL", "", "", "", "", "", money(r.summary.in_value), "", money(r.summary.out_value), ...(adjAll ? [""] : []), "", "",
+      money(r.summary.closing_value), ""]);
     blank();
   }
 
-  if (sec.stockOut) {
-    lines.push(["STOCK OUT"]);
-    lines.push(["Txn ID", "Date & time", "Item", "Item code", "Quantity", "Unit", `Cost per unit applied (${cur})`, `Total value (${cur})`, "Reason", "Taken by (worker)", "Destination", "Reference", "Notes", "Recorded by"]);
-    for (const t of r.stockOut) {
-      lines.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, plainQty(t.entered_quantity), t.entered_unit_symbol,
-        cost(t.entered_unit_cost), money(t.total_value), reasonLabel(t.reason), t.worker_name, t.recipient, t.reference, t.notes, t.user_name]);
+  if (r.days.length > 1) {
+    lines.push(["DAY BY DAY"]);
+    const hasAdj = r.days.some((d) => d.rows.some((x) => x.adj !== "0"));
+    for (const d of r.days) {
+      lines.push([d.day]);
+      lines.push(["S/N", "Item name", "Item code", "Unit", "Opening stock", "Stock in", `Cost of stock in (${cur})`, "Stock out",
+        `Cost of stock out (${cur})`, ...(hasAdj ? ["Corrections"] : []), "Closing (Bal)"]);
+      d.rows.forEach((x, i) => lines.push([i + 1, x.name, x.sku, x.unit, x.opening, x.in, money(x.in_value), x.out, money(x.out_value),
+        ...(hasAdj ? [x.adj] : []), x.closing]));
+      lines.push(["", "TOTAL", "", "", "", "", money(d.rows.reduce((a, x) => a + Number(x.in_value), 0)), "",
+        money(d.rows.reduce((a, x) => a + Number(x.out_value), 0))]);
+      blank();
     }
-    if (!r.stockOut.length) lines.push(["No stock issued in this period"]);
-    lines.push(["", "", "", "", "", "", "Total", money(r.summary.out_value)]);
+  }
+
+  if (r.byCategory.length) {
+    lines.push(["TOTAL STOCK BY CATEGORY"]);
+    lines.push(["Category", "Items", `Opening value (${cur})`, `Cost of stock in (${cur})`, `Cost of stock out (${cur})`, `Total stock value (${cur})`]);
+    for (const c of r.byCategory) lines.push([c.category, c.items, money(c.opening_value), money(c.in_value), money(c.out_value), money(c.closing_value)]);
+    lines.push(["TOTAL", r.byCategory.reduce((a, c) => a + c.items, 0), money(r.summary.opening_value), money(r.summary.in_value),
+      money(r.summary.out_value), money(r.summary.closing_value)]);
+    blank();
+  }
+
+  if (sec.stockIn || sec.stockOut) {
+    lines.push([sec.stockIn && sec.stockOut ? "STOCK IN AND STOCK OUT" : sec.stockIn ? "STOCK IN" : "STOCK OUT"]);
+    lines.push(["Txn ID", "Date & time", "Type", "Item", "Item code", "Quantity", "Unit", `Cost per unit (${cur})`,
+      ...(sec.stockIn ? [`Cost of stock in (${cur})`] : []), ...(sec.stockOut ? [`Cost of stock out (${cur})`] : []),
+      "Supplier", "Reason", "Taken by (worker)", "Destination", "Reference", "Notes", "Recorded by"]);
+    for (const t of r.movements) {
+      const isIn = t.txn_type === "stock_in";
+      lines.push([t.txn_no, formatDateTime(t.occurred_at, tz), isIn ? "Stock in" : "Stock out", t.item_name, t.item_sku,
+        plainQty(t.entered_quantity), t.entered_unit_symbol, cost(t.entered_unit_cost),
+        ...(sec.stockIn ? [isIn ? money(t.total_value) : ""] : []), ...(sec.stockOut ? [!isIn ? money(t.total_value) : ""] : []),
+        isIn ? (t.is_opening ? "Opening stock" : t.supplier_label) : "", isIn ? "" : reasonLabel(t.reason), t.worker_name, t.recipient,
+        t.reference, t.notes, t.user_name]);
+    }
+    if (!r.movements.length) lines.push(["No stock moved in this period"]);
+    lines.push(["", "", "", "", "", "", "", "TOTAL", ...(sec.stockIn ? [money(r.summary.in_value)] : []), ...(sec.stockOut ? [money(r.summary.out_value)] : [])]);
     blank();
   }
 
@@ -81,18 +105,6 @@ export function reportToCsv(r: ReportData): Buffer {
         (t.direction > 0 ? "+" : "-") + plainQty(t.quantity), t.unit_symbol, (t.direction > 0 ? "" : "-") + money(t.total_value),
         t.correction_reason, t.user_name]);
     }
-    blank();
-  }
-
-  if (sec.balances) {
-    lines.push(["CLOSING INVENTORY — BALANCE LEFT PER ITEM (closing balance carries forward as the next period's opening stock)"]);
-    lines.push(["Item", "Item code", "Category", "Unit", "Opening balance", "Received", "Issued", "Corrections", "Closing balance",
-      `Cost per unit (${cur})`, `Closing worth (${cur})`, "Status"]);
-    for (const b of r.balances) {
-      lines.push([b.name, b.sku, b.category, b.unit, plainQty(b.opening_qty), plainQty(b.in_qty), plainQty(b.out_qty), plainQty(b.adj_qty),
-        plainQty(b.closing_qty), cost(b.closing_cost), money(b.closing_value), statusText(b.status)]);
-    }
-    lines.push(["", "", "", "", "", "", "", "", "", "Total", money(r.summary.closing_value)]);
     blank();
   }
 

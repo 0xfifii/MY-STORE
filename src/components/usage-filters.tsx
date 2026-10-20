@@ -11,6 +11,8 @@ const RANGES = [
   { v: "30", l: "30 days" },
   { v: "90", l: "90 days" },
   { v: "month", l: "This month" },
+  { v: "12w", l: "12 weeks" },
+  { v: "12m", l: "12 months" },
   { v: "custom", l: "Dates" },
 ];
 

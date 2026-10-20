@@ -3,32 +3,32 @@
 import Link from "next/link";
 import { useState } from "react";
 
-// Categorical slots (validated for colour-blind separation); "Other" is neutral grey.
-const COLORS = ["#9c2a45", "#2a78d6", "#eda100", "#1baf7a", "#6250d6"];
+// Categorical slots (validated for colour-blind separation, adjacent pairs); "Other" is neutral grey.
+const COLORS = ["#9c2a45", "#2a78d6", "#eda100", "#1baf7a", "#6250d6", "#eb6834"];
 const OTHER = "#a69c9e";
 
 export type Slice = { label: string; value: number; detail: string; href?: string };
 
 /** Donut chart: share of the total with a hover readout and a labelled legend (never colour alone). */
-export function PieChart({ slices, centerLabel, centerValue, size = 200, emptyText }: {
-  slices: Slice[]; centerLabel: string; centerValue: string; size?: number; emptyText: string;
+export function PieChart({ slices, centerLabel, centerValue, size = 200, emptyText, big }: {
+  slices: Slice[]; centerLabel: string; centerValue: string; size?: number; emptyText: string; big?: boolean;
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const total = slices.reduce((a, s) => a + s.value, 0);
   if (!slices.length || total <= 0) {
     return <p className="py-10 text-center text-sm text-muted">{emptyText}</p>;
   }
-  const r = 42;
-  const stroke = 16;
+  const stroke = big ? 18 : 16;
+  const r = 50 - stroke / 2 - 2.5; // leaves room for the hover growth so the ring is never clipped
   const C = 2 * Math.PI * r;
   const gap = slices.length > 1 ? 1.2 : 0; // surface gap between slices
   let offset = 0;
-  const color = (i: number, s: Slice) => (s.label.startsWith("Other items") ? OTHER : COLORS[i % COLORS.length]);
+  const color = (i: number, s: Slice) => (s.label.startsWith("Other ") ? OTHER : COLORS[i % COLORS.length]);
   const active = hover !== null ? slices[hover] : null;
 
   return (
-    <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
-      <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <div className={`flex flex-col items-center gap-5 ${big ? "md:flex-row md:gap-8" : "sm:flex-row sm:items-center"}`}>
+      <div className="relative aspect-square shrink-0" style={{ width: size, maxWidth: "100%" }}>
         <svg viewBox="0 0 100 100" className="size-full -rotate-90" role="img" aria-label={`${centerLabel}: ${slices.map((s) => `${s.label} ${Math.round((s.value / total) * 100)}%`).join(", ")}`}>
           <circle cx="50" cy="50" r={r} fill="none" stroke="rgb(255 255 255 / 0.7)" strokeWidth={stroke} />
           {slices.map((s, i) => {
@@ -47,8 +47,8 @@ export function PieChart({ slices, centerLabel, centerValue, size = 200, emptyTe
           })}
         </svg>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-          <span className="text-[11px] leading-tight text-muted">{active ? active.label : centerLabel}</span>
-          <span className="mt-0.5 text-lg font-semibold leading-tight">
+          <span className={`${big ? "text-xs sm:text-sm" : "text-[11px]"} leading-tight text-muted`}>{active ? active.label : centerLabel}</span>
+          <span className={`mt-0.5 font-semibold leading-tight ${big ? "text-xl sm:text-3xl" : "text-lg"}`}>
             {active ? `${Math.round((active.value / total) * 100)}%` : centerValue}
           </span>
         </div>

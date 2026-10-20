@@ -1,6 +1,6 @@
 import { handle } from "@/lib/api";
 import { requireApiUser } from "@/lib/auth";
-import { usageAnalysis, workerItems } from "@/lib/analytics";
+import { moneyByPeriod, spendAnalysis, usageAnalysis, workerItems, type Grouping } from "@/lib/analytics";
 import { getSettings } from "@/lib/settings";
 import { reasonLabel, todayIn, addDays } from "@/lib/format";
 
@@ -24,9 +24,28 @@ export const GET = handle(async (req) => {
     categoryId: /^\d+$/.test(sp.get("category") ?? "") ? Number(sp.get("category")) : null,
   };
   const r = { from, to, tz: s.timezone };
-  const [u, wi] = await Promise.all([usageAnalysis(r, f), workerItems(r, f)]);
+  const group: Grouping = sp.get("group") === "week" || sp.get("group") === "month" ? (sp.get("group") as Grouping) : "day";
+  const [u, wi, periods, byItem, byCat, bySup] = await Promise.all([
+    usageAnalysis(r, f), workerItems(r, f), moneyByPeriod(r, group, f),
+    spendAnalysis(r, "item", f), spendAnalysis(r, "category", f), spendAnalysis(r, "supplier", f),
+  ]);
+  const cur = s.currency_code;
   const L: unknown[][] = [];
-  L.push([s.store_name], ["Usage analysis", `${from} to ${to}`], [], ["Value taken", u.totals.value], ["Times stock was taken", u.totals.takes], []);
+  L.push([s.store_name], ["Usage and money analysis", `${from} to ${to}`], [],
+    [`Money spent on stock (${cur})`, byItem.spent], ["Purchases", byItem.receipts], [`Value of stock used (${cur})`, u.totals.value], ["Times stock was taken", u.totals.takes], []);
+  L.push([`AMOUNT STOCKED IN AND OUT PER ${group.toUpperCase()}`], [group === "day" ? "Day" : group === "week" ? "Week starting" : "Month starting",
+    `Stocked in (${cur})`, `Stocked out (${cur})`, `Difference (${cur})`, "Receipts", "Issues"]);
+  periods.forEach((p) => L.push([p.period, p.in_value, p.out_value, (Number(p.in_value) - Number(p.out_value)).toFixed(2), p.in_count, p.out_count]));
+  L.push(["TOTAL", periods.reduce((a, p) => a + Number(p.in_value), 0).toFixed(2), periods.reduce((a, p) => a + Number(p.out_value), 0).toFixed(2)], []);
+  const spendBlock = (title: string, rows: typeof byItem.rows, withQty: boolean) => {
+    L.push([title], ["S/N", "Name", ...(withQty ? ["Quantity bought", "Unit"] : []), `Amount spent (${cur})`, "Share %", "Purchases"]);
+    const tot = Number(byItem.spent) || 1;
+    rows.forEach((x, i) => L.push([i + 1, x.label, ...(withQty ? [x.qty, x.unit] : []), x.value, ((Number(x.value) / tot) * 100).toFixed(1), x.count]));
+    L.push([]);
+  };
+  spendBlock("HOW MONEY IS SPENT — BY ITEM", byItem.rows, true);
+  spendBlock("HOW MONEY IS SPENT — BY CATEGORY", byCat.rows, false);
+  spendBlock("HOW MONEY IS SPENT — BY SUPPLIER", bySup.rows, false);
   L.push(["ITEMS TAKEN (most to least)"], ["S/N", "Item", "Code", "Category", "Quantity", "Unit", `Value (${s.currency_code})`, "Times taken", "Workers"]);
   u.items.forEach((x, i) => L.push([i + 1, x.name, x.sku, x.category, x.qty, x.unit, x.value, x.takes, x.workers]));
   L.push([], ["BY WORKER"], ["S/N", "Worker", "Department", "Times taken", "Different items", `Value (${s.currency_code})`]);

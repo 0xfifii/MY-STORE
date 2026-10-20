@@ -44,6 +44,54 @@ export function ArchiveButton({ itemId, archived, name, quantity }: { itemId: st
   );
 }
 
+export function DeleteItemButton({ itemId, name, quantity, unit, compact, afterHref }: {
+  itemId: string; name: string; quantity: string; unit: string; compact?: boolean; afterHref?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [sure, setSure] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
+  const go = async () => {
+    setBusy(true);
+    try {
+      const d = await api<{ name: string; transactions_removed: number }>(`/api/items/${itemId}`, { method: "DELETE" });
+      toast.success(`${d.name} deleted`, d.transactions_removed ? `${d.transactions_removed} stock record${d.transactions_removed === 1 ? "" : "s"} removed with it.` : undefined);
+      setOpen(false);
+      if (afterHref) router.replace(afterHref);
+      router.refresh();
+    } catch (e) { toast.error("Couldn't delete item", (e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <>
+      {compact ? (
+        <button type="button" onClick={() => { setSure(false); setOpen(true); }} aria-label={`Delete ${name}`}
+          className="flex size-8 items-center justify-center rounded-full bg-white/80 text-muted ring-1 ring-white hover:bg-bad-bg hover:text-bad">
+          <Trash2 className="size-3.5" />
+        </button>
+      ) : (
+        <Button variant="outline-danger" onClick={() => { setSure(false); setOpen(true); }}><Trash2 className="size-4" /> Delete</Button>
+      )}
+      <Modal open={open} onClose={() => setOpen(false)} title={`Delete ${name}?`} busy={busy}
+        footer={<><Button variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="danger" onClick={go} loading={busy} disabled={!sure}>Delete for good</Button></>}>
+        <p className="text-sm">
+          The item and <strong>all of its stock in and stock out records</strong> will be removed. Reports, totals and
+          charts will no longer include it. This can&apos;t be undone.
+        </p>
+        {Number(quantity) > 0 && (
+          <p className="mt-3 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">It still has {formatQty(quantity)} {unit} in stock.</p>
+        )}
+        <p className="mt-3 text-sm text-muted">If you only want to hide it, use Archive instead — its history stays in reports.</p>
+        <label className="mt-4 flex items-start gap-2.5 text-sm font-medium">
+          <input type="checkbox" checked={sure} onChange={(e) => setSure(e.target.checked)} className="mt-0.5 size-4 accent-[var(--color-bad)]" />
+          Yes, delete {name} and its history
+        </label>
+      </Modal>
+    </>
+  );
+}
+
 export function ReverseButton({ txnId, txnNo, summary }: { txnId: string; txnNo: string; summary: string }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");

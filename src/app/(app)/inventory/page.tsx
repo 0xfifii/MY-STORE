@@ -3,6 +3,7 @@ import { Boxes, Plus, Download, Pencil } from "lucide-react";
 import { EmptyState, LinkButton, PageHeader, StatusBadge } from "@/components/ui/primitives";
 import { ListFilters, Pagination } from "@/components/list-filters";
 import { StockButtons } from "@/components/stock-dialog";
+import { DeleteItemButton } from "@/components/item-actions";
 import { requirePageUser } from "@/lib/auth";
 import { listCategories } from "@/lib/catalog";
 import { listItems, type ItemListParams } from "@/lib/inventory";
@@ -115,12 +116,15 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
 
                 <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/80 pt-4">
                   <StockButtons itemId={it.id} name={it.name} />
-                  {can(user, "item.write") && (
-                    <Link href={`/items/${it.id}/edit`} aria-label={`Edit ${it.name}`}
-                      className="flex size-8 items-center justify-center rounded-full bg-white/80 text-muted ring-1 ring-white hover:text-burgundy">
-                      <Pencil className="size-3.5" />
-                    </Link>
-                  )}
+                  <div className="flex gap-1.5">
+                    {can(user, "item.write") && (
+                      <Link href={`/items/${it.id}/edit`} aria-label={`Edit ${it.name}`}
+                        className="flex size-8 items-center justify-center rounded-full bg-white/80 text-muted ring-1 ring-white hover:text-burgundy">
+                        <Pencil className="size-3.5" />
+                      </Link>
+                    )}
+                    {can(user, "item.delete") && <DeleteItemButton compact itemId={it.id} name={it.name} quantity={it.quantity} unit={it.unit_symbol} />}
+                  </div>
                 </div>
               </li>
             );

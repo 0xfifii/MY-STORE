@@ -7,7 +7,7 @@ import { statusText } from "./csv";
 const BURGUNDY = "FF7A1F35";
 const LIGHT = "FFF7ECEF";
 
-/** Formatted workbook: Summary, Stock In, Stock Out, Corrections, Closing Inventory, Low Stock. */
+/** Formatted workbook: General Report, Stock Sheet, Stock In & Out, Corrections, Low Stock, By Worker, Most Stocked. */
 export async function reportToXlsx(r: ReportData): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = r.settings.store_name;
@@ -19,97 +19,138 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
   const qtyFmt = "#,##0.######";
   const sec = sectionsFor(r.params.kind);
 
-  // ---- Stock Sheet: one block per day — S/N, item, opening, in, out, closing (bal)
-  if (r.days.length) {
-    const ws = wb.addWorksheet("Stock Sheet", { views: [{ showGridLines: false }] });
-    const hasAdj = r.days.some((d) => d.rows.some((x) => x.adj !== "0"));
-    ws.columns = [
-      { width: 6 }, { width: 32 }, { width: 13 }, { width: 8 }, { width: 15 }, { width: 13 }, { width: 13 },
-      ...(hasAdj ? [{ width: 13 }] : []), { width: 17 },
-    ];
-    const t = ws.addRow([r.settings.store_name]);
-    t.font = { bold: true, size: 16, color: { argb: BURGUNDY } };
-    ws.addRow([`Stock sheet · ${r.periodLabel}`]).font = { bold: true, size: 12 };
-    ws.addRow(["Each day's closing balance is the next day's opening stock."]).font = { italic: true, size: 9, color: { argb: "FF666666" } };
-    const lastCol = hasAdj ? 9 : 8;
-    for (const d of r.days) {
-      ws.addRow([]);
-      const dh = ws.addRow([new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })]);
-      ws.mergeCells(dh.number, 1, dh.number, lastCol);
-      dh.font = { bold: true, size: 12, color: { argb: BURGUNDY } };
-      dh.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: LIGHT } };
-      styleHeader(ws.addRow(["S/N", "Item name", "Item code", "Unit", "Opening stock", "Stock in", "Stock out", ...(hasAdj ? ["Corrections"] : []), "Closing (Bal)"]));
-      d.rows.forEach((x, i) => {
-        const row = ws.addRow([i + 1, x.name, x.sku, x.unit, Number(x.opening), Number(x.in), Number(x.out), ...(hasAdj ? [Number(x.adj)] : []), Number(x.closing)]);
-        for (let c = 5; c <= lastCol; c++) row.getCell(c).numFmt = qtyFmt;
-        row.getCell(lastCol).font = { bold: true };
-        row.eachCell((c) => (c.border = { bottom: { style: "hair", color: { argb: "FFDDDDDD" } } }));
-      });
-    }
-  }
+  const st = r.stockStatus;
+  const adjAll = r.summary.adj_count > 0;
 
-  // ---- Summary
-  const s = wb.addWorksheet("Summary", { views: [{ showGridLines: false }] });
-  s.columns = [{ width: 38 }, { width: 28 }];
-  s.addRow([r.settings.store_name]).font = { bold: true, size: 18, color: { argb: BURGUNDY } };
-  s.addRow([r.title]).font = { bold: true, size: 13 };
-  s.addRow(["Reporting period", r.periodLabel]);
-  if (r.scopeLabel) s.addRow(["Scope", r.scopeLabel]);
-  s.addRow(["Generated", formatDateTime(r.generatedAt, tz)]);
-  s.addRow(["Currency", `${r.settings.currency_code} (${sym})`]);
-  s.addRow([]);
+  // ---- General report: total stock, money in and out, totals by category
+  const g = wb.addWorksheet("General Report", { views: [{ showGridLines: false }] });
+  g.columns = [{ width: 34 }, { width: 12 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 20 }];
+  g.addRow([r.settings.store_name]).font = { bold: true, size: 18, color: { argb: BURGUNDY } };
+  g.addRow([r.title]).font = { bold: true, size: 13 };
+  g.addRow(["Reporting period", r.periodLabel]);
+  if (r.scopeLabel) g.addRow(["Scope", r.scopeLabel]);
+  g.addRow(["Generated", formatDateTime(r.generatedAt, tz)]);
+  g.addRow(["Currency", `${r.settings.currency_code} (${sym})`]);
+  g.addRow([]);
+  styleHeader(g.addRow(["Total stock", "Value"]));
   const sumRows: [string, number | string, string?][] = [
-    ["Opening inventory value", Number(r.summary.opening_value), moneyFmt],
-    ["Total stock-in value", Number(r.summary.in_value), moneyFmt],
-    ["Total stock-out value", Number(r.summary.out_value), moneyFmt],
+    ["Total stock value (closing)", Number(r.summary.closing_value), moneyFmt],
+    ["Opening stock value", Number(r.summary.opening_value), moneyFmt],
+    ["Cost of stock in", Number(r.summary.in_value), moneyFmt],
+    ["Cost of stock out", Number(r.summary.out_value), moneyFmt],
   ];
-  if (r.summary.adj_count) sumRows.push(["Net corrections (reversals)", Number(r.summary.adj_value), moneyFmt]);
+  if (adjAll) sumRows.push(["Net corrections (reversals)", Number(r.summary.adj_value), moneyFmt]);
   sumRows.push(
-    ["Closing inventory value", Number(r.summary.closing_value), moneyFmt],
-    ["Stock-in transactions", r.summary.in_count],
-    ["Stock-out transactions", r.summary.out_count],
+    ["Net change in stock value", Number(r.summary.closing_value) - Number(r.summary.opening_value), moneyFmt],
+    ["Items in store", st.items], ["Items in stock", st.in_stock], ["Items low", st.low], ["Items out of stock", st.out],
+    ["Stock-in transactions", r.summary.in_count], ["Stock-out transactions", r.summary.out_count],
   );
-  if (r.summary.adj_count) sumRows.push(["Correction transactions", r.summary.adj_count]);
+  if (adjAll) sumRows.push(["Correction transactions", r.summary.adj_count]);
   sumRows.push(["Unique items received or issued", r.summary.items_moved]);
   if (r.topIn[0]) sumRows.push(["Most stocked in", `${r.topIn[0].name} — ${formatQty(r.topIn[0].qty)} ${r.topIn[0].unit}`]);
   if (r.topOut[0]) sumRows.push(["Most stocked out", `${r.topOut[0].name} — ${formatQty(r.topOut[0].qty)} ${r.topOut[0].unit}`]);
-  const head = s.addRow(["Summary", ""]);
-  styleHeader(head);
   for (const [label, val, fmt] of sumRows) {
-    const row = s.addRow([label, val]);
+    const row = g.addRow([label, val]);
     if (fmt) row.getCell(2).numFmt = fmt;
     row.getCell(2).alignment = { horizontal: "right" };
-    if (label.startsWith("Closing")) row.font = { bold: true };
+    if (label.startsWith("Total stock")) row.font = { bold: true, color: { argb: BURGUNDY } };
     row.eachCell((c) => (c.border = { bottom: { style: "hair", color: { argb: "FFDDDDDD" } } }));
   }
-  s.addRow([]);
-  s.addRow(["Closing value = Opening + Stock in − Stock out ± Corrections. Valuation: weighted-average cost."]).font = {
+  g.getColumn(2).width = 22;
+  if (r.byCategory.length) {
+    g.addRow([]);
+    g.addRow(["Total stock by category"]).font = { bold: true, size: 12, color: { argb: BURGUNDY } };
+    styleHeader(g.addRow(["Category", "Items", "Opening value", "Cost of stock in", "Cost of stock out", "Total stock value"]));
+    for (const c of r.byCategory) {
+      const row = g.addRow([c.category, c.items, Number(c.opening_value), Number(c.in_value), Number(c.out_value), Number(c.closing_value)]);
+      for (let i = 3; i <= 6; i++) row.getCell(i).numFmt = moneyFmt;
+      row.eachCell((c) => (c.border = { bottom: { style: "hair", color: { argb: "FFDDDDDD" } } }));
+    }
+    const tr = g.addRow(["Total", r.byCategory.reduce((a, c) => a + c.items, 0), Number(r.summary.opening_value), Number(r.summary.in_value),
+      Number(r.summary.out_value), Number(r.summary.closing_value)]);
+    for (let i = 3; i <= 6; i++) tr.getCell(i).numFmt = moneyFmt;
+    tr.font = { bold: true };
+    tr.eachCell((c) => (c.border = { top: { style: "thin" } }));
+  }
+  g.addRow([]);
+  g.addRow(["Closing = Opening + Stock in − Stock out ± Corrections. Valuation: weighted-average cost."]).font = {
     italic: true, size: 9, color: { argb: "FF666666" },
   };
 
-  // ---- Stock In
-  if (sec.stockIn) {
-    const ws = table(wb, "Stock In", [
-      ["Txn ID", 12], ["Date & time", 19], ["Item", 28], ["Item code", 13], ["Quantity", 11, qtyFmt], ["Unit", 8],
-      ["Cost per unit", 14, costFmt], ["Total value", 16, moneyFmt], ["Supplier", 20], ["Reference", 16], ["Notes", 28], ["Recorded by", 16],
-    ], r.stockIn.map((t) => [
-      t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, Number(t.entered_quantity), t.entered_unit_symbol,
-      Number(t.entered_unit_cost), Number(t.total_value), t.is_opening ? "Opening stock" : t.supplier_label, t.reference, t.notes, t.user_name,
-    ]));
-    totalRow(ws, 8, Number(r.summary.in_value), moneyFmt, r.stockIn.length);
+  // ---- Stock Sheet: opening, stock in, cost of stock in, stock out, cost of stock out, closing — one table
+  if (sec.balances) {
+    const ws = wb.addWorksheet("Stock Sheet", { views: [{ showGridLines: false }] });
+    ws.columns = [
+      { width: 6 }, { width: 30 }, { width: 12 }, { width: 8 }, { width: 14 }, { width: 12 }, { width: 16 }, { width: 12 }, { width: 16 },
+      ...(adjAll ? [{ width: 12 }] : []), { width: 15 }, { width: 16 }, { width: 13 },
+    ];
+    ws.addRow([r.settings.store_name]).font = { bold: true, size: 16, color: { argb: BURGUNDY } };
+    ws.addRow([`Stock sheet · ${r.periodLabel}`]).font = { bold: true, size: 12 };
+    ws.addRow(["Each closing balance (Bal) is the next day's opening stock."]).font = { italic: true, size: 9, color: { argb: "FF666666" } };
+
+    type Line = { name: string; sku: string; unit: string; opening: string; in: string; in_value: string; out: string; out_value: string; adj: string; closing: string; worth?: string; status?: string };
+    const block = (title: string | null, rows: Line[], adj: boolean, withWorth: boolean) => {
+      ws.addRow([]);
+      const cols = 9 + (adj ? 1 : 0) + 1 + (withWorth ? 2 : 0);
+      if (title) {
+        const dh = ws.addRow([title]);
+        ws.mergeCells(dh.number, 1, dh.number, cols);
+        dh.font = { bold: true, size: 12, color: { argb: BURGUNDY } };
+        dh.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: LIGHT } };
+      }
+      styleHeader(ws.addRow(["S/N", "Item name", "Item code", "Unit", "Opening stock", "Stock in", "Cost of stock in", "Stock out", "Cost of stock out",
+        ...(adj ? ["Corrections"] : []), "Closing (Bal)", ...(withWorth ? ["Closing worth", "Status"] : [])]));
+      let tin = 0, tout = 0, tworth = 0;
+      rows.forEach((x, i) => {
+        tin += Number(x.in_value); tout += Number(x.out_value); tworth += Number(x.worth ?? 0);
+        const row = ws.addRow([i + 1, x.name, x.sku, x.unit, Number(x.opening), Number(x.in), Number(x.in_value), Number(x.out), Number(x.out_value),
+          ...(adj ? [Number(x.adj)] : []), Number(x.closing), ...(withWorth ? [Number(x.worth), x.status] : [])]);
+        [5, 6, 8, ...(adj ? [10] : []), adj ? 11 : 10].forEach((c) => (row.getCell(c).numFmt = qtyFmt));
+        [7, 9, ...(withWorth ? [adj ? 12 : 11] : [])].forEach((c) => (row.getCell(c).numFmt = moneyFmt));
+        row.getCell(6).font = { color: { argb: "FF166534" } };
+        row.getCell(8).font = { color: { argb: BURGUNDY } };
+        row.getCell(adj ? 11 : 10).font = { bold: true };
+        row.eachCell((c) => (c.border = { bottom: { style: "hair", color: { argb: "FFDDDDDD" } } }));
+      });
+      const tr = ws.addRow(["", "Total", "", "", "", "", tin, "", tout, ...(adj ? [""] : []), "", ...(withWorth ? [tworth, ""] : [])]);
+      tr.getCell(7).numFmt = moneyFmt; tr.getCell(9).numFmt = moneyFmt;
+      if (withWorth) tr.getCell(adj ? 12 : 11).numFmt = moneyFmt;
+      tr.font = { bold: true };
+      tr.eachCell((c) => (c.border = { top: { style: "thin" } }));
+    };
+    block(r.days.length > 1 ? "Whole period" : null, r.balances.map((b) => ({
+      name: b.name, sku: b.sku, unit: b.unit, opening: b.opening_qty, in: b.in_qty, in_value: b.in_value, out: b.out_qty, out_value: b.out_value,
+      adj: b.adj_qty, closing: b.closing_qty, worth: b.closing_value, status: statusText(b.status),
+    })), adjAll, true);
+    if (r.days.length > 1) {
+      for (const d of r.days) {
+        block(new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }),
+          d.rows, d.rows.some((x) => x.adj !== "0"), false);
+      }
+    }
   }
 
-  // ---- Stock Out
-  if (sec.stockOut) {
-    const ws = table(wb, "Stock Out", [
-      ["Txn ID", 12], ["Date & time", 19], ["Item", 28], ["Item code", 13], ["Quantity", 11, qtyFmt], ["Unit", 8],
-      ["Cost per unit applied", 16, costFmt], ["Total value", 16, moneyFmt], ["Reason", 15], ["Taken by (worker)", 20], ["Destination", 18],
-      ["Reference", 16], ["Notes", 28], ["Recorded by", 16],
-    ], r.stockOut.map((t) => [
-      t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, Number(t.entered_quantity), t.entered_unit_symbol,
-      Number(t.entered_unit_cost), Number(t.total_value), reasonLabel(t.reason), t.worker_name, t.recipient, t.reference, t.notes, t.user_name,
-    ]));
-    totalRow(ws, 8, Number(r.summary.out_value), moneyFmt, r.stockOut.length);
+  // ---- Stock In & Out together
+  if (sec.stockIn || sec.stockOut) {
+    const ws = table(wb, sec.stockIn && sec.stockOut ? "Stock In & Out" : sec.stockIn ? "Stock In" : "Stock Out", [
+      ["Txn ID", 12], ["Date & time", 19], ["Type", 10], ["Item", 28], ["Item code", 13], ["Quantity", 11, qtyFmt], ["Unit", 8], ["Cost per unit", 14, costFmt],
+      ...(sec.stockIn ? [["Cost of stock in", 16, moneyFmt] as [string, number, string]] : []),
+      ...(sec.stockOut ? [["Cost of stock out", 16, moneyFmt] as [string, number, string]] : []),
+      ["Supplier", 20], ["Reason", 14], ["Taken by (worker)", 20], ["Destination", 18], ["Reference", 16], ["Notes", 28], ["Recorded by", 16],
+    ], r.movements.map((t) => {
+      const isIn = t.txn_type === "stock_in";
+      return [t.txn_no, formatDateTime(t.occurred_at, tz), isIn ? "Stock in" : "Stock out", t.item_name, t.item_sku, Number(t.entered_quantity),
+        t.entered_unit_symbol, Number(t.entered_unit_cost),
+        ...(sec.stockIn ? [isIn ? Number(t.total_value) : null] : []), ...(sec.stockOut ? [!isIn ? Number(t.total_value) : null] : []),
+        isIn ? (t.is_opening ? "Opening stock" : t.supplier_label) : null, isIn ? null : reasonLabel(t.reason), t.worker_name, t.recipient,
+        t.reference, t.notes, t.user_name];
+    }));
+    const tr = ws.addRow([]);
+    tr.getCell(8).value = "Total";
+    let col = 9;
+    if (sec.stockIn) { tr.getCell(col).value = Number(r.summary.in_value); tr.getCell(col).numFmt = moneyFmt; col++; }
+    if (sec.stockOut) { tr.getCell(col).value = Number(r.summary.out_value); tr.getCell(col).numFmt = moneyFmt; }
+    tr.font = { bold: true };
   }
 
   // ---- Corrections
@@ -121,24 +162,6 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
       t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, t.reverses_txn_no, t.direction * Number(t.quantity),
       t.unit_symbol, t.direction * Number(t.total_value), t.correction_reason, t.user_name,
     ]));
-  }
-
-  // ---- Closing inventory
-  if (sec.balances) {
-    const ws = table(wb, "Closing Inventory", [
-      ["Item", 28], ["Item code", 13], ["Category", 16], ["Unit", 8], ["Opening", 12, qtyFmt], ["Received", 12, qtyFmt],
-      ["Issued", 12, qtyFmt], ["Corrections", 12, qtyFmt], ["Closing (next opening)", 14, qtyFmt], ["Cost per unit", 14, costFmt],
-      ["Closing worth", 16, moneyFmt], ["Status", 13],
-    ], r.balances.map((b) => [
-      b.name, b.sku, b.category, b.unit, Number(b.opening_qty), Number(b.in_qty), Number(b.out_qty), Number(b.adj_qty),
-      Number(b.closing_qty), Number(b.closing_cost), Number(b.closing_value), statusText(b.status),
-    ]));
-    totalRow(ws, 11, Number(r.summary.closing_value), moneyFmt, r.balances.length);
-    r.balances.forEach((b, i) => {
-      if (b.status === "in_stock") return;
-      const cell = ws.getRow(i + 2).getCell(12);
-      cell.font = { bold: true, color: { argb: b.status === "out" ? "FFB91C1C" : "FFB45309" } };
-    });
   }
 
   if (sec.lowStock) {
@@ -194,14 +217,4 @@ function table(wb: ExcelJS.Workbook, name: string, cols: [string, number, string
   if (!rows.length) ws.addRow(["No records for this period"]).font = { italic: true, color: { argb: "FF666666" } };
   ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
   return ws;
-}
-
-function totalRow(ws: ExcelJS.Worksheet, col: number, value: number, fmt: string, count: number) {
-  const row = ws.addRow([]);
-  row.getCell(col - 1).value = "Total";
-  row.getCell(col).value = value;
-  row.getCell(col).numFmt = fmt;
-  row.font = { bold: true };
-  row.getCell(col).border = { top: { style: "thin" } };
-  void count;
 }

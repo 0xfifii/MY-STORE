@@ -79,9 +79,20 @@ export type ReportData = {
   days: DaySheet[];
   /** Stock taken per worker during the period. */
   byWorker: { name: string; takes: number; value: string; items: number }[];
+  /** Stock in and stock out in one list, in time order. */
+  movements: TxnRow[];
+  /** General report: totals per category (money, because units differ between items). */
+  byCategory: CategoryTotal[];
+  /** Stock position at the end of the period. */
+  stockStatus: { items: number; in_stock: number; low: number; out: number };
 };
 
-export type DaySheetRow = { item_id: string; name: string; sku: string; unit: string; opening: string; in: string; out: string; adj: string; closing: string };
+export type CategoryTotal = { category: string; items: number; opening_value: string; in_value: string; out_value: string; closing_value: string };
+
+export type DaySheetRow = {
+  item_id: string; name: string; sku: string; unit: string;
+  opening: string; in: string; in_value: string; out: string; out_value: string; adj: string; closing: string;
+};
 export type DaySheet = { day: string; rows: DaySheetRow[] };
 
 export const KIND_LABEL: Record<ReportKind, string> = {
@@ -254,11 +265,13 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
   const dayList: string[] = [];
   for (let d = params.from; d <= params.to && dayList.length < 92; d = addDays(d, 1)) dayList.push(d);
   if (balances.length) {
-    const moves = await query<{ item_id: string; day: string; in_q: string; out_q: string; adj_q: string }>(
+    const moves = await query<{ item_id: string; day: string; in_q: string; out_q: string; adj_q: string; in_v: string; out_v: string }>(
       `SELECT t.item_id, to_char((t.occurred_at AT TIME ZONE $3)::date, 'YYYY-MM-DD') AS day,
               coalesce(sum(t.quantity) FILTER (WHERE t.txn_type='stock_in'), 0)::text AS in_q,
               coalesce(sum(t.quantity) FILTER (WHERE t.txn_type='stock_out'), 0)::text AS out_q,
-              coalesce(sum(t.direction * t.quantity) FILTER (WHERE t.txn_type='reversal'), 0)::text AS adj_q
+              coalesce(sum(t.direction * t.quantity) FILTER (WHERE t.txn_type='reversal'), 0)::text AS adj_q,
+              coalesce(sum(t.total_value) FILTER (WHERE t.txn_type='stock_in'), 0)::numeric(20,2)::text AS in_v,
+              coalesce(sum(t.total_value) FILTER (WHERE t.txn_type='stock_out'), 0)::numeric(20,2)::text AS out_v
          FROM stock_transactions t JOIN items i ON i.id = t.item_id
         WHERE t.occurred_at >= ($1::date)::timestamp AT TIME ZONE $3
           AND t.occurred_at <  ($2::date)::timestamp AT TIME ZONE $3
@@ -294,7 +307,10 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
         const a = m ? toN(m.adj_q) : 0n;
         const close = open + i - o + a;
         running.set(b.item_id, close);
-        rows.push({ item_id: b.item_id, name: b.name, sku: b.sku, unit: b.unit, opening: toS(open), in: toS(i), out: toS(o), adj: toS(a), closing: toS(close) });
+        rows.push({
+          item_id: b.item_id, name: b.name, sku: b.sku, unit: b.unit, opening: toS(open), in: toS(i), in_value: m?.in_v ?? "0",
+          out: toS(o), out_value: m?.out_v ?? "0", adj: toS(a), closing: toS(close),
+        });
       }
       days.push({ day: d, rows });
     }
@@ -311,6 +327,15 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
         AND ($5::int IS NULL OR i.category_id = $5::int)
         AND NOT EXISTS (SELECT 1 FROM stock_transactions rv WHERE rv.reverses_id = t.id)
       GROUP BY coalesce(w.name, 'Not recorded') ORDER BY sum(t.total_value) DESC`,
+    args,
+  );
+
+  const byCategory = await query<CategoryTotal>(
+    `${balanceCte}
+     SELECT coalesce(category, 'Uncategorised') AS category, count(*)::int AS items,
+            sum(opening_value)::numeric(20,2)::text AS opening_value, sum(in_value)::numeric(20,2)::text AS in_value,
+            sum(out_value)::numeric(20,2)::text AS out_value, sum(closing_value)::numeric(20,2)::text AS closing_value
+       FROM final GROUP BY 1 ORDER BY sum(closing_value) DESC, 1`,
     args,
   );
 
@@ -378,6 +403,14 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
     topOut: rank("out"),
     days,
     byWorker,
+    movements: txns.filter((t) => t.txn_type !== "reversal" && (params.kind !== "stock_in" || t.txn_type === "stock_in") && (params.kind !== "stock_out" || t.txn_type === "stock_out")),
+    byCategory,
+    stockStatus: {
+      items: balances.filter((b) => !b.archived).length,
+      in_stock: balances.filter((b) => !b.archived && b.status === "in_stock").length,
+      low: balances.filter((b) => !b.archived && b.status === "low").length,
+      out: balances.filter((b) => !b.archived && b.status === "out").length,
+    },
   };
 }
 
@@ -402,6 +435,7 @@ export function sectionsFor(kind: ReportKind) {
     // Every report ends with each item's opening → closing balance (closing carries forward as the next opening).
     balances: true,
     lowStock: kind === "full" || kind === "balance",
+    general: true,
     highlights: kind !== "balance",
   };
 }

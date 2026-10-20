@@ -58,13 +58,9 @@ export function LoginForm({ next }: { next: string }) {
           For staff of this store only. Forgot your password? Ask the store owner to reset it under Users.
         </p>
         <button type="submit" disabled={busy} aria-label="Sign in"
-          className="group flex h-14 items-center gap-1 rounded-full bg-night pl-5 pr-2 text-sm font-semibold text-white transition-colors hover:bg-claret disabled:opacity-60">
+          className="flex h-14 min-w-36 items-center justify-center gap-2 rounded-full bg-night px-8 text-sm font-semibold text-white transition-colors hover:bg-claret disabled:opacity-60">
+          {busy && <Loader2 className="size-4 animate-spin" />}
           Sign in
-          <span className="ml-2 flex size-10 items-center justify-center rounded-full bg-white/15">
-            {busy ? <Loader2 className="size-4 animate-spin" /> : (
-              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="m9 6 6 6-6 6" /></svg>
-            )}
-          </span>
         </button>
       </div>
     </form>

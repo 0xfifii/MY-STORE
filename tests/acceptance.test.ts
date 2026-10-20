@@ -369,33 +369,37 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
               coalesce(sum(total_value) FILTER (WHERE txn_type='stock_out'),0)::numeric(20,2)::text o
          FROM stock_transactions WHERE occurred_at >= ($1::date)::timestamp AT TIME ZONE 'Africa/Lagos'`, [today]);
     const csv = await exportCsv("preset=today");
-    expect(csv).toContain(`Total stock-in value,${rows[0].i}`);
-    expect(csv).toContain(`Total stock-out value,${rows[0].o}`);
+    expect(csv).toContain(`Cost of stock in,${rows[0].i}`);
+    expect(csv).toContain(`Cost of stock out,${rows[0].o}`);
   });
 
   it("opening + in − out ± corrections = closing, per item and in total; yesterday's closing = today's opening", async () => {
     for (const q of [`from=${yesterday}&to=${yesterday}`, `from=${today}&to=${today}`, `from=${yesterday}&to=${today}`]) {
       const csv = await exportCsv(q + "&kind=balance");
       const lines = csv.split("\r\n");
-      const start = lines.findIndex((l) => l.startsWith("CLOSING INVENTORY"));
-      const rowsCsv = lines.slice(start + 2).filter((l) => l && !l.startsWith(",") && !l.startsWith("LOW"));
-      for (const l of rowsCsv.slice(0, rowsCsv.findIndex((x) => x === "") === -1 ? undefined : rowsCsv.findIndex((x) => x === ""))) {
-        const c = l.split(",");
-        if (c.length < 12) continue;
-        const [open, rec, iss, adj, close] = c.slice(4, 9).map(Number);
-        expect(open + rec - iss + adj).toBeCloseTo(close, 6);
+      const start = lines.findIndex((l) => l.startsWith("STOCK SHEET"));
+      const head = lines[start + 1].split(",");
+      const col = (name: string) => head.findIndex((h) => h.startsWith(name));
+      let checked = 0;
+      for (let j = start + 2; j < lines.length && lines[j]; j++) {
+        const c = lines[j].split(",");
+        if (c[1] === "TOTAL") continue;
+        const adjQ = col("Corrections") >= 0 ? Number(c[col("Corrections")]) : 0;
+        expect(Number(c[col("Opening stock")]) + Number(c[col("Stock in")]) - Number(c[col("Stock out")]) + adjQ).toBeCloseTo(Number(c[col("Closing (Bal)")]), 6);
+        checked++;
       }
+      expect(checked).toBeGreaterThan(0);
       const num = (label: string) => Number(lines.find((l) => l.startsWith(label))!.split(",")[1]);
       const adj = lines.find((l) => l.startsWith("Net corrections")) ? num("Net corrections") : 0;
-      expect(num("Opening inventory value") + num("Total stock-in value") - num("Total stock-out value") + adj).toBeCloseTo(num("Closing inventory value"), 2);
+      expect(num("Opening stock value") + num("Cost of stock in") - num("Cost of stock out") + adj).toBeCloseTo(num("Total stock value (closing)"), 2);
     }
     const y = await exportCsv(`from=${yesterday}&to=${yesterday}`);
     const t = await exportCsv(`from=${today}&to=${today}`);
     const get = (csv: string, label: string) => csv.split("\r\n").find((l) => l.startsWith(label))!.split(",")[1];
-    expect(get(t, "Opening inventory value")).toBe(get(y, "Closing inventory value"));
+    expect(get(t, "Opening stock value")).toBe(get(y, "Total stock value (closing)"));
     // Closing value as of today equals the live inventory worth
     const { rows } = await db.query("SELECT sum(stock_value)::numeric(20,2)::text v FROM items");
-    expect(get(t, "Closing inventory value")).toBe(rows[0].v);
+    expect(get(t, "Total stock value (closing)")).toBe(rows[0].v);
   });
 
   it("every report ends with the most stocked in / out items", async () => {
@@ -403,12 +407,14 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
     const lines = csv.split("\r\n");
     const outAt = lines.findIndex((l) => l.startsWith("MOST STOCKED OUT"));
     const inAt = lines.findIndex((l) => l.startsWith("MOST STOCKED IN"));
-    expect(inAt).toBeGreaterThan(lines.findIndex((l) => l.startsWith("CLOSING INVENTORY")));
+    expect(inAt).toBeGreaterThan(lines.findIndex((l) => l.startsWith("STOCK SHEET")));
     expect(lines[inAt + 2]).toMatch(/^1,Rice \(50kg bag\),/);
     expect(lines[outAt + 2]).toMatch(/^1,Rice \(50kg bag\),/);
     // Stock-out-only report still shows each item's balance
     const outOnly = await exportCsv("preset=today&kind=stock_out");
-    expect(outOnly).toContain("CLOSING INVENTORY");
+    expect(outOnly).toContain("STOCK SHEET");
+    expect(outOnly).toMatch(/\r\nSTOCK OUT\r\n/);
+    expect(outOnly).not.toContain("STOCK IN AND STOCK OUT");
     expect(outOnly).toContain("MOST STOCKED OUT");
   });
 
@@ -423,7 +429,7 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
     expect(mText).toContain("Monthly Inventory Report");
     // The month's closing equals today's closing (same end state)
     const get = (csv: string, label: string) => csv.split("\r\n").find((l) => l.startsWith(label))!.split(",")[1];
-    expect(get(mText, "Closing inventory value")).toBe(get(await exportCsv("preset=today"), "Closing inventory value"));
+    expect(get(mText, "Total stock value (closing)")).toBe(get(await exportCsv("preset=today"), "Total stock value (closing)"));
   });
 
   it("item and category filters narrow the report", async () => {
@@ -434,22 +440,27 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
 });
 
 describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
-  it("xlsx has Summary / Stock In / Stock Out / Closing Inventory sheets with matching totals", async () => {
+  it("xlsx has General Report / Stock Sheet / Stock In & Out sheets with matching totals", async () => {
     const r = await owner.get("/api/reports/export?format=xlsx&preset=today");
     expect(r.status).toBe(200);
     expect(r.headers.get("content-disposition")).toMatch(/mystore-report-\d{4}-\d{2}-\d{2}\.xlsx/);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(r.data);
     const names = wb.worksheets.map((w) => w.name);
-    expect(names).toEqual(expect.arrayContaining(["Summary", "Stock In", "Stock Out", "Closing Inventory", "Low Stock", "Most Stocked"]));
-    const closing = wb.getWorksheet("Closing Inventory")!;
-    let sum = 0, total = 0;
-    closing.eachRow((row, i) => {
-      if (i === 1) return;
-      if (row.getCell(10).value === "Total") total = Number(row.getCell(11).value);
-      else if (typeof row.getCell(11).value === "number") sum += Number(row.getCell(11).value);
+    expect(names).toEqual(expect.arrayContaining(["General Report", "Stock Sheet", "Stock In & Out", "Low Stock", "Most Stocked"]));
+    const sheet = wb.getWorksheet("Stock Sheet")!;
+    let worthCol = 0, inCostCol = 0, sum = 0, total = 0, inSum = 0, inTotal = 0, done = false;
+    sheet.eachRow((row) => {
+      if (done) return;
+      const vals = (row.values as unknown[]).map((v) => (typeof v === "string" ? v : v));
+      if (!worthCol && vals.includes("Closing worth")) { worthCol = vals.indexOf("Closing worth"); inCostCol = vals.indexOf("Cost of stock in"); return; }
+      if (!worthCol) return;
+      if (row.getCell(2).value === "Total") { total = Number(row.getCell(worthCol).value); inTotal = Number(row.getCell(inCostCol).value); done = true; return; }
+      if (typeof row.getCell(worthCol).value === "number") { sum += Number(row.getCell(worthCol).value); inSum += Number(row.getCell(inCostCol).value); }
     });
+    expect(worthCol).toBeGreaterThan(0);
     expect(sum).toBeCloseTo(total, 2);
+    expect(inSum).toBeCloseTo(inTotal, 2);
     const { rows } = await db.query("SELECT sum(stock_value)::float v FROM items");
     expect(total).toBeCloseTo(rows[0].v, 2);
   });
@@ -471,7 +482,9 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
     expect(text).toContain("₦");
     expect(text).toContain("Rice (50kg bag)");
     expect(text).toContain("Most stocked out");
-    expect(text).toContain("carried forward as its opening stock");
+    expect(text).toContain("next day's opening stock");
+    expect(text).toContain("Cost of stock in");
+    expect(text).toContain("Total stock value");
   });
 
   it("CSV is Excel-compatible (UTF-8 BOM) and quotes commas", async () => {
@@ -590,18 +603,18 @@ describe("15. Workers, permissions and usage analysis", () => {
     const { rows } = await db.query("SELECT ((now() AT TIME ZONE 'Africa/Lagos')::date - 1)::text y, (now() AT TIME ZONE 'Africa/Lagos')::date::text t");
     const csv = ((await owner.get(`/api/reports/export?format=csv&from=${rows[0].y}&to=${rows[0].t}`)).data as Buffer).toString();
     const lines = csv.split("\r\n");
-    expect(lines.some((l) => l.startsWith("S/N,Item name,Item code,Unit,Opening stock,Stock in,Stock out"))).toBe(true);
+    expect(lines.some((l) => l.startsWith("S/N,Item name,Item code,Unit,Opening stock,Stock in,Cost of stock in (NGN),Stock out,Cost of stock out (NGN)"))).toBe(true);
     const block = (day: string) => {
       const i = lines.indexOf(day);
       const out: Record<string, string[]> = {};
-      for (let j = i + 2; j < lines.length && lines[j]; j++) { const c = lines[j].split(","); out[c[2]] = c; }
+      for (let j = i + 2; j < lines.length && lines[j]; j++) { const c = lines[j].split(","); if (c[1] !== "TOTAL") out[c[2]] = c; }
       return out;
     };
     const y = block(rows[0].y), t = block(rows[0].t);
     expect(Object.keys(t).length).toBeGreaterThan(0);
     for (const code of Object.keys(t)) {
       const c = t[code];
-      expect(Number(c[c.length - 1])).toBeCloseTo(Number(c[4]) + Number(c[5]) - Number(c[6]) + (c.length === 9 ? Number(c[7]) : 0), 6);
+      expect(Number(c[c.length - 1])).toBeCloseTo(Number(c[4]) + Number(c[5]) - Number(c[7]) + (c.length === 11 ? Number(c[9]) : 0), 6);
       if (y[code]) expect(c[4]).toBe(y[code][y[code].length - 1]);
     }
     expect(csv).toContain("STOCK TAKEN BY WORKER");
@@ -633,5 +646,45 @@ describe("14. Pages render (no dead pages)", () => {
   it("owner-only pages redirect staff away", async () => {
     for (const p of ["/users", "/settings", "/audit"]) expect((await staff.get(p)).status, p).toBe(307);
     expect((await viewer.get("/stock-out")).status).toBe(307);
+  });
+});
+
+describe("16. Deleting items and money analysis", () => {
+  it("only an owner can delete an item; its history goes with it and other items are untouched", async () => {
+    const tmp = await createItem("Temp Delete Me", "kg");
+    expect((await stockIn(owner, tmp, "10", "kg", "500")).status).toBe(201);
+    expect((await stockOut(owner, tmp, "4", "kg")).status).toBe(201);
+    const riceBefore = await item(rice);
+    const ledgerBefore = Number((await db.query("SELECT count(*) n FROM stock_transactions WHERE item_id <> $1", [tmp])).rows[0].n);
+
+    expect((await staff.req("DELETE", `/api/items/${tmp}`)).status).toBe(403);
+    expect((await viewer.req("DELETE", `/api/items/${tmp}`)).status).toBe(403);
+    const r = await owner.req("DELETE", `/api/items/${tmp}`);
+    expect(r.status, JSON.stringify(r.data)).toBe(200);
+    expect(r.data.transactions_removed).toBe(2);
+
+    expect((await owner.get(`/api/items/${tmp}`)).status).toBe(404);
+    expect((await db.query("SELECT 1 FROM stock_transactions WHERE item_id = $1", [tmp])).rowCount).toBe(0);
+    expect(Number((await db.query("SELECT count(*) n FROM stock_transactions").then((x) => x.rows[0].n)))).toBe(ledgerBefore);
+    expect((await item(rice)).quantity).toBe(riceBefore.quantity);
+    const a = await db.query("SELECT details FROM audit_logs WHERE action = 'item.delete' AND entity_id = $1", [tmp]);
+    expect(a.rows[0].details.name).toBe("Temp Delete Me");
+    // The ledger is still protected for everything else
+    await expect(db.query("DELETE FROM stock_transactions WHERE item_id = $1", [rice])).rejects.toThrow(/LEDGER_IMMUTABLE/);
+    expect((await owner.req("DELETE", `/api/items/${tmp}`)).status).toBe(404);
+    expect((await owner.req("DELETE", "/api/items/not-a-uuid")).status).toBe(404);
+  });
+
+  it("usage page shows money by day, week and month and spending breakdowns", async () => {
+    for (const q of ["", "?group=week&range=12w", "?group=month&range=12m", "?spend=category", "?spend=supplier"]) {
+      const r = await owner.get(`/audit${q}`);
+      expect(r.status, q).toBe(200);
+      const html = (r.data as Buffer | string).toString();
+      expect(html, q).toContain("How money is spent");
+      expect(html, q).toContain("Stock in and stock out amounts");
+    }
+    const csv = ((await owner.get("/api/usage/export?group=month")).data as Buffer).toString();
+    expect(csv).toContain("AMOUNT STOCKED IN AND OUT PER MONTH");
+    expect(csv).toContain("HOW MONEY IS SPENT — BY SUPPLIER");
   });
 });

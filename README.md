@@ -222,12 +222,18 @@ contains the complete history.
 - **Permissions** (Users → Permissions): for each staff or viewer account, tick exactly what they may do
   (Stock In, Stock Out, add items, manage workers, see usage analysis, …) and optionally limit Stock In/Out
   to certain categories. Enforced on the server.
-- **Usage & Audit**: most and least taken items (pie chart), items taken most-to-least, who took what,
-  stock out per day, reasons, categories, which staff account recorded what, and a filterable log of every
-  change. Downloadable as CSV.
-- **Reports** start with the stock sheet: S/N, item name, opening stock, stock in, stock out and closing
-  balance (Bal). Weekly/monthly reports also have a day-by-day sheet (Excel "Stock Sheet" tab) where each
-  day's closing is the next day's opening.
+- **Usage & Audit**: money spent on stock (big pie by item, category or supplier, with insights), the
+  amount stocked in and stocked out per **day, week or month** (chart + table), most and least taken items
+  (big pie), who took what, reasons, categories, which staff account recorded what, and a filterable log of
+  every change. Downloadable as CSV.
+- **Reports** open with a general summary (total stock value, opening value, cost of stock in, cost of stock
+  out, net change, items low/out) and then one stock sheet per item: S/N, item, opening stock, stock in,
+  cost of stock in, stock out, cost of stock out, closing balance (Bal) and worth — all in one table — plus
+  totals by category and a single "stock in and stock out" list. Weekly/monthly reports add a day-by-day
+  sheet where each day's closing is the next day's opening.
+- **Deleting items**: owners (or users given "Delete items permanently") can delete an item from its card or
+  its page. The item and all of its stock records are removed after a confirm step, and the deletion is kept
+  in the change log. To only hide an item and keep its history, use Archive.
 
 ## 6. Roles
 

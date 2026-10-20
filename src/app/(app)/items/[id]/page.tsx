@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { EmptyState, LinkButton, PageHeader, Panel, StatusBadge, TxnTypeBadge } from "@/components/ui/primitives";
 import { StockButtons } from "@/components/stock-dialog";
-import { ArchiveButton, ConversionManager, ReverseButton } from "@/components/item-actions";
+import { ArchiveButton, ConversionManager, DeleteItemButton, ReverseButton } from "@/components/item-actions";
 import { requirePageUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { getItem, getItemConversions, getItemUnits, listTransactions } from "@/lib/inventory";
@@ -55,13 +55,13 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
     <div>
       <PageHeader
         title={item.name}
-        back={{ href: "/inventory", label: "Inventory" }}
         description={<>{item.sku}{item.category_name ? ` · ${item.category_name}` : ""}{item.supplier_name ? ` · usual supplier ${item.supplier_name}` : ""}{item.archived_at ? " · archived" : ""}</>}
         actions={
           <>
             <StockButtons itemId={item.id} name={item.name} size="md" archived={!!item.archived_at} />
             {can(user, "item.write") && <LinkButton href={`/items/${id}/edit`} variant="secondary"><Pencil className="size-4" /> Edit</LinkButton>}
             {can(user, "item.archive") && <ArchiveButton itemId={id} archived={!!item.archived_at} name={item.name} quantity={item.quantity} />}
+            {can(user, "item.delete") && <DeleteItemButton itemId={id} name={item.name} quantity={item.quantity} unit={item.unit_symbol} afterHref="/inventory" />}
           </>
         }
       />
@@ -161,7 +161,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
                     <td className="whitespace-nowrap px-4 py-2.5 text-right">{formatMoney(t.total_value, sym)}</td>
                     <td className="whitespace-nowrap px-4 py-2.5 text-right">{formatQty(t.balance_after)} {t.unit_symbol}</td>
                     <td className="max-w-64 px-4 py-2.5 text-xs">
-                      {t.txn_type === "stock_out" && <span className="block">{reasonLabel(t.reason)}{t.recipient ? ` → ${t.recipient}` : ""}</span>}
+                      {t.txn_type === "stock_out" && <span className="block">{reasonLabel(t.reason)}{t.recipient ? ` · to ${t.recipient}` : ""}</span>}
                       {t.txn_type === "stock_in" && <span className="block">{t.is_opening ? "Opening stock" : t.supplier_label ?? ""}</span>}
                       {t.txn_type === "reversal" && <span className="block">Reverses {t.reverses_txn_no}: {t.correction_reason}</span>}
                       {t.reference && <span className="block text-muted">Ref {t.reference}</span>}

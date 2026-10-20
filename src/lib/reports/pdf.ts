@@ -58,13 +58,17 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     ],
     margin: [8, 7, 8, 7],
   });
+  const net = Number(r.summary.closing_value) - Number(r.summary.opening_value);
+  const st = r.stockStatus;
   const cards: unknown[] = [
+    card("Total stock value", m(r.summary.closing_value), true),
     card("Opening value", m(r.summary.opening_value)),
-    card("Stock in value", m(r.summary.in_value)),
-    card("Stock out value", m(r.summary.out_value)),
+    card("Cost of stock in", m(r.summary.in_value)),
+    card("Cost of stock out", m(r.summary.out_value)),
   ];
   if (r.summary.adj_count) cards.push(card("Net corrections", m(r.summary.adj_value)));
-  cards.push(card("Closing value", m(r.summary.closing_value), true));
+  cards.push(card("Net change", `${net >= 0 ? "+" : "−"}${m(Math.abs(net))}`));
+  cards.push(card("Low · out of stock", `${st.low} · ${st.out}`));
   content.push({
     table: { widths: cards.map(() => "*"), body: [cards] },
     layout: { hLineColor: "#E5D5DA", vLineColor: "#E5D5DA", fillColor: () => "#FBF6F7" },
@@ -83,38 +87,55 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   const right = (t: string, extra: Record<string, unknown> = {}): Cell => ({ text: t, alignment: "right", ...extra });
   const empty = (cols: number, msg: string) => [[{ text: msg, colSpan: cols, italics: true, color: "#777" }, ...Array(cols - 1).fill("")]];
 
-  // ---- Stock sheet first: S/N, item, opening, in, out, closing (bal) for the period
-  if (sec.balances) {
-    content.push({ text: r.periodType === "day" ? "Stock sheet" : "Stock sheet — whole period", style: "h2" });
-    content.push({ text: "Each item's closing balance (Bal) is carried forward as its opening stock for the next day.", fontSize: 8, color: "#555", margin: [0, -2, 0, 6] });
-    const adj = r.summary.adj_count > 0;
-    const body: Cell[][] = [[h("S/N"), h("Item name"), h("Unit"), h("Opening stock", "right"), h("Stock in", "right"), h("Stock out", "right"),
-      ...(adj ? [h("Corrections", "right")] : []), h("Closing (Bal)", "right"), h("Cost / unit", "right"), h("Closing worth", "right"), h("Status")]];
-    r.balances.forEach((b, i) => {
-      body.push([String(i + 1), `${b.name}  (${b.sku})`, b.unit, right(formatQty(b.opening_qty)), right(formatQty(b.in_qty)), right(formatQty(b.out_qty)),
-        ...(adj ? [right(formatQty(b.adj_qty))] : []),
-        right(formatQty(b.closing_qty), { bold: true }), right(c(b.closing_cost)), right(m(b.closing_value)),
-        { text: statusText(b.status), color: b.status === "out" ? "#B91C1C" : b.status === "low" ? "#B45309" : "#166534", bold: b.status !== "in_stock" }]);
+  type Line = { name: string; sku: string; unit: string; opening: string; in: string; in_value: string; out: string; out_value: string; adj: string; closing: string; worth?: string; status?: "in_stock" | "low" | "out" };
+  const combined = (rows: Line[], adj: boolean, withWorth: boolean) => {
+    const body: Cell[][] = [[h("S/N"), h("Item name"), h("Unit"), h("Opening stock", "right"), h("Stock in", "right"), h("Cost of stock in", "right"),
+      h("Stock out", "right"), h("Cost of stock out", "right"), ...(adj ? [h("Corrections", "right")] : []), h("Closing (Bal)", "right"),
+      ...(withWorth ? [h("Closing worth", "right"), h("Status")] : [])]];
+    let tin = 0, tout = 0, tw = 0;
+    rows.forEach((b, i) => {
+      tin += Number(b.in_value); tout += Number(b.out_value); tw += Number(b.worth ?? 0);
+      body.push([String(i + 1), `${b.name}  (${b.sku})`, b.unit, right(formatQty(b.opening)),
+        right(Number(b.in) ? `+${formatQty(b.in)}` : "0", { color: "#166534" }), right(Number(b.in_value) ? m(b.in_value) : "—"),
+        right(Number(b.out) ? `−${formatQty(b.out)}` : "0", { color: BURGUNDY }), right(Number(b.out_value) ? m(b.out_value) : "—"),
+        ...(adj ? [right(formatQty(b.adj))] : []), right(formatQty(b.closing), { bold: true }),
+        ...(withWorth ? [right(m(b.worth ?? 0)), { text: statusText(b.status ?? "in_stock"), color: b.status === "out" ? "#B91C1C" : b.status === "low" ? "#B45309" : "#166534", bold: b.status !== "in_stock" }] : [])]);
     });
     const cols = body[0].length;
-    if (!r.balances.length) body.push(...empty(cols, "No items."));
-    body.push([{ text: "Total closing inventory worth", bold: true, colSpan: cols - 2, alignment: "right" }, ...Array(cols - 3).fill(""),
-      right(m(r.summary.closing_value), { bold: true }), ""]);
-    const widths = adj ? [24, "*", 34, 60, 52, 52, 56, 62, 62, 72, 58] : [24, "*", 36, 64, 58, 58, 66, 70, 78, 62];
-    content.push(tableBlock(body, widths));
+    if (!rows.length) body.push(...empty(cols, "No items."));
+    body.push([{ text: "Total", bold: true, colSpan: 5, alignment: "right" }, "", "", "", "", right(m(tin), { bold: true }), "", right(m(tout), { bold: true }),
+      ...(adj ? [""] : []), "", ...(withWorth ? [right(m(tw), { bold: true }), ""] : [])]);
+    const widths: (number | string)[] = [20, "*", 30, 54, 46, 62, 46, 62, ...(adj ? [46] : []), 58, ...(withWorth ? [64, 52] : [])];
+    return tableBlock(body, widths);
+  };
+
+  // ---- Stock sheet first: opening, stock in + cost, stock out + cost, closing — one table
+  if (sec.balances) {
+    content.push({ text: r.periodType === "day" ? "Stock sheet" : "Stock sheet — whole period", style: "h2" });
+    content.push({ text: "Opening stock, stock in, stock out and their cost in one table. Each closing balance (Bal) is the next day's opening stock.", fontSize: 8, color: "#555", margin: [0, -2, 0, 6] });
+    content.push(combined(r.balances.map((b) => ({
+      name: b.name, sku: b.sku, unit: b.unit, opening: b.opening_qty, in: b.in_qty, in_value: b.in_value, out: b.out_qty, out_value: b.out_value,
+      adj: b.adj_qty, closing: b.closing_qty, worth: b.closing_value, status: b.status,
+    })), r.summary.adj_count > 0, true));
 
     // Day-by-day blocks for short periods (the Excel file always has every day).
     if (r.days.length > 1 && r.days.length <= 7) {
       for (const d of r.days) {
         content.push({ text: new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }), style: "h3" });
-        const db: Cell[][] = [[h("S/N"), h("Item name"), h("Unit"), h("Opening stock", "right"), h("Stock in", "right"), h("Stock out", "right"), h("Closing (Bal)", "right")]];
-        d.rows.forEach((x, i) => db.push([String(i + 1), x.name, x.unit, right(formatQty(x.opening)), right(formatQty(x.in)), right(formatQty(x.out)),
-          right(formatQty(x.closing), { bold: true })]));
-        content.push(tableBlock(db, [24, "*", 40, 80, 70, 70, 90]));
+        content.push(combined(d.rows, d.rows.some((x) => x.adj !== "0"), false));
       }
     } else if (r.days.length > 7) {
       content.push({ text: "The day-by-day stock sheet for every day in this period is in the Excel download (Stock Sheet tab).", fontSize: 8, italics: true, color: "#555", margin: [0, 6, 0, 0] });
     }
+  }
+
+  if (r.byCategory.length) {
+    content.push({ text: "Total stock by category", style: "h2" });
+    const body: Cell[][] = [[h("Category"), h("Items", "right"), h("Opening value", "right"), h("Cost of stock in", "right"), h("Cost of stock out", "right"), h("Total stock value", "right")]];
+    for (const c of r.byCategory) body.push([c.category, right(String(c.items)), right(m(c.opening_value)), right(m(c.in_value)), right(m(c.out_value)), right(m(c.closing_value), { bold: true })]);
+    body.push([{ text: "Total", bold: true }, right(String(r.byCategory.reduce((a, c) => a + c.items, 0)), { bold: true }), right(m(r.summary.opening_value), { bold: true }),
+      right(m(r.summary.in_value), { bold: true }), right(m(r.summary.out_value), { bold: true }), right(m(r.summary.closing_value), { bold: true })]);
+    content.push(tableBlock(body, ["*", 50, 90, 90, 90, 100]));
   }
 
   if (r.byWorker.length && sec.stockOut) {
@@ -124,30 +145,24 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     content.push(tableBlock(wb, [24, "*", 80, 90, 100]));
   }
 
-  if (sec.stockIn) {
-    content.push({ text: "Stock In", style: "h2" });
-    const body: Cell[][] = [[h("Txn"), h("Date & time"), h("Item"), h("Code"), h("Quantity", "right"), h("Cost / unit", "right"), h("Total value", "right"), h("Supplier"), h("Reference / notes")]];
-    for (const t of r.stockIn) {
-      body.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku,
-        right(`${formatQty(t.entered_quantity)} ${t.entered_unit_symbol}`), right(c(t.entered_unit_cost)), right(m(t.total_value)),
-        t.is_opening ? "Opening stock" : t.supplier_label ?? "", [t.reference, t.notes].filter(Boolean).join(" — ")]);
+  if (sec.stockIn || sec.stockOut) {
+    content.push({ text: sec.stockIn && sec.stockOut ? "Stock in and stock out" : sec.stockIn ? "Stock in" : "Stock out", style: "h2" });
+    const body: Cell[][] = [[h("Txn"), h("Date & time"), h("Type"), h("Item"), h("Quantity", "right"), h("Cost / unit", "right"),
+      ...(sec.stockIn ? [h("Cost of stock in", "right")] : []), ...(sec.stockOut ? [h("Cost of stock out", "right")] : []),
+      h("Supplier / taken by"), h("Reference / notes")]];
+    for (const t of r.movements) {
+      const isIn = t.txn_type === "stock_in";
+      body.push([t.txn_no, formatDateTime(t.occurred_at, tz), { text: isIn ? "In" : "Out", bold: true, color: isIn ? "#166534" : BURGUNDY }, `${t.item_name} (${t.item_sku})`,
+        right(`${isIn ? "+" : "−"}${formatQty(t.entered_quantity)} ${t.entered_unit_symbol}`), right(c(t.entered_unit_cost)),
+        ...(sec.stockIn ? [right(isIn ? m(t.total_value) : "")] : []), ...(sec.stockOut ? [right(!isIn ? m(t.total_value) : "")] : []),
+        isIn ? (t.is_opening ? "Opening stock" : t.supplier_label ?? "") : [[t.worker_name, t.recipient].filter(Boolean).join(" · to "), reasonLabel(t.reason)].filter(Boolean).join(" — "),
+        [t.reference, t.notes].filter(Boolean).join(" — ")]);
     }
-    if (!r.stockIn.length) body.push(...empty(9, "No stock received in this period."));
-    body.push([{ text: "Total", bold: true, colSpan: 6, alignment: "right" }, "", "", "", "", "", right(m(r.summary.in_value), { bold: true }), "", ""]);
-    content.push(tableBlock(body, [52, 76, "*", 52, 55, 60, 68, 72, 96]));
-  }
-
-  if (sec.stockOut) {
-    content.push({ text: "Stock Out", style: "h2" });
-    const body: Cell[][] = [[h("Txn"), h("Date & time"), h("Item"), h("Code"), h("Quantity", "right"), h("Cost / unit", "right"), h("Total value", "right"), h("Reason"), h("Taken by"), h("Reference / notes")]];
-    for (const t of r.stockOut) {
-      body.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku,
-        right(`${formatQty(t.entered_quantity)} ${t.entered_unit_symbol}`), right(c(t.entered_unit_cost)), right(m(t.total_value)),
-        reasonLabel(t.reason), [t.worker_name, t.recipient].filter(Boolean).join(" → "), [t.reference, t.notes].filter(Boolean).join(" — ")]);
-    }
-    if (!r.stockOut.length) body.push(...empty(10, "No stock issued in this period."));
-    body.push([{ text: "Total", bold: true, colSpan: 6, alignment: "right" }, "", "", "", "", "", right(m(r.summary.out_value), { bold: true }), "", "", ""]);
-    content.push(tableBlock(body, [52, 76, "*", 52, 55, 60, 68, 54, 62, 76]));
+    const cols = body[0].length;
+    if (!r.movements.length) body.push(...empty(cols, "No stock moved in this period."));
+    body.push([{ text: "Total", bold: true, colSpan: 6, alignment: "right" }, "", "", "", "", "",
+      ...(sec.stockIn ? [right(m(r.summary.in_value), { bold: true })] : []), ...(sec.stockOut ? [right(m(r.summary.out_value), { bold: true })] : []), "", ""]);
+    content.push(tableBlock(body, [50, 72, 26, "*", 60, 58, ...(sec.stockIn ? [64] : []), ...(sec.stockOut ? [64] : []), 100, 90]));
   }
 
   if (sec.corrections && r.corrections.length) {
