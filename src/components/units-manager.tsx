@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "@/components/hand-icons";
 import { Button, Field, Input, Panel, Select } from "./ui/primitives";
 import { useToast } from "./ui/toast";
 import { api } from "@/lib/client";
@@ -70,7 +70,7 @@ export function UnitsManager({ units, rules, canAdd, canRules }: { units: Unit[]
 
       <Panel title="Standard conversion rules">
         <p className="text-sm text-muted">
-          Used for any item whose unit is on one side of the rule. Units are never mixed otherwise — a bag only converts to kg when you set
+          Used for any item whose unit is on one side of the rule. Units are never mixed otherwise: a bag only converts to kg when you set
           that on the item itself (e.g. Rice: 1 bag = 50 kg).
         </p>
         <ul className="mt-3 divide-y divide-white/80 rounded-md border border-line">

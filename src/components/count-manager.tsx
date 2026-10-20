@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ClipboardCheck, X } from "lucide-react";
+import { Check, ClipboardCheck, X } from "@/components/hand-icons";
 import { ItemPicker, type PickerItem } from "./item-picker";
 import { Button, Field, Input, Textarea } from "./ui/primitives";
 import { Modal } from "./ui/dialog";
@@ -57,11 +57,11 @@ export function CountForm({ symbol }: { symbol: string }) {
         </div>
         <div className="rounded-2xl bg-white/70 p-3 ring-1 ring-white">
           <p className="text-xs text-muted">Counted</p>
-          <p className="text-xl font-semibold">{valid ? formatQty(counted) : "—"} <span className="text-sm text-muted">{item.unit_symbol}</span></p>
+          <p className="text-xl font-semibold">{valid ? formatQty(counted) : "-"} <span className="text-sm text-muted">{item.unit_symbol}</span></p>
         </div>
         <div className={`rounded-2xl p-3 ring-1 ring-white ${diff === null ? "bg-white/70" : diff < 0 ? "bg-bad-bg text-bad" : diff > 0 ? "bg-sky-50 text-sky-700" : "bg-ok-bg text-ok"}`}>
           <p className="text-xs opacity-80">{diff === null ? "Difference" : diff < 0 ? "Shortage" : diff > 0 ? "Excess" : "Matches"}</p>
-          <p className="text-xl font-semibold">{diff === null ? "—" : `${diff > 0 ? "+" : diff < 0 ? "−" : ""}${formatQty(String(Math.abs(Math.round(diff * 1e6) / 1e6)))}`}</p>
+          <p className="text-xl font-semibold">{diff === null ? "-" : `${diff > 0 ? "+" : diff < 0 ? "−" : ""}${formatQty(String(Math.abs(Math.round(diff * 1e6) / 1e6)))}`}</p>
         </div>
       </div>
       <Field label={`Quantity counted (${item.unit_symbol})`} htmlFor="cnt-q" required>

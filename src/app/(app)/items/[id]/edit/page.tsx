@@ -21,7 +21,7 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title={`Edit ${item.name}`}
-        description="Balances can't be edited here — they only change through Stock In, Stock Out and corrections." />
+        description="Balances can't be edited here. They only change through Stock In, Stock Out and corrections." />
       <ItemForm
         mode="edit"
         unitLocked={!!hasTxn}

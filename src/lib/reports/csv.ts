@@ -27,7 +27,7 @@ export function reportToCsv(r: ReportData): Buffer {
   blank();
 
   const st = r.stockStatus;
-  lines.push(["GENERAL REPORT — TOTAL STOCK"]);
+  lines.push(["GENERAL REPORT: TOTAL STOCK"]);
   lines.push(["Total stock value (closing)", money(r.summary.closing_value)]);
   lines.push(["Opening stock value", money(r.summary.opening_value)]);
   lines.push(["Cost of stock in", money(r.summary.in_value)]);
@@ -44,7 +44,7 @@ export function reportToCsv(r: ReportData): Buffer {
 
   const adjAll = r.summary.adj_count > 0;
   if (sec.balances) {
-    lines.push(["STOCK SHEET — OPENING STOCK / STOCK IN / STOCK OUT AND THEIR COST IN ONE TABLE (closing balance is the next day's opening stock)"]);
+    lines.push(["STOCK SHEET: OPENING STOCK / STOCK IN / STOCK OUT AND THEIR COST IN ONE TABLE (closing balance is the next day's opening stock)"]);
     lines.push(["S/N", "Item name", "Item code", "Category", "Unit", "Opening stock", "Stock in", `Cost of stock in (${cur})`, "Stock out",
       `Cost of stock out (${cur})`, ...(adjAll ? ["Corrections"] : []), "Closing (Bal)", `Cost per unit (${cur})`, `Closing worth (${cur})`, "Status"]);
     r.balances.forEach((b, i) => lines.push([i + 1, b.name, b.sku, b.category, b.unit, plainQty(b.opening_qty), plainQty(b.in_qty), money(b.in_value),

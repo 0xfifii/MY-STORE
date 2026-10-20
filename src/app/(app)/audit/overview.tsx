@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowDownToLine, BadgePercent, ClipboardCheck, FileSpreadsheet, FileText, Mail, Package, TrendingDown, TrendingUp } from "lucide-react";
+import { AlertTriangle, ArrowDownToLine, BadgePercent, ClipboardCheck, FileSpreadsheet, FileText, Mail, Package, TrendingDown, TrendingUp } from "@/components/hand-icons";
 import { Panel } from "@/components/ui/primitives";
 import { PieChart } from "@/components/pie-chart";
 import { auditSummary, distribution, unitsInStock, type DistBy, type DistMode } from "@/lib/audit-analytics";
@@ -105,7 +105,7 @@ export async function OverviewTab({ period, sym, tz, mode, by, unit, link, canMa
       <Panel title={`Monthly audit report · ${new Date(month + "-01T12:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })}`}>
         <p className="text-sm text-muted">
           Opening and closing balances, purchases, most purchased and highest-spending items, price changes, the 12-month trend, stock-count
-          discrepancies and approvals, low stock and damaged or expired stock — with the generation date and who prepared it.
+          discrepancies and approvals, low stock and damaged or expired stock, with the generation date and who prepared it.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <a href={`/api/audit/export?month=${month}&format=pdf`} className="inline-flex h-11 items-center gap-2 rounded-full bg-burgundy px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-burgundy-hover active:scale-95"><FileText className="size-4" /> Download PDF</a>

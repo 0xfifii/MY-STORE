@@ -14,12 +14,12 @@ export function appUrl(req?: Request) {
  * the owner ("sent", "off", "not_configured" or "failed: …").
  */
 export async function sendWelcomeEmail(
-  u: { name: string; email: string; role: Role; password?: string | null },
-  opts: { by: { id: string; name: string }; url: string },
+  u: { id?: string; name: string; email: string; role: Role; password?: string | null },
+  opts: { by: { id: string; name: string }; url: string; force?: boolean; resendOf?: string | null },
 ): Promise<{ status: "sent" | "off" | "not_configured" | "failed"; detail?: string }> {
   const s = await getSettings();
-  if (!s.welcome_email_enabled) return { status: "off" };
-  if (!(await smtpConfigured())) return { status: "not_configured" };
+  if (!s.welcome_email_enabled && !opts.force) return { status: "off" };
+  const configured = await smtpConfigured();
   const login = `${opts.url}/login`;
   const lines = [
     `Hello ${u.name},`,
@@ -36,9 +36,13 @@ export async function sendWelcomeEmail(
       html: emailHtml(s.store_name, `Welcome, ${u.name}`, text, { label: "Sign in", href: login }),
       kind: "welcome",
       userId: opts.by.id,
+      // The password is never stored for resending; a resend tells them to ask the owner.
+      payload: u.id ? { attach: { kind: "welcome", userId: u.id } } : {},
+      resendOf: opts.resendOf ?? null,
     });
     return { status: "sent" };
   } catch (e) {
-    return { status: "failed", detail: (e as Error).message };
+    // Logged as failed either way, so it can be resent from Users or Send Email once email works.
+    return { status: configured ? "failed" : "not_configured", detail: (e as Error).message };
   }
 }

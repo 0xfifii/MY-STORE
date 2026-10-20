@@ -38,12 +38,13 @@ export const POST = handle(async (req) => {
     const content = b.attach.format === "pdf" ? await auditReportPdf(data) : await auditReportXlsx(data);
     attachments.push({ filename: auditFileName(b.attach.month, b.attach.format), content });
   }
-  const text = `${b.message}\n\n— ${user.name}, ${s.store_name}` + (attachments.length ? `\n\nAttached: ${attachments.map((a) => a.filename).join(", ")}` : "");
+  const text = `${b.message}\n\n- ${user.name}, ${s.store_name}` + (attachments.length ? `\n\nAttached: ${attachments.map((a) => a.filename).join(", ")}` : "");
   try {
     await sendMail({
       to: b.to, subject: b.subject, text, html: emailHtml(s.store_name, b.subject, text), attachments,
       kind: b.attach.kind === "audit" ? "audit_report" : b.attach.kind === "report" ? "report" : "message",
       userId: user.id, replyTo: user.email,
+      payload: b.attach.kind === "none" ? {} : { attach: b.attach.kind === "report" ? { kind: "report", preset: b.attach.preset, format: b.attach.format } : { kind: "audit", month: b.attach.month, format: b.attach.format } },
     });
   } catch (e) {
     throw new AppError("EMAIL_FAILED", (e as Error).message, 502);

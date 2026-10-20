@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil, Plus } from "@/components/hand-icons";
 import { Button, EmptyState, Field, Input, Textarea } from "./ui/primitives";
 import { Modal } from "./ui/dialog";
 import { useToast } from "./ui/toast";

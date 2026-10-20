@@ -84,7 +84,7 @@ export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { ini
           <input type="checkbox" className="mt-0.5 size-5 accent-burgundy" checked={s.auto_report_enabled} onChange={(e) => setS({ ...s, auto_report_enabled: e.target.checked })} />
           <span>
             <span className="block text-sm font-medium">Daily report</span>
-            <span className="block text-xs text-muted">Saved to Report History every day. Runs on the server — no one needs to have the app open.</span>
+            <span className="block text-xs text-muted">Saved to Report History every day. Runs on the server, so no one needs to have the app open.</span>
           </span>
         </label>
         <label className="mt-3 flex items-start gap-3">

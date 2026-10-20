@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, TrendingDown, TrendingUp } from "@/components/hand-icons";
 import { PageHeader, Panel } from "@/components/ui/primitives";
 import { PieChart } from "@/components/pie-chart";
 import { Pagination } from "@/components/list-filters";
@@ -106,7 +106,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
     <div>
       <PageHeader
         title="Audit & Analytics"
-        description="Inventory value, purchases, stock out, purchase prices, stock counts and every change — from the real stock records."
+        description="Inventory value, purchases, stock out, purchase prices, stock counts and every change, straight from the stock records."
         actions={tab === "usage" ? (
           <a href={`/api/usage/export?from=${from}&to=${to}&group=${group}${f.workerId ? `&worker=${f.workerId}` : ""}${f.itemId ? `&item=${f.itemId}` : ""}${f.categoryId ? `&category=${f.categoryId}` : ""}`}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-night px-5 text-sm font-semibold text-white transition hover:bg-claret active:scale-95">
@@ -124,7 +124,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         <div className="flex w-max gap-1 rounded-full bg-white/60 p-1 ring-1 ring-white">
           {TABS.map(([k, l]) => (
             <Link key={k} href={tabHref(k)} scroll={false} aria-current={tab === k ? "page" : undefined}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#9c2a45] to-[#5e1528] text-white shadow-md" : "text-muted hover:bg-white hover:text-ink"}`}>
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#b3141f] to-[#6b0a12] text-white shadow-md" : "text-muted hover:bg-white hover:text-ink"}`}>
               {l}
             </Link>
           ))}
@@ -219,7 +219,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
       >
         <div className="grid grid-cols-2 gap-px border-b border-white/80 bg-white/60 sm:grid-cols-4">
           <MiniStat label="Total stocked in" value={m(inTotal)} dot="#2a78d6" />
-          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#9c2a45" />
+          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#b3141f" />
           <MiniStat label={`Average in per ${word}`} value={m(periods.length ? inTotal / periods.length : 0)} />
           <MiniStat label={`Average out per ${word}`} value={m(periods.length ? outTotal / periods.length : 0)} />
         </div>
@@ -228,7 +228,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
             {periods.map((p) => (
               <div key={p.period} className="group relative flex h-full min-w-0 flex-1 items-end justify-center gap-[1px]">
                 <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#2a78d6]" style={{ height: `${Math.max(Number(p.in_value) ? 2 : 0, (Number(p.in_value) / maxBar) * 100)}%` }} />
-                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#9c2a45]" style={{ height: `${Math.max(Number(p.out_value) ? 2 : 0, (Number(p.out_value) / maxBar) * 100)}%` }} />
+                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#b3141f]" style={{ height: `${Math.max(Number(p.out_value) ? 2 : 0, (Number(p.out_value) / maxBar) * 100)}%` }} />
                 <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-xl bg-night px-2.5 py-1.5 text-[11px] leading-snug text-white group-hover:block">
                   <strong>{periodName(p.period, group)}</strong><br />In {m(p.in_value)} · Out {m(p.out_value)}
                 </span>
@@ -239,7 +239,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
             <span>{periods[0] ? periodName(periods[0].period, group, true) : ""}</span>
             <span className="flex gap-3">
               <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#2a78d6]" /> Stock in</span>
-              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#9c2a45]" /> Stock out</span>
+              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#b3141f]" /> Stock out</span>
             </span>
             <span>{periods.length ? periodName(periods[periods.length - 1].period, group, true) : ""}</span>
           </div>
@@ -310,7 +310,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
         {spend.rows.length > 0 && (
           <>
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <Insight label={`Biggest spend (${spendBy})`} value={topSpend?.label ?? "—"} sub={topSpend ? `${m(topSpend.value)} · ${Math.round((Number(topSpend.value) / (spent || 1)) * 100)}% of all spending` : ""} />
+              <Insight label={`Biggest spend (${spendBy})`} value={topSpend?.label ?? "-"} sub={topSpend ? `${m(topSpend.value)} · ${Math.round((Number(topSpend.value) / (spent || 1)) * 100)}% of all spending` : ""} />
               <Insight label="Average per purchase" value={m(spend.receipts ? spent / spend.receipts : 0)} sub={`${spend.receipts} purchases in this period`} />
               <Insight label="Spending vs usage" value={spent >= Number(u.totals.value) ? "Buying more than using" : "Using more than buying"}
                 sub={`${m(spend.spent)} bought · ${m(u.totals.value)} used`} />
@@ -517,7 +517,7 @@ function Details({ d }: { d: Record<string, unknown> }) {
       <ul className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
         {Object.entries(changes).map(([k, v]) => (
           <li key={k} className="rounded-full bg-white/70 px-2.5 py-1 ring-1 ring-white">
-            {k.replace(/_/g, " ")}: <span className="text-muted line-through">{String(v.from ?? "—")}</span> <span className="text-muted">to</span> <strong>{String(v.to ?? "—")}</strong>
+            {k.replace(/_/g, " ")}: <span className="text-muted line-through">{String(v.from ?? "-")}</span> <span className="text-muted">to</span> <strong>{String(v.to ?? "-")}</strong>
           </li>
         ))}
       </ul>

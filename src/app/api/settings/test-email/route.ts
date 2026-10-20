@@ -16,7 +16,7 @@ export const POST = handle(async (req) => {
   const to = body.to ?? user.email;
   const text = `This is a test email from ${s.store_name}.\n\nIf you can read this, emails from the app (receipts, reports and messages) will be delivered.`;
   try {
-    const id = await sendMail({ to: [to], subject: `${s.store_name} — test email`, text, html: emailHtml(s.store_name, "Email is working", text), kind: "test", userId: user.id });
+    const id = await sendMail({ to: [to], subject: `${s.store_name}: test email`, text, html: emailHtml(s.store_name, "Email is working", text), kind: "test", userId: user.id });
     return ok({ ok: true, messageId: id, to });
   } catch (e) {
     throw new AppError("SMTP_FAILED", (e as Error).message, 502);

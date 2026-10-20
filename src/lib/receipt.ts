@@ -5,7 +5,7 @@ import { formatDateTime, formatMoney, formatQty, formatUnitCost, reasonLabel } f
 import { renderPdf } from "./reports/pdf";
 import { AppError } from "./errors";
 
-const BURGUNDY = "#7A1F35";
+const BURGUNDY = "#8f0e16";
 
 export function receiptTitle(t: TxnRow) {
   if (t.txn_type === "stock_out") return t.source === "count" ? "Stock count adjustment (shortage)" : "Stock-out receipt";
@@ -14,7 +14,7 @@ export function receiptTitle(t: TxnRow) {
 }
 
 export function receiptFileName(t: TxnRow) {
-  return `mystore-receipt-${t.txn_no}.pdf`;
+  return `velvet-store-receipt-${t.txn_no}.pdf`;
 }
 
 export async function loadReceipt(id: string) {
@@ -29,7 +29,7 @@ export async function receiptPdf(t: TxnRow, s: StoreSettings): Promise<Buffer> {
   const isOut = t.txn_type === "stock_out";
   const sameUnit = t.entered_unit_symbol === t.unit_symbol;
   const row = (label: string, value: string | null | undefined) =>
-    value ? [{ text: label, color: "#77696d" }, { text: value, bold: true }] : null;
+    value ? [{ text: label, color: "#85706a" }, { text: value, bold: true }] : null;
   const details = [
     isOut ? row("Reason", t.source === "count" ? "Stock count shortage" : reasonLabel(t.reason)) : null,
     isOut ? row("Taken by", t.worker_name) : row("Supplier", t.is_opening ? "Opening stock" : t.supplier_label),
@@ -56,7 +56,7 @@ export async function receiptPdf(t: TxnRow, s: StoreSettings): Promise<Buffer> {
     { canvas: [{ type: "line", x1: 0, y1: 6, x2: 363, y2: 6, lineWidth: 1.5, lineColor: BURGUNDY }], margin: [0, 0, 0, 12] },
   ];
   if (t.reversed_by_txn_no) {
-    content.push({ text: `CANCELLED — reversed by ${t.reversed_by_txn_no}`, bold: true, color: "#B42318", margin: [0, 0, 0, 10] });
+    content.push({ text: `CANCELLED: reversed by ${t.reversed_by_txn_no}`, bold: true, color: "#B42318", margin: [0, 0, 0, 10] });
   }
   content.push({
     table: {
@@ -68,11 +68,11 @@ export async function receiptPdf(t: TxnRow, s: StoreSettings): Promise<Buffer> {
           { text: "Cost / unit", style: "th", alignment: "right" }, { text: "Value", style: "th", alignment: "right" },
         ],
         [
-          { stack: [{ text: t.item_name, bold: true }, { text: [t.item_sku, t.category_name].filter(Boolean).join(" · "), color: "#77696d", fontSize: 8 }] },
+          { stack: [{ text: t.item_name, bold: true }, { text: [t.item_sku, t.category_name].filter(Boolean).join(" · "), color: "#85706a", fontSize: 8 }] },
           {
             stack: [
               { text: `${formatQty(t.entered_quantity)} ${t.entered_unit_symbol}`, bold: true, alignment: "right" },
-              ...(sameUnit ? [] : [{ text: `= ${formatQty(t.quantity)} ${t.unit_symbol}`, color: "#77696d", fontSize: 8, alignment: "right" }]),
+              ...(sameUnit ? [] : [{ text: `= ${formatQty(t.quantity)} ${t.unit_symbol}`, color: "#85706a", fontSize: 8, alignment: "right" }]),
             ],
           },
           { text: formatUnitCost(t.entered_unit_cost, sym), alignment: "right" },
@@ -80,9 +80,9 @@ export async function receiptPdf(t: TxnRow, s: StoreSettings): Promise<Buffer> {
         ],
       ],
     },
-    layout: { hLineWidth: () => 0.5, vLineWidth: () => 0, hLineColor: () => "#E2D3D7", paddingTop: () => 6, paddingBottom: () => 6 },
+    layout: { hLineWidth: () => 0.5, vLineWidth: () => 0, hLineColor: () => "#e8d6c6", paddingTop: () => 6, paddingBottom: () => 6 },
   });
-  content.push({ text: isOut ? "Values use the item's weighted-average cost at the time of issue." : "Cost as recorded when the stock was received.", fontSize: 7.5, color: "#77696d", margin: [0, 4, 0, 12] });
+  content.push({ text: isOut ? "Values use the item's weighted-average cost at the time of issue." : "Cost as recorded when the stock was received.", fontSize: 7.5, color: "#85706a", margin: [0, 4, 0, 12] });
   if (details.length) {
     content.push({ table: { widths: [110, "*"], body: details }, layout: "noBorders", margin: [0, 0, 0, 30] });
   }
@@ -97,7 +97,7 @@ export async function receiptPdf(t: TxnRow, s: StoreSettings): Promise<Buffer> {
   return renderPdf({
     pageSize: "A5",
     pageMargins: [30, 30, 30, 36],
-    info: { title: `${s.store_name} — ${receiptTitle(t)} ${t.txn_no}`, author: s.store_name },
+    info: { title: `${s.store_name}: ${receiptTitle(t)} ${t.txn_no}`, author: s.store_name },
     defaultStyle: { fontSize: 9, color: "#111" },
     styles: { th: { bold: true, color: "#FFFFFF", fillColor: BURGUNDY, fontSize: 8 } },
     content,

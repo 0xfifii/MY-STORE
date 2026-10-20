@@ -1,15 +1,16 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { forwardRef } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/components/hand-icons";
 import type { StockStatus } from "@/lib/format";
+import { Mascot, type MascotMood } from "../mascot";
 
 type Variant = "primary" | "accent" | "secondary" | "ghost" | "danger" | "outline-danger";
 type Size = "sm" | "md" | "lg";
 
 const variantClass: Record<Variant, string> = {
-  primary: "btn-shine bg-night text-white shadow-[0_8px_18px_-10px_rgb(29_21_23/0.7)] hover:bg-claret hover:shadow-[0_12px_24px_-10px_rgb(79_16_34/0.7)] disabled:bg-night/40 disabled:shadow-none",
-  accent: "btn-shine bg-gradient-to-br from-[#9c2a45] to-burgundy text-white shadow-[0_8px_18px_-10px_rgb(122_31_53/0.8)] hover:from-burgundy hover:to-claret disabled:opacity-50",
+  primary: "btn-shine bg-night text-white shadow-[0_8px_18px_-10px_rgb(43_22_19/0.7)] hover:bg-claret hover:shadow-[0_12px_24px_-10px_rgb(82_8_16/0.7)] disabled:bg-night/40 disabled:shadow-none",
+  accent: "btn-shine bg-gradient-to-br from-[#b3141f] to-burgundy text-white shadow-[0_8px_18px_-10px_rgb(143_14_22/0.8)] hover:from-burgundy hover:to-claret disabled:opacity-50",
   secondary: "bg-white/80 text-ink border border-white shadow-sm hover:bg-white hover:text-burgundy disabled:opacity-60",
   ghost: "text-burgundy hover:bg-rose/70 disabled:opacity-50",
   danger: "bg-bad text-white hover:bg-bad/90 disabled:opacity-60",
@@ -73,7 +74,7 @@ export function Field({
 }
 
 export const inputClass =
-  "h-12 w-full rounded-2xl border border-white bg-white/75 px-4 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(79_16_34/0.06)] placeholder:text-muted/70 focus:border-burgundy/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10 disabled:bg-canvas disabled:text-muted";
+  "h-12 w-full rounded-2xl border border-white bg-white/75 px-4 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(82_8_16/0.06)] placeholder:text-muted/70 focus:border-burgundy/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10 disabled:bg-canvas disabled:text-muted";
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className, ...rest },
@@ -130,7 +131,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <h1 className="font-display text-[28px] font-medium leading-tight tracking-tight text-ink sm:text-[34px]">{title}</h1>
+        <h1 className="font-display text-[28px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink sm:text-[36px]">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -145,7 +146,7 @@ export function Panel({ title, actions, children, className, bodyClass }: {
     <section className={clsx("glass rounded-[var(--radius-card)] transition-shadow duration-300", className)}>
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-6">
-          {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}
+          {title && <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>}
           {actions}
         </div>
       )}
@@ -154,10 +155,11 @@ export function Panel({ title, actions, children, className, bodyClass }: {
   );
 }
 
-export function EmptyState({ icon, title, body, action }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode }) {
+export function EmptyState({ icon, title, body, action, mood = "sleepy" }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode; mood?: MascotMood }) {
+  void icon; // Velvy stands in for icons on empty screens
   return (
-    <div className="flex flex-col items-center px-6 py-12 text-center">
-      {icon && <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white/80 text-burgundy shadow-sm">{icon}</div>}
+    <div className="flex flex-col items-center px-6 py-10 text-center">
+      <Mascot mood={mood} className="mb-2 h-28 w-24" />
       <p className="font-semibold text-ink">{title}</p>
       {body && <p className="mt-1 max-w-sm text-sm text-muted">{body}</p>}
       {action && <div className="mt-4">{action}</div>}

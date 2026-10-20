@@ -1,6 +1,6 @@
 /** Accent colours that sit with burgundy; a category always gets the same one. */
 export const ACCENTS = [
-  { solid: "#9c2a45", soft: "#f6e3e8", text: "#7a1f35" },
+  { solid: "#b3141f", soft: "#f8e2d8", text: "#8f0e16" },
   { solid: "#2a78d6", soft: "#e8f1fc", text: "#1c5cab" },
   { solid: "#d99a00", soft: "#fff4d6", text: "#8a5a00" },
   { solid: "#1baf7a", soft: "#e3f6ee", text: "#11714f" },
@@ -9,7 +9,7 @@ export const ACCENTS = [
 ];
 
 export function accentFor(key: string | number | null | undefined) {
-  if (key === null || key === undefined || key === "") return { solid: "#77696d", soft: "#f1ecec", text: "#5c5053" };
+  if (key === null || key === undefined || key === "") return { solid: "#85706a", soft: "#f1e7dd", text: "#65524c" };
   const s = String(key);
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;

@@ -17,7 +17,7 @@ export async function api<T = Record<string, unknown>>(url: string, init: Reques
       body: json !== undefined ? JSON.stringify(json) : rest.body,
     });
   } catch {
-    throw new ApiError("Can't reach the server. Check your internet connection and try again — nothing was saved.", 0, {});
+    throw new ApiError("Can't reach the server. Check your internet connection and try again. Nothing was saved.", 0, {});
   }
   let data: Record<string, unknown> = {};
   try {

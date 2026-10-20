@@ -32,16 +32,16 @@ export async function buildAuditReport(month: string, generatedBy: string): Prom
   return { month, label: monthLabel(month), settings: s, generatedAt: new Date().toISOString(), generatedBy, report, summary, purchases, prices, issues, counts, trend };
 }
 
-export const auditFileName = (month: string, ext: string) => `mystore-monthly-audit-${month}.${ext}`;
+export const auditFileName = (month: string, ext: string) => `velvet-store-monthly-audit-${month}.${ext}`;
 
-const BURGUNDY = "#7A1F35";
+const BURGUNDY = "#8f0e16";
 type Cell = Record<string, unknown> | string;
 
 export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
   const s = a.settings;
   const sym = s.currency_symbol;
   const m = (v: string | number) => formatMoney(v, sym);
-  const c = (v: string | number | null) => (v === null ? "—" : formatUnitCost(v, sym));
+  const c = (v: string | number | null) => (v === null ? "-" : formatUnitCost(v, sym));
   const h = (t: string, right = false): Cell => ({ text: t, style: "th", alignment: right ? "right" : "left" });
   const R = (t: string, extra: Record<string, unknown> = {}): Cell => ({ text: t, alignment: "right", ...extra });
   const none = (cols: number, msg: string): Cell[] => [{ text: msg, colSpan: cols, italics: true, color: "#777" }, ...Array(cols - 1).fill("")];
@@ -81,7 +81,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
         card("Count differences", `−${m(sm.counts.shortage)} / +${m(sm.counts.excess)}`, `${sm.counts.pending} counts pending`),
       ]],
     },
-    layout: { hLineColor: "#E5D5DA", vLineColor: "#E5D5DA", fillColor: () => "#FBF6F7" },
+    layout: { hLineColor: "#ead8c8", vLineColor: "#ead8c8", fillColor: () => "#fbf4ec" },
   });
 
   // 1. Opening and closing balances
@@ -104,7 +104,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
     if (top) {
       content.push({
         text: [
-          { text: "Highest spending: ", bold: true }, `${top.name} — ${m(top.spend)}.   `,
+          { text: "Highest spending: ", bold: true }, `${top.name}, ${m(top.spend)}.   `,
           { text: "Largest quantity bought (per unit): ", bold: true },
           [...byQty.values()].map((p) => `${p.name} ${formatQty(p.qty)} ${p.unit}`).join(" · "),
         ],
@@ -120,10 +120,10 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
   }
 
   // 3. Stock out
-  content.push({ text: "3. Stock out — fastest-moving items", style: "h2" });
+  content.push({ text: "3. Stock out: fastest-moving items", style: "h2" });
   {
     const body: Cell[][] = [[h("#"), h("Item"), h("Qty out", true), h("Issues", true), h("Value issued", true), h("Share of available", true), h("Main reasons")]];
-    a.issues.forEach((x, i) => body.push([String(i + 1), `${x.name} (${x.sku})`, R(`${formatQty(x.out_qty)} ${x.unit}`), R(String(x.issues)), R(m(x.out_value)), R(x.turnover ? `${x.turnover}%` : "—"),
+    a.issues.forEach((x, i) => body.push([String(i + 1), `${x.name} (${x.sku})`, R(`${formatQty(x.out_qty)} ${x.unit}`), R(String(x.issues)), R(m(x.out_value)), R(x.turnover ? `${x.turnover}%` : "-"),
       x.reasons.slice(0, 3).map((y) => `${reasonLabel(y.reason)} ${y.count}×`).join(", ")]));
     if (!a.issues.length) body.push(none(7, "No stock was issued this month."));
     content.push(tableBlock(body, [16, "*", 74, 44, 80, 80, 170]));
@@ -137,9 +137,9 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
     for (const p of a.prices) {
       const up = (p.change ?? 0) > 0, down = (p.change ?? 0) < 0;
       body.push([`${p.name} (per ${p.unit})`, R(c(p.previous)), R(c(p.latest), { bold: true }),
-        R(p.change === null ? "—" : `${up ? "+" : down ? "−" : ""}${c(Math.abs(p.change))}`, { color: up ? "#B42318" : down ? "#166534" : "#111", bold: up || down }),
+        R(p.change === null ? "-" : `${up ? "+" : down ? "−" : ""}${c(Math.abs(p.change))}`, { color: up ? "#B42318" : down ? "#166534" : "#111", bold: up || down }),
         R(p.changePct === null ? "first purchase" : `${p.changePct > 0 ? "+" : ""}${p.changePct.toFixed(2)}%`, { color: up ? "#B42318" : down ? "#166534" : "#111" }),
-        R(c(p.high)), R(c(p.low)), R(c(p.avgWeighted)), R(String(p.points.length)), p.suppliers.join(", ") || "—"]);
+        R(c(p.high)), R(c(p.low)), R(c(p.avgWeighted)), R(String(p.points.length)), p.suppliers.join(", ") || "-"]);
     }
     if (!a.prices.length) body.push(none(10, "No supplier purchases this month, so there is no price history to compare."));
     content.push(tableBlock(body, ["*", 62, 62, 58, 52, 58, 58, 72, 44, 90]));
@@ -155,14 +155,14 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
   }
 
   // 6. Counts
-  content.push({ text: "6. Physical stock counts — discrepancies and adjustments", style: "h2" });
+  content.push({ text: "6. Physical stock counts: discrepancies and adjustments", style: "h2" });
   {
     const body: Cell[][] = [[h("Count"), h("Item"), h("System", true), h("Counted", true), h("Difference", true), h("Value", true), h("Status"), h("Counted by"), h("Approved / rejected by"), h("Adjustment")]];
     for (const x of a.counts) {
       const d = Number(x.difference);
       body.push([x.count_no, x.item_name, R(`${formatQty(x.system_qty)} ${x.unit}`), R(`${formatQty(x.counted_qty)} ${x.unit}`),
         R(`${d > 0 ? "+" : ""}${formatQty(x.difference)}`, { color: d < 0 ? "#B42318" : d > 0 ? "#1D4ED8" : "#166534", bold: d !== 0 }), R(m(x.value_difference)),
-        x.status, x.counted_by ?? "—", x.decided_by ? `${x.decided_by}${x.decided_at ? `, ${formatDateTime(x.decided_at, s.timezone)}` : ""}` : "—", x.txn_no ?? "—"]);
+        x.status, x.counted_by ?? "-", x.decided_by ? `${x.decided_by}${x.decided_at ? `, ${formatDateTime(x.decided_at, s.timezone)}` : ""}` : "-", x.txn_no ?? "-"]);
     }
     if (!a.counts.length) body.push(none(10, "No physical counts were recorded this month."));
     content.push(tableBlock(body, [44, "*", 58, 58, 54, 62, 46, 70, 120, 56]));
@@ -201,7 +201,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
 
   return renderPdf({
     pageSize: "A4", pageOrientation: "landscape", pageMargins: [36, 36, 36, 40],
-    info: { title: `${s.store_name} — Monthly Audit Report — ${a.label}`, author: s.store_name },
+    info: { title: `${s.store_name}: Monthly Audit Report, ${a.label}`, author: s.store_name },
     defaultStyle: { fontSize: 8, color: "#111" },
     styles: {
       brand: { fontSize: 20, bold: true, color: BURGUNDY }, title: { fontSize: 12, bold: true, margin: [0, 2, 0, 0] },
@@ -225,7 +225,7 @@ export async function auditReportXlsx(a: AuditReportData): Promise<Buffer> {
   const sheet = (name: string, cols: [string, number, string?][], rows: unknown[][], note?: string) => {
     const ws = wb.addWorksheet(name, { views: [{ state: "frozen", ySplit: 1 }] });
     ws.columns = cols.map(([header, width, fmt]) => ({ header, width, style: fmt ? { numFmt: fmt } : {} }));
-    ws.getRow(1).eachCell((c) => { c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7A1F35" } }; c.alignment = { wrapText: true, vertical: "middle" }; });
+    ws.getRow(1).eachCell((c) => { c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "ff8f0e16" } }; c.alignment = { wrapText: true, vertical: "middle" }; });
     ws.getRow(1).height = 24;
     rows.forEach((r) => ws.addRow(r));
     if (!rows.length) ws.addRow(["No records for this month"]).font = { italic: true, color: { argb: "FF666666" } };
@@ -235,7 +235,7 @@ export async function auditReportXlsx(a: AuditReportData): Promise<Buffer> {
   const sm = a.summary, rs = a.report.summary;
   const sumWs = wb.addWorksheet("Summary", { views: [{ showGridLines: false }] });
   sumWs.columns = [{ width: 40 }, { width: 30 }];
-  sumWs.addRow([s.store_name]).font = { bold: true, size: 18, color: { argb: "FF7A1F35" } };
+  sumWs.addRow([s.store_name]).font = { bold: true, size: 18, color: { argb: "ff8f0e16" } };
   sumWs.addRow(["Monthly Audit Report"]).font = { bold: true, size: 13 };
   const rows: [string, unknown, string?][] = [
     ["Reporting period", `${a.label} (${a.report.params.from} to ${a.report.params.to})`],

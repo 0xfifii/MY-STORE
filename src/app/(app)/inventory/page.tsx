@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, Plus, Download, Pencil } from "lucide-react";
+import { Boxes, Plus, Download, Pencil } from "@/components/hand-icons";
 import { EmptyState, LinkButton, PageHeader, StatusBadge } from "@/components/ui/primitives";
 import { ListFilters, Pagination } from "@/components/list-filters";
 import { StockButtons } from "@/components/stock-dialog";
@@ -17,7 +17,7 @@ export const metadata = { title: "Inventory" };
 type SP = { q?: string; category?: string; status?: string; sort?: string; page?: string };
 
 const SORTS: Record<string, { sort: ItemListParams["sort"]; dir: "asc" | "desc"; label: string }> = {
-  name: { sort: "name", dir: "asc", label: "Name A–Z" },
+  name: { sort: "name", dir: "asc", label: "Name A to Z" },
   low: { sort: "quantity", dir: "asc", label: "Lowest balance" },
   high: { sort: "quantity", dir: "desc", label: "Highest balance" },
   value: { sort: "value", dir: "desc", label: "Highest worth" },
@@ -108,7 +108,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                 <div className="relative mt-5 flex items-end justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-medium uppercase tracking-wide text-muted">In stock</p>
-                    <p className="text-[38px] font-light leading-none tracking-tight">
+                    <p className="text-[38px] font-normal leading-none tracking-tight">
                       {formatQty(it.quantity)}
                       <span className="ml-1.5 text-base font-medium text-muted">{it.unit_symbol}</span>
                     </p>

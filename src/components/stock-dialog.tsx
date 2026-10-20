@@ -19,7 +19,7 @@ export function StockDialogProvider({ children }: { children: React.ReactNode })
       <Modal
         open={!!state}
         onClose={() => setState(null)}
-        title={state ? `${state.mode === "in" ? "Stock in" : "Stock out"}${state.name ? ` — ${state.name}` : ""}` : ""}
+        title={state ? `${state.mode === "in" ? "Stock in" : "Stock out"}${state.name ? `: ${state.name}` : ""}` : ""}
       >
         {state && <StockMoveForm key={state.key} mode={state.mode} initialItemId={state.itemId} embedded />}
       </Modal>
@@ -52,7 +52,7 @@ export function StockButtons({ itemId, name, size = "sm", archived }: { itemId: 
       )}
       {canOut && (
         <button type="button" onClick={() => open("out", itemId, name)} aria-label={`Stock out ${name}`}
-          className={`${cls} btn-shine inline-flex items-center rounded-full bg-gradient-to-br from-[#9c2a45] to-burgundy font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md active:scale-95`}>
+          className={`${cls} btn-shine inline-flex items-center rounded-full bg-gradient-to-br from-[#b3141f] to-burgundy font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md active:scale-95`}>
           <StockOutIcon className={ic} /> Out
         </button>
       )}

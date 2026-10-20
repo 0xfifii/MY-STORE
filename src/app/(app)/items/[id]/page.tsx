@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { Pencil } from "@/components/hand-icons";
 import { EmptyState, LinkButton, PageHeader, Panel, StatusBadge, TxnTypeBadge } from "@/components/ui/primitives";
 import { StockButtons } from "@/components/stock-dialog";
 import { ReceiptLink } from "@/components/icons";

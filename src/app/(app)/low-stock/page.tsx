@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, Download } from "lucide-react";
+import { CheckCircle2, Download } from "@/components/hand-icons";
 import { EmptyState, PageHeader, StatusBadge } from "@/components/ui/primitives";
 import { StockButtons } from "@/components/stock-dialog";
 import { requirePageUser } from "@/lib/auth";

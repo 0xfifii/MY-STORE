@@ -43,9 +43,9 @@ export const GET = handle(async (req) => {
     rows.forEach((x, i) => L.push([i + 1, x.label, ...(withQty ? [x.qty, x.unit] : []), x.value, ((Number(x.value) / tot) * 100).toFixed(1), x.count]));
     L.push([]);
   };
-  spendBlock("HOW MONEY IS SPENT — BY ITEM", byItem.rows, true);
-  spendBlock("HOW MONEY IS SPENT — BY CATEGORY", byCat.rows, false);
-  spendBlock("HOW MONEY IS SPENT — BY SUPPLIER", bySup.rows, false);
+  spendBlock("HOW MONEY IS SPENT BY ITEM", byItem.rows, true);
+  spendBlock("HOW MONEY IS SPENT BY CATEGORY", byCat.rows, false);
+  spendBlock("HOW MONEY IS SPENT BY SUPPLIER", bySup.rows, false);
   L.push(["ITEMS TAKEN (most to least)"], ["S/N", "Item", "Code", "Category", "Quantity", "Unit", `Value (${s.currency_code})`, "Times taken", "Workers"]);
   u.items.forEach((x, i) => L.push([i + 1, x.name, x.sku, x.category, x.qty, x.unit, x.value, x.takes, x.workers]));
   L.push([], ["BY WORKER"], ["S/N", "Worker", "Department", "Times taken", "Different items", `Value (${s.currency_code})`]);
@@ -60,6 +60,6 @@ export const GET = handle(async (req) => {
   }
   const text = L.map((l) => l.map(cell).join(",")).join("\r\n") + "\r\n";
   return new Response(Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(text)]), {
-    headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="mystore-usage-${from}_to_${to}.csv"` },
+    headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="velvet-store-usage-${from}_to_${to}.csv"` },
   });
 });

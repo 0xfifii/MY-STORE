@@ -106,7 +106,7 @@ export async function StockOutTab({ r, period, sym, sort, link }: { r: R; period
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Callout tone="night" label="Issued most often" title={fastest.name} sub={`${fastest.issues} stock outs · ${formatQty(fastest.out_qty)} ${fastest.unit}`} />
           <Callout tone="rose" label="Highest value issued" title={priciest.name} sub={`${m(priciest.out_value)} · ${((Number(priciest.out_value) / (totalValue || 1)) * 100).toFixed(0)}% of value issued`} />
-          <Callout label="Fastest moving (share of available stock used)" title={turnover.name} sub={turnover.turnover ? `${turnover.turnover}% of what was available went out` : "—"} />
+          <Callout label="Fastest moving (share of available stock used)" title={turnover.name} sub={turnover.turnover ? `${turnover.turnover}% of what was available went out` : "-"} />
         </div>
       )}
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
@@ -131,10 +131,10 @@ export async function StockOutTab({ r, period, sym, sort, link }: { r: R; period
                       <Td>
                         <div className="w-36 space-y-1 text-[11px]">
                           <div className="flex items-center gap-1.5"><div className="h-1.5 rounded-full bg-[#2a78d6]" style={{ width: `${(Number(x.in_qty) / mx) * 100}%`, minWidth: Number(x.in_qty) ? 3 : 0 }} /><span className="text-muted">in {formatQty(x.in_qty)}</span></div>
-                          <div className="flex items-center gap-1.5"><div className="h-1.5 rounded-full bg-[#9c2a45]" style={{ width: `${(Number(x.out_qty) / mx) * 100}%`, minWidth: 3 }} /><span className="text-muted">out {formatQty(x.out_qty)}</span></div>
+                          <div className="flex items-center gap-1.5"><div className="h-1.5 rounded-full bg-[#b3141f]" style={{ width: `${(Number(x.out_qty) / mx) * 100}%`, minWidth: 3 }} /><span className="text-muted">out {formatQty(x.out_qty)}</span></div>
                         </div>
                       </Td>
-                      <Td right>{x.turnover ? `${x.turnover}%` : "—"}</Td>
+                      <Td right>{x.turnover ? `${x.turnover}%` : "-"}</Td>
                       <Td><div className="flex flex-wrap gap-1">{x.reasons.map((y) => <span key={y.reason} className="rounded-full bg-white px-2 py-0.5 text-[11px] ring-1 ring-line">{reasonLabel(y.reason)} {y.count}×</span>)}</div></Td>
                     </tr>
                   );
@@ -149,7 +149,7 @@ export async function StockOutTab({ r, period, sym, sort, link }: { r: R; period
               {reasons.map((x) => (
                 <li key={x.reason}>
                   <div className="flex justify-between text-sm"><span className="font-medium">{reasonLabel(x.reason)}</span><span className="text-muted">{x.count}× · <strong className="text-ink">{m(x.value)}</strong></span></div>
-                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-gradient-to-r from-[#9c2a45] to-[#d65a75]" style={{ width: `${(Number(x.value) / (reasonTotal || 1)) * 100}%` }} /></div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-gradient-to-r from-[#b3141f] to-[#d9443a]" style={{ width: `${(Number(x.value) / (reasonTotal || 1)) * 100}%` }} /></div>
                 </li>
               ))}
             </ul>
@@ -167,7 +167,7 @@ export async function PricesTab({ r, period, sym, q, dir, pitem, link }: { r: R;
   const all = await priceTracking(r, q);
   const rows = all.filter((x) => (dir === "up" ? (x.change ?? 0) > 0 : dir === "down" ? (x.change ?? 0) < 0 : true));
   const sel = rows.find((x) => x.item_id === pitem) ?? rows.find((x) => x.points.length > 1) ?? rows[0];
-  const c = (v: number | null, u: string) => (v === null ? "—" : `${formatUnitCost(v, sym)}`) + (v === null ? "" : ` / ${u}`);
+  const c = (v: number | null, u: string) => (v === null ? "-" : `${formatUnitCost(v, sym)}`) + (v === null ? "" : ` / ${u}`);
   const ups = all.filter((x) => (x.change ?? 0) > 0).length;
   const downs = all.filter((x) => (x.change ?? 0) < 0).length;
 
@@ -179,11 +179,11 @@ export async function PricesTab({ r, period, sym, q, dir, pitem, link }: { r: R;
       </div>
 
       {sel ? (
-        <Panel title={<span>{sel.name} — purchase price per {sel.unit} <span className="font-normal text-muted">· {period.label}</span></span>}>
+        <Panel title={<span>{sel.name}: purchase price per {sel.unit} <span className="font-normal text-muted">· {period.label}</span></span>}>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <div>
               <LineChart format="money" symbol={sym} markChanges zeroBase={false}
-                series={[{ name: "Price", color: "#9c2a45", points: sel.points.map((p) => ({ x: formatDate(p.day).replace(/ \d{4}$/, ""), y: p.price, note: `${formatQty(String(p.qty))} ${sel.unit}${p.supplier ? ` · ${p.supplier}` : ""}` })) }]} />
+                series={[{ name: "Price", color: "#b3141f", points: sel.points.map((p) => ({ x: formatDate(p.day).replace(/ \d{4}$/, ""), y: p.price, note: `${formatQty(String(p.qty))} ${sel.unit}${p.supplier ? ` · ${p.supplier}` : ""}` })) }]} />
               {sel.points.length === 1 && <p className="mt-2 text-xs text-muted">Only one purchase in this period{sel.historyBefore ? ` (plus ${sel.historyBefore} earlier)` : ""}. Pick a longer period to see a trend.</p>}
             </div>
             <div className="space-y-2 text-sm">
@@ -212,7 +212,7 @@ export async function PricesTab({ r, period, sym, q, dir, pitem, link }: { r: R;
                       <Td right>{formatQty(String(p.qty))} {sel.unit}</Td>
                       <Td right>{formatMoney(p.spend, sym)}</Td>
                       <Td><span className="text-xs text-muted">{p.entered}</span></Td>
-                      <Td>{p.supplier ?? "—"}</Td>
+                      <Td>{p.supplier ?? "-"}</Td>
                     </tr>
                   );
                 })}
@@ -232,15 +232,15 @@ export async function PricesTab({ r, period, sym, q, dir, pitem, link }: { r: R;
               {rows.map((x) => (
                 <tr key={x.item_id} className={`transition-colors hover:bg-white/60 ${sel?.item_id === x.item_id ? "bg-rose/60" : ""}`}>
                   <Td><Link href={link({ pitem: x.item_id })} scroll={false} className="font-semibold hover:text-burgundy">{x.name}</Link><span className="block text-xs text-muted">per {x.unit} · {x.points.length} purchase{x.points.length === 1 ? "" : "s"}</span></Td>
-                  <Td right>{x.previous === null ? "—" : formatUnitCost(x.previous, sym)}</Td>
-                  <Td right><strong>{x.latest === null ? "—" : formatUnitCost(x.latest, sym)}</strong></Td>
+                  <Td right>{x.previous === null ? "-" : formatUnitCost(x.previous, sym)}</Td>
+                  <Td right><strong>{x.latest === null ? "-" : formatUnitCost(x.latest, sym)}</strong></Td>
                   <Td><Change value={x.change} pct={x.changePct} fmt={(n) => formatUnitCost(n, sym)} /></Td>
-                  <Td right>{x.high === null ? "—" : formatUnitCost(x.high, sym)}</Td>
-                  <Td right>{x.low === null ? "—" : formatUnitCost(x.low, sym)}</Td>
-                  <Td right>{x.avgWeighted === null ? "—" : formatUnitCost(x.avgWeighted, sym)}</Td>
+                  <Td right>{x.high === null ? "-" : formatUnitCost(x.high, sym)}</Td>
+                  <Td right>{x.low === null ? "-" : formatUnitCost(x.low, sym)}</Td>
+                  <Td right>{x.avgWeighted === null ? "-" : formatUnitCost(x.avgWeighted, sym)}</Td>
                   <Td><span className="text-xs text-muted">{x.qtyAtPrice.map((p) => `${formatQty(String(p.qty))} @ ${formatUnitCost(p.price, sym)}`).join(" · ")}</span></Td>
                   <Td right>{formatMoney(x.spend, sym)}</Td>
-                  <Td><span className="text-xs">{x.suppliers.join(", ") || "—"}</span></Td>
+                  <Td><span className="text-xs">{x.suppliers.join(", ") || "-"}</span></Td>
                 </tr>
               ))}
             </tbody>

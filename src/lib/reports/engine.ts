@@ -75,7 +75,7 @@ export type ReportData = {
   /** Ranked by value (units differ between items, so value is the fair comparison). */
   topIn: Highlight[];
   topOut: Highlight[];
-  /** Day-by-day stock sheet (S/N, item, opening, in, out, closing) — each day's closing is the next day's opening. */
+  /** Day-by-day stock sheet (S/N, item, opening, in, out, closing), each day's closing is the next day's opening. */
   days: DaySheet[];
   /** Stock taken per worker during the period. */
   byWorker: { name: string; takes: number; value: string; items: number }[];
@@ -355,8 +355,8 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
   const periodType = periodTypeOf(params.from, params.to, params.periodType);
   const periodLabel =
     periodType === "month"
-      ? `${new Date(params.from + "T12:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })} (${formatDate(params.from)} – ${formatDate(params.to)})`
-      : params.from === params.to ? formatDate(params.from) : `${formatDate(params.from)} – ${formatDate(params.to)}`;
+      ? `${new Date(params.from + "T12:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })} (${formatDate(params.from)} to ${formatDate(params.to)})`
+      : params.from === params.to ? formatDate(params.from) : `${formatDate(params.from)} to ${formatDate(params.to)}`;
 
   const counts = (rows: TxnRow[]) => rows.reduce<Record<string, number>>((m, t) => ((m[t.item_id] = (m[t.item_id] ?? 0) + 1), m), {});
   const inCount = counts(stockIn);
@@ -423,7 +423,7 @@ export function reportFileName(p: ReportParams, ext: string) {
   const pt = periodTypeOf(p.from, p.to, p.periodType);
   const kind = (pt === "week" ? "weekly-" : pt === "month" ? "monthly-" : "") + (p.kind === "full" ? "report" : p.kind.replace("_", "-"));
   const period = p.from === p.to ? p.from : `${p.from}_to_${p.to}`;
-  return `mystore-${kind}-${period}.${ext}`;
+  return `velvet-store-${kind}-${period}.${ext}`;
 }
 
 /** Which sections a report kind contains. */

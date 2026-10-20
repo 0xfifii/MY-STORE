@@ -4,8 +4,8 @@ import { sectionsFor } from "./engine";
 import { formatDateTime, formatQty, reasonLabel } from "../format";
 import { statusText } from "./csv";
 
-const BURGUNDY = "FF7A1F35";
-const LIGHT = "FFF7ECEF";
+const BURGUNDY = "ff8f0e16";
+const LIGHT = "fff7ebe0";
 
 /** Formatted workbook: General Report, Stock Sheet, Stock In & Out, Corrections, Low Stock, By Worker, Most Stocked. */
 export async function reportToXlsx(r: ReportData): Promise<Buffer> {
@@ -47,8 +47,8 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
   );
   if (adjAll) sumRows.push(["Correction transactions", r.summary.adj_count]);
   sumRows.push(["Unique items received or issued", r.summary.items_moved]);
-  if (r.topIn[0]) sumRows.push(["Most stocked in", `${r.topIn[0].name} — ${formatQty(r.topIn[0].qty)} ${r.topIn[0].unit}`]);
-  if (r.topOut[0]) sumRows.push(["Most stocked out", `${r.topOut[0].name} — ${formatQty(r.topOut[0].qty)} ${r.topOut[0].unit}`]);
+  if (r.topIn[0]) sumRows.push(["Most stocked in", `${r.topIn[0].name}, ${formatQty(r.topIn[0].qty)} ${r.topIn[0].unit}`]);
+  if (r.topOut[0]) sumRows.push(["Most stocked out", `${r.topOut[0].name}, ${formatQty(r.topOut[0].qty)} ${r.topOut[0].unit}`]);
   for (const [label, val, fmt] of sumRows) {
     const row = g.addRow([label, val]);
     if (fmt) row.getCell(2).numFmt = fmt;
@@ -77,7 +77,7 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
     italic: true, size: 9, color: { argb: "FF666666" },
   };
 
-  // ---- Stock Sheet: opening, stock in, cost of stock in, stock out, cost of stock out, closing — one table
+  // ---- Stock Sheet: opening, stock in, cost of stock in, stock out, cost of stock out, closing, one table
   if (sec.balances) {
     const ws = wb.addWorksheet("Stock Sheet", { views: [{ showGridLines: false }] });
     ws.columns = [

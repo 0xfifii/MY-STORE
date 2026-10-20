@@ -67,14 +67,14 @@ export function LineChart({ series, format, symbol = "", unit = "", height = 240
         aria-label={series.map((s) => `${s.name}: ${s.points.filter((p) => p.y !== null).map((p) => `${p.x} ${f(p.y!)}`).join(", ")}`).join("; ")} className="block touch-pan-y overflow-visible">
         {ticks.map((t, i) => (
           <g key={i}>
-            <line x1={padL} x2={w - padR} y1={Y(t)} y2={Y(t)} stroke="#ecdfe2" strokeDasharray={i === 0 ? "" : "3 4"} />
-            <text x={padL - 8} y={Y(t) + 4} textAnchor="end" fontSize="11" fill="#77696d">{format === "money" ? fmtMoney(t >= 100 ? Math.round(t) : t, symbol) : fmtQty(t)}</text>
+            <line x1={padL} x2={w - padR} y1={Y(t)} y2={Y(t)} stroke="#eadcce" strokeDasharray={i === 0 ? "" : "3 4"} />
+            <text x={padL - 8} y={Y(t) + 4} textAnchor="end" fontSize="11" fill="#85706a">{format === "money" ? fmtMoney(t >= 100 ? Math.round(t) : t, symbol) : fmtQty(t)}</text>
           </g>
         ))}
         {labels.map((l, i) => (i % step === 0 || i === labels.length - 1) && (
-          <text key={i} x={X(i)} y={height - 8} textAnchor={i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"} fontSize="11" fill="#77696d">{l}</text>
+          <text key={i} x={X(i)} y={height - 8} textAnchor={i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"} fontSize="11" fill="#85706a">{l}</text>
         ))}
-        {hover !== null && <line x1={X(hover)} x2={X(hover)} y1={padT} y2={padT + ih} stroke="#1d1517" strokeOpacity="0.25" />}
+        {hover !== null && <line x1={X(hover)} x2={X(hover)} y1={padT} y2={padT + ih} stroke="#2b1613" strokeOpacity="0.25" />}
         {series.map((s) => {
           let d = "", pen = false;
           s.points.forEach((p, i) => {
@@ -105,7 +105,7 @@ export function LineChart({ series, format, symbol = "", unit = "", height = 240
             return (
               <p key={s.name} className="mt-0.5 flex items-center gap-1.5">
                 <span className="size-2 rounded-full" style={{ background: s.color }} />
-                {s.name}: <strong>{p?.y === null || p?.y === undefined ? "—" : f(p.y)}</strong>
+                {s.name}: <strong>{p?.y === null || p?.y === undefined ? "-" : f(p.y)}</strong>
                 {p?.note ? <span className="text-white/70">· {p.note}</span> : null}
               </p>
             );

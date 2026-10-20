@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Search } from "lucide-react";
+import { Search } from "@/components/hand-icons";
 import { Select, Spinner } from "./ui/primitives";
 
 type Opt = { value: string; label: string };
@@ -61,7 +61,7 @@ export function ListFilters({
           onKeyDown={(e) => { if (e.key === "Escape" && q) { e.preventDefault(); setQ(""); } }}
           placeholder={searchPlaceholder}
           aria-label={searchPlaceholder}
-          className="h-12 w-full rounded-full border border-white bg-white/75 pl-11 pr-10 text-[15px] shadow-[inset_0_1px_2px_rgb(79_16_34/0.06)] focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10"
+          className="h-12 w-full rounded-full border border-white bg-white/75 pl-11 pr-10 text-[15px] shadow-[inset_0_1px_2px_rgb(82_8_16/0.06)] focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10"
         />
         {pending && <Spinner className="absolute right-3 top-1/2 size-4 -translate-y-1/2" />}
       </div>

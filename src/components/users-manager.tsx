@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Plus, ShieldCheck, UserCheck, UserX } from "lucide-react";
+import { KeyRound, Mail, Plus, ShieldCheck, UserCheck, UserX } from "@/components/hand-icons";
 import { Button, Field, Input, Select } from "./ui/primitives";
 import { Modal } from "./ui/dialog";
 import { useToast } from "./ui/toast";
@@ -11,6 +11,7 @@ import { ROLE_LABELS, TOGGLEABLE, permissionsOf, type Role } from "@/lib/permiss
 
 type U = {
   id: string; name: string; email: string; role: Role; is_active: boolean; last_login: string | null;
+  welcome?: { status: string; at: string; error: string | null } | null;
   permissions: string[] | null; allowed_category_ids: number[] | null;
 };
 
@@ -20,11 +21,12 @@ const ROLE_HELP: Record<Role, string> = {
   viewer: "Can look at inventory and download reports. Can't change anything.",
 };
 
-export function UsersManager({ users, meId, categories }: { users: U[]; meId: string; categories: { id: number; name: string }[] }) {
+export function UsersManager({ users, meId, categories, mailReady = true }: { users: U[]; meId: string; categories: { id: number; name: string }[]; mailReady?: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [modal, setModal] = useState<null | { kind: "new" } | { kind: "password"; user: U }>(null);
   const [permUser, setPermUser] = useState<U | null>(null);
+  const [welcomeUser, setWelcomeUser] = useState<U | null>(null);
   const [f, setF] = useState({ name: "", email: "", role: "staff" as Role, password: "" });
   const [welcome, setWelcome] = useState({ send_welcome: true, include_password: true });
   const [busy, setBusy] = useState(false);
@@ -71,6 +73,11 @@ export function UsersManager({ users, meId, categories }: { users: U[]; meId: st
             <div className="min-w-0 flex-1">
               <p className="font-semibold">{u.name}{u.id === meId && <span className="ml-2 text-xs font-normal text-muted">(you)</span>}{!u.is_active && <span className="ml-2 text-xs font-normal text-bad">deactivated</span>}</p>
               <p className="truncate text-xs text-muted">{u.email} · last sign-in {u.last_login ?? "never"}</p>
+              {u.id !== meId && (
+                <p className={`mt-0.5 text-xs ${u.welcome?.status === "sent" ? "text-ok" : u.welcome ? "text-bad" : "text-muted"}`}>
+                  {u.welcome?.status === "sent" ? `Welcome email sent ${u.welcome.at}` : u.welcome ? `Welcome email not delivered (${u.welcome.at}): ${u.welcome.error ?? "failed"}` : "No welcome email sent yet"}
+                </p>
+              )}
               {u.role !== "owner" && (
                 <p className="mt-1 truncate text-xs text-ink/70">
                   Can: {permissionsOf(u).filter((p) => p !== "view").map((p) => TOGGLEABLE.find((t) => t.action === p)?.label).filter(Boolean).join(", ") || "view only"}
@@ -90,6 +97,11 @@ export function UsersManager({ users, meId, categories }: { users: U[]; meId: st
               <Button size="sm" variant="secondary" onClick={() => { setF({ ...f, password: "" }); setErr(null); setModal({ kind: "password", user: u }); }}>
                 <KeyRound className="size-4" /> Password
               </Button>
+              {u.id !== meId && u.is_active && (
+                <Button size="sm" variant="secondary" onClick={() => setWelcomeUser(u)}>
+                  <Mail className="size-4" /> {u.welcome?.status === "sent" ? "Resend welcome email" : "Send welcome email"}
+                </Button>
+              )}
               {u.id !== meId && (
                 <Button size="sm" variant={u.is_active ? "outline-danger" : "secondary"} onClick={() => patch(u, { is_active: !u.is_active }, u.is_active ? "User deactivated" : "User reactivated")}>
                   {u.is_active ? <UserX className="size-4" /> : <UserCheck className="size-4" />} {u.is_active ? "Deactivate" : "Reactivate"}
@@ -136,6 +148,7 @@ export function UsersManager({ users, meId, categories }: { users: U[]; meId: st
           <button type="submit" className="hidden" />
         </form>
       </Modal>
+      {welcomeUser && <WelcomeModal user={welcomeUser} mailReady={mailReady} onClose={() => setWelcomeUser(null)} />}
       {permUser && <PermissionsModal user={permUser} categories={categories} onClose={() => setPermUser(null)} />}
     </div>
   );
@@ -204,6 +217,45 @@ function PermissionsModal({ user, categories, onClose }: { user: U; categories: 
         </div>
       )}
       {err && <p role="alert" className="mt-3 text-sm text-bad">{err}</p>}
+    </Modal>
+  );
+}
+
+/** Send (or resend) the welcome email, optionally with a fresh temporary password. */
+function WelcomeModal({ user, mailReady, onClose }: { user: U; mailReady: boolean; onClose: () => void }) {
+  const [reset, setReset] = useState(false);
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const router = useRouter();
+  const toast = useToast();
+  const send = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await api(`/api/users/${user.id}/welcome`, { method: "POST", json: reset ? { new_password: pw } : {} });
+      toast.success("Welcome email sent", `Sent to ${user.email}. Ask them to check spam if it doesn't arrive in a few minutes.`);
+      onClose();
+      router.refresh();
+    } catch (e) { setErr((e as Error).message); router.refresh(); } finally { setBusy(false); }
+  };
+  return (
+    <Modal open onClose={onClose} title={`Welcome email for ${user.name}`} busy={busy}
+      footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={send} loading={busy} disabled={!mailReady || (reset && pw.length < 8)}><Mail className="size-4" /> Send email</Button></>}>
+      <form onSubmit={(e) => { e.preventDefault(); if (mailReady && (!reset || pw.length >= 8)) send(); }} className="space-y-4">
+        <p className="text-sm">Sends the sign-in link and login email to <strong>{user.email}</strong>.</p>
+        {!mailReady && <p className="rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">Email isn&apos;t set up yet. Add the email account in Store Settings first.</p>}
+        <label className="flex items-start gap-2.5 text-sm">
+          <input type="checkbox" className="mt-0.5 size-4 accent-burgundy" checked={reset} onChange={(e) => setReset(e.target.checked)} />
+          <span><span className="font-medium">Set a new temporary password and include it</span><span className="block text-xs text-muted">Passwords are stored scrambled, so the old one can&apos;t be sent again. This signs them out of other devices.</span></span>
+        </label>
+        {reset && (
+          <Field label="New temporary password" htmlFor="wl-pw" hint="At least 8 characters.">
+            <Input id="wl-pw" type="text" autoComplete="new-password" autoFocus value={pw} onChange={(e) => setPw(e.target.value)} />
+          </Field>
+        )}
+        {err && <p role="alert" className="rounded-2xl bg-bad-bg px-3 py-2 text-sm text-bad">{err}</p>}
+        <button type="submit" className="hidden" />
+      </form>
     </Modal>
   );
 }

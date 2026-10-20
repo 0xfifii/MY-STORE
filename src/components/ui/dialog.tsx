@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X } from "@/components/hand-icons";
 import clsx from "clsx";
 
 /** Bottom sheet on phones, centred dialog on larger screens. */
@@ -14,30 +14,37 @@ export function Modal({
   const panel = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  // Keep the latest callbacks without re-running the open/focus effect on every keystroke
+  // (re-running it moved the cursor back to the first box while typing).
+  const closeRef = useRef(onClose);
+  const busyRef = useRef(busy);
+  closeRef.current = onClose;
+  busyRef.current = busy;
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) onClose();
+      if (e.key === "Escape" && !busyRef.current) closeRef.current();
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
-    setTimeout(() => {
-      const first = panel.current?.querySelector<HTMLElement>("[data-autofocus], input:not([type=hidden]), select, textarea, button");
-      first?.focus();
+    const t = setTimeout(() => {
+      const first = panel.current?.querySelector<HTMLElement>("[data-autofocus], [autofocus], input:not([type=hidden]):not([type=checkbox]), select, textarea, button");
+      if (first && !panel.current?.contains(document.activeElement)) first.focus();
     }, 20);
     return () => {
+      clearTimeout(t);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
       prev?.focus?.();
     };
-  }, [open, onClose, busy]);
+  }, [open]);
 
   if (!open || !mounted) return null;
   // Rendered at the end of <body>: frosted (backdrop-filter) panels would otherwise trap and clip the dialog.
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-claret-deep/45 backdrop-blur-[2px]" onClick={() => !busy && onClose()} />
+      <div className="absolute inset-0 bg-claret-deep/45 backdrop-blur-[2px]" onClick={() => !busyRef.current && closeRef.current()} />
       <div
         ref={panel}
         className={clsx(

@@ -1,5 +1,5 @@
 """
-Browser walkthrough of MY STORE (Playwright, Chromium).
+Browser walkthrough of The Velvet Store (Playwright, Chromium).
 Exercises the real UI on desktop, tablet and phone sizes and saves screenshots.
 
 Usage: python3 tests/ui_walkthrough.py http://localhost:3000 ./screenshots

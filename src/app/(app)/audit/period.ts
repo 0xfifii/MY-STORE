@@ -34,7 +34,7 @@ export function resolvePeriod(sp: { p?: string; d?: string; from?: string; to?: 
     from = sp.from && D.test(sp.from) ? sp.from : addDays(today, -29);
     to = sp.to && D.test(sp.to) ? sp.to : today;
     if (to < from) [from, to] = [to, from];
-    label = `${fmt(from, { day: "numeric", month: "short", year: "numeric" })} – ${fmt(to, { day: "numeric", month: "short", year: "numeric" })}`;
+    label = `${fmt(from, { day: "numeric", month: "short", year: "numeric" })} to ${fmt(to, { day: "numeric", month: "short", year: "numeric" })}`;
   }
   if (to > today) to = today;
   if (next && next > today) next = null;

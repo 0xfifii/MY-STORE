@@ -8,9 +8,9 @@ export const Td = ({ children, right, className = "" }: { children?: React.React
 );
 
 const TONES: Record<string, string> = {
-  burgundy: "from-[#9c2a45] to-[#5e1528] text-white",
+  burgundy: "from-[#b3141f] to-[#6b0a12] text-white",
   blue: "from-[#2a78d6] to-[#1c5cab] text-white",
-  rose: "from-[#f6ebee] to-white text-ink",
+  rose: "from-[#f7e8dd] to-white text-ink",
   amber: "from-[#fff4d6] to-white text-ink",
   green: "from-[#e3f5ec] to-white text-ink",
   plain: "from-white/90 to-white/60 text-ink",
@@ -21,7 +21,7 @@ export function StatCard({ label, value, sub, href, tone = "plain", icon }: { la
   const dark = tone === "burgundy" || tone === "blue";
   return (
     <Link href={href} scroll={false}
-      className={`group relative block overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-br p-4 shadow-[0_10px_30px_-18px_rgb(79_16_34/0.45)] ring-1 ring-white/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_rgb(79_16_34/0.5)] active:scale-[0.98] ${TONES[tone]}`}>
+      className={`group relative block overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-br p-4 shadow-[0_10px_30px_-18px_rgb(82_8_16/0.45)] ring-1 ring-white/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_rgb(82_8_16/0.5)] active:scale-[0.98] ${TONES[tone]}`}>
       <div className="flex items-start justify-between gap-2">
         <p className={`text-xs font-medium ${dark ? "text-white/75" : "text-muted"}`}>{label}</p>
         {icon && <span className={`flex size-8 items-center justify-center rounded-full ${dark ? "bg-white/15" : "bg-white shadow-sm"}`}>{icon}</span>}

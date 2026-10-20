@@ -126,7 +126,7 @@ export async function runScheduledReports(now = new Date()) {
     }
   }
 
-  // Delivery (only real when SMTP is configured — never faked).
+  // Delivery (only real when SMTP is configured, never faked).
   if (generated.length) {
     const ids = generated.map((g) => g.id);
     if (!settings.email_enabled || settings.email_recipients.length === 0) {
@@ -142,7 +142,7 @@ export async function runScheduledReports(now = new Date()) {
         const totals = await queryOne<{ v: string }>("SELECT coalesce(sum(stock_value),0)::text AS v FROM items WHERE archived_at IS NULL");
         const messageId = await sendMail({
           to: settings.email_recipients,
-          subject: `${settings.store_name} — ${kinds.join(" & ")} inventory report (${today})`,
+          subject: `${settings.store_name}: ${kinds.join(" & ")} inventory report (${today})`,
           text:
             `Attached: ${generated.map((g) => g.fileName).join(", ")}.\n\n` +
             `Current inventory worth: ${formatMoney(totals?.v ?? 0, settings.currency_symbol)}\n\n` +

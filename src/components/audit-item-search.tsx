@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search } from "@/components/hand-icons";
 import { Spinner } from "./ui/primitives";
 import { api } from "@/lib/client";
 
@@ -60,7 +60,7 @@ export function AuditItemSearch({ month, maxMonth, itemName }: { month: string; 
             if (e.key === "Enter" && hits[active]) { e.preventDefault(); pick(hits[active]); }
             if (e.key === "Escape") setOpen(false);
           }}
-          placeholder={itemName ? `Showing ${itemName} — search another item or category` : "Search any item by name, code or category"}
+          placeholder={itemName ? `Showing ${itemName}. Search another item or category` : "Search any item by name, code or category"}
           aria-label="Search items"
           role="combobox"
           aria-expanded={open}

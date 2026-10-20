@@ -22,7 +22,7 @@ export const POST = handle(async (req) => {
   );
   await audit(me.id, "user.create", "user", row!.id, { email: u.email, role: u.role });
   const welcome = u.send_welcome
-    ? await sendWelcomeEmail({ ...u, password: u.include_password ? u.password : null }, { by: { id: me.id, name: me.name }, url: appUrl(req) })
+    ? await sendWelcomeEmail({ ...u, id: row!.id, password: u.include_password ? u.password : null }, { by: { id: me.id, name: me.name }, url: appUrl(req) })
     : { status: "off" as const };
   return ok({ id: row!.id, welcome }, 201);
 });

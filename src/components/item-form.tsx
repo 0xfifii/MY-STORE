@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Plus, Trash2 } from "@/components/hand-icons";
 import { Button, Field, Input, Select, Textarea, buttonClass } from "./ui/primitives";
 import { Modal } from "./ui/dialog";
 import { useToast } from "./ui/toast";
@@ -148,7 +148,7 @@ export function ItemForm({
               <ul className="mt-1.5 space-y-0.5">
                 {similar.map((s) => (
                   <li key={s.id}>
-                    <Link href={`/items/${s.id}`} target="_blank" className="underline">{s.name}</Link> ({s.sku}){s.archived ? " — archived" : ""}
+                    <Link href={`/items/${s.id}`} target="_blank" className="underline">{s.name}</Link> ({s.sku}){s.archived ? " (archived)" : ""}
                   </li>
                 ))}
               </ul>
@@ -161,7 +161,7 @@ export function ItemForm({
           <Field label="Category" htmlFor="category">
             <div className="flex gap-2">
               <Select id="category" value={v.category_id} onChange={(e) => set("category_id", e.target.value)}>
-                <option value="">— None —</option>
+                <option value="">None</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </Select>
               {app.can("catalog.write") && (
@@ -207,7 +207,7 @@ export function ItemForm({
           </label>
           <Field label="Usual supplier" htmlFor="supplier">
             <Select id="supplier" value={v.default_supplier_id} onChange={(e) => set("default_supplier_id", e.target.value)}>
-              <option value="">— None —</option>
+              <option value="">None</option>
               {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </Select>
           </Field>

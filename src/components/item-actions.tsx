@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, ArchiveRestore, Trash2, Undo2, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, Trash2, Undo2, Plus } from "@/components/hand-icons";
 import { Button, Field, Input, Select, Textarea } from "./ui/primitives";
 import { Modal } from "./ui/dialog";
 import { useToast } from "./ui/toast";
@@ -82,7 +82,7 @@ export function DeleteItemButton({ itemId, name, quantity, unit, compact, afterH
         {Number(quantity) > 0 && (
           <p className="mt-3 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">It still has {formatQty(quantity)} {unit} in stock.</p>
         )}
-        <p className="mt-3 text-sm text-muted">If you only want to hide it, use Archive instead — its history stays in reports.</p>
+        <p className="mt-3 text-sm text-muted">If you only want to hide it, use Archive instead. Its history stays in reports.</p>
         <label className="mt-4 flex items-start gap-2.5 text-sm font-medium">
           <input type="checkbox" checked={sure} onChange={(e) => setSure(e.target.checked)} className="mt-0.5 size-4 accent-[var(--color-bad)]" />
           Yes, delete {name} and its history

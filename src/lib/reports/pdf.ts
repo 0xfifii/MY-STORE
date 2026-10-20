@@ -8,7 +8,7 @@ import { statusText } from "./csv";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const PdfPrinter = require("pdfmake");
 
-const BURGUNDY = "#7A1F35";
+const BURGUNDY = "#8f0e16";
 const fontDir = join(process.cwd(), "assets", "fonts");
 export const PDF_FONTS = {
   DMSans: {
@@ -71,7 +71,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   cards.push(card("Low · out of stock", `${st.low} · ${st.out}`));
   content.push({
     table: { widths: cards.map(() => "*"), body: [cards] },
-    layout: { hLineColor: "#E5D5DA", vLineColor: "#E5D5DA", fillColor: () => "#FBF6F7" },
+    layout: { hLineColor: "#ead8c8", vLineColor: "#ead8c8", fillColor: () => "#fbf4ec" },
   });
   content.push({
     text: [
@@ -96,8 +96,8 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     rows.forEach((b, i) => {
       tin += Number(b.in_value); tout += Number(b.out_value); tw += Number(b.worth ?? 0);
       body.push([String(i + 1), `${b.name}  (${b.sku})`, b.unit, right(formatQty(b.opening)),
-        right(Number(b.in) ? `+${formatQty(b.in)}` : "0", { color: "#166534" }), right(Number(b.in_value) ? m(b.in_value) : "—"),
-        right(Number(b.out) ? `−${formatQty(b.out)}` : "0", { color: BURGUNDY }), right(Number(b.out_value) ? m(b.out_value) : "—"),
+        right(Number(b.in) ? `+${formatQty(b.in)}` : "0", { color: "#166534" }), right(Number(b.in_value) ? m(b.in_value) : "-"),
+        right(Number(b.out) ? `−${formatQty(b.out)}` : "0", { color: BURGUNDY }), right(Number(b.out_value) ? m(b.out_value) : "-"),
         ...(adj ? [right(formatQty(b.adj))] : []), right(formatQty(b.closing), { bold: true }),
         ...(withWorth ? [right(m(b.worth ?? 0)), { text: statusText(b.status ?? "in_stock"), color: b.status === "out" ? "#B91C1C" : b.status === "low" ? "#B45309" : "#166534", bold: b.status !== "in_stock" }] : [])]);
     });
@@ -109,9 +109,9 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     return tableBlock(body, widths);
   };
 
-  // ---- Stock sheet first: opening, stock in + cost, stock out + cost, closing — one table
+  // ---- Stock sheet first: opening, stock in + cost, stock out + cost, closing, one table
   if (sec.balances) {
-    content.push({ text: r.periodType === "day" ? "Stock sheet" : "Stock sheet — whole period", style: "h2" });
+    content.push({ text: r.periodType === "day" ? "Stock sheet" : "Stock sheet for the whole period", style: "h2" });
     content.push({ text: "Opening stock, stock in, stock out and their cost in one table. Each closing balance (Bal) is the next day's opening stock.", fontSize: 8, color: "#555", margin: [0, -2, 0, 6] });
     content.push(combined(r.balances.map((b) => ({
       name: b.name, sku: b.sku, unit: b.unit, opening: b.opening_qty, in: b.in_qty, in_value: b.in_value, out: b.out_qty, out_value: b.out_value,
@@ -155,8 +155,8 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
       body.push([t.txn_no, formatDateTime(t.occurred_at, tz), { text: isIn ? "In" : "Out", bold: true, color: isIn ? "#166534" : BURGUNDY }, `${t.item_name} (${t.item_sku})`,
         right(`${isIn ? "+" : "−"}${formatQty(t.entered_quantity)} ${t.entered_unit_symbol}`), right(c(t.entered_unit_cost)),
         ...(sec.stockIn ? [right(isIn ? m(t.total_value) : "")] : []), ...(sec.stockOut ? [right(!isIn ? m(t.total_value) : "")] : []),
-        isIn ? (t.is_opening ? "Opening stock" : t.supplier_label ?? "") : [[t.worker_name, t.recipient].filter(Boolean).join(" · to "), reasonLabel(t.reason)].filter(Boolean).join(" — "),
-        [t.reference, t.notes].filter(Boolean).join(" — ")]);
+        isIn ? (t.is_opening ? "Opening stock" : t.supplier_label ?? "") : [[t.worker_name, t.recipient].filter(Boolean).join(" · to "), reasonLabel(t.reason)].filter(Boolean).join(", "),
+        [t.reference, t.notes].filter(Boolean).join(", ")]);
     }
     const cols = body[0].length;
     if (!r.movements.length) body.push(...empty(cols, "No stock moved in this period."));
@@ -209,7 +209,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     pageSize: "A4",
     pageOrientation: "landscape",
     pageMargins: [36, 36, 36, 40],
-    info: { title: `${r.settings.store_name} — ${r.title} — ${r.periodLabel}`, author: r.settings.store_name },
+    info: { title: `${r.settings.store_name}: ${r.title}, ${r.periodLabel}`, author: r.settings.store_name },
     defaultStyle: { font: "DMSans", fontSize: 8, color: "#111" },
     styles: {
       brand: { fontSize: 20, bold: true, color: BURGUNDY },
@@ -260,8 +260,8 @@ export function tableBlock(body: Cell[][], widths: (number | string)[]) {
     layout: {
       hLineWidth: (i: number) => (i === 0 ? 0 : 0.5),
       vLineWidth: () => 0,
-      hLineColor: () => "#E2D3D7",
-      fillColor: (row: number) => (row > 0 && row % 2 === 0 ? "#FBF6F7" : null),
+      hLineColor: () => "#e8d6c6",
+      fillColor: (row: number) => (row > 0 && row % 2 === 0 ? "#fbf4ec" : null),
       paddingTop: () => 4,
       paddingBottom: () => 4,
     },

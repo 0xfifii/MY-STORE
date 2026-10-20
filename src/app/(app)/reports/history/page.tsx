@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Archive, Clock } from "lucide-react";
+import { Archive, Clock } from "@/components/hand-icons";
 import { EmptyState, PageHeader } from "@/components/ui/primitives";
 import { GenerateNow } from "@/components/generate-now";
 import { Pagination } from "@/components/list-filters";
@@ -64,7 +64,7 @@ export default async function ReportHistoryPage({ searchParams }: { searchParams
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">
-                    {r.title} · {r.period_start === r.period_end ? formatDate(r.period_start) : `${formatDate(r.period_start)} – ${formatDate(r.period_end)}`}
+                    {r.title} · {r.period_start === r.period_end ? formatDate(r.period_start) : `${formatDate(r.period_start)} to ${formatDate(r.period_end)}`}
                   </p>
                   <p className="text-xs text-muted">
                     {r.trigger === "scheduled" ? "Automatic" : `Manual${r.generated_by_name ? ` by ${r.generated_by_name}` : ""}`} · {formatDateTime(r.created_at, s.timezone)}

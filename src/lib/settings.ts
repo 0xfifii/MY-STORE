@@ -21,7 +21,7 @@ export type StoreSettings = {
 
 export async function getSettings(): Promise<StoreSettings> {
   const s = await queryOne<StoreSettings & Record<string, unknown>>("SELECT * FROM settings WHERE id = 1");
-  if (!s) throw new Error("Settings row missing — run database migrations.");
+  if (!s) throw new Error("Settings row missing, run database migrations.");
   // The mail account (and its password) never leaves the server through general settings.
   for (const k of ["smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"]) delete s[k];
   return s;
@@ -32,7 +32,7 @@ export type MailAccount = {
   has_password: boolean; welcome_email_enabled: boolean;
 };
 
-/** Mail account as shown in Store Settings — the password itself is never returned. */
+/** Mail account as shown in Store Settings, the password itself is never returned. */
 export async function getMailAccount(): Promise<MailAccount> {
   const r = await queryOne<MailAccount>(
     `SELECT smtp_host, smtp_port, smtp_user, smtp_from, (coalesce(smtp_pass,'') <> '') AS has_password, welcome_email_enabled

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState } from "react";
-import { CheckCircle2, AlertTriangle, X } from "lucide-react";
+import { CheckCircle2, AlertTriangle, X } from "@/components/hand-icons";
 
 type Toast = { id: number; kind: "success" | "error"; title: string; body?: string };
 type Ctx = { success: (title: string, body?: string) => void; error: (title: string, body?: string) => void };

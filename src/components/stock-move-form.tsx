@@ -1,13 +1,14 @@
 "use client";
 import { ReceiptActions } from "./email-dialog";
+import { Mascot } from "./mascot";
 import { StockInIcon, StockOutIcon } from "@/components/icons";
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  CheckCircle2, RefreshCcw,
-} from "lucide-react";
+  RefreshCcw,
+} from "@/components/hand-icons";
 import clsx from "clsx";
 import { ItemPicker, type PickerItem } from "./item-picker";
 import { Button, Field, Input, Select, Spinner, StatusBadge, Textarea, buttonClass } from "./ui/primitives";
@@ -179,7 +180,7 @@ export function StockMoveForm({
       const err = e as Error & { data?: { available?: string } };
       setError(err.message);
       setStep("edit");
-      // Refresh the balance — someone else may have just issued stock.
+      // Refresh the balance, someone else may have just issued stock.
       if (item) loadItem(item.id);
     } finally {
       setBusy(false);
@@ -231,11 +232,11 @@ export function StockMoveForm({
   if (step === "done") {
     return (
       <div className="text-center">
-        <CheckCircle2 className="mx-auto size-12 text-ok" />
+        <Mascot mood="excited" className="mx-auto h-32 w-28" label="Velvy celebrating" />
         <p className="mt-3 font-display text-xl font-bold">{mode === "in" ? "Stock received" : "Stock issued"}</p>
         <p className="mt-1 text-sm text-muted">Transaction {lastTxn?.txn_no}</p>
         <div className="mx-auto mt-5 max-w-xs rounded-3xl bg-white/80 p-5 shadow-sm">
-          <p className="text-sm text-muted">{item.name} — balance now</p>
+          <p className="text-sm text-muted">{item.name}: balance now</p>
           <p className="font-display text-4xl font-bold tracking-tight">
             {formatQty(item.quantity)} <span className="text-xl text-muted">{base}</span>
           </p>
@@ -281,7 +282,7 @@ export function StockMoveForm({
           <div className="pl-4 text-right">
             <p className="text-xs text-muted">After this {mode === "in" ? "receipt" : "issue"}</p>
             <p className={clsx("font-display text-3xl font-bold tracking-tight sm:text-4xl", exceeds ? "text-bad" : after ? "text-burgundy" : "text-line")}>
-              {after && !exceeds ? formatQty(after) : "—"}<span className="ml-1 text-base font-semibold text-muted">{base}</span>
+              {after && !exceeds ? formatQty(after) : "-"}<span className="ml-1 text-base font-semibold text-muted">{base}</span>
             </p>
           </div>
         </div>
@@ -305,14 +306,14 @@ export function StockMoveForm({
               {mode === "in" ? (
                 <>
                   <dt className="text-muted">Cost per {unit?.symbol}</dt><dd className="text-right">{formatUnitCost(cost || 0, sym)}</dd>
-                  <dt className="text-muted">Supplier / source</dt><dd className="text-right">{suppliers.find((s) => String(s.id) === supplierId)?.name ?? (supplierName || "—")}</dd>
+                  <dt className="text-muted">Supplier / source</dt><dd className="text-right">{suppliers.find((s) => String(s.id) === supplierId)?.name ?? (supplierName || "-")}</dd>
                   <dt className="text-muted">Received</dt><dd className="text-right">{dateTouched && occurredAt ? new Date(occurredAt).toLocaleString() : "Now"}</dd>
                 </>
               ) : (
                 <dt className="col-span-2 text-xs text-muted">Valued at weighted-average cost: {formatUnitCost(item.avg_cost, sym)} / {base}.</dt>
               )}
               <dt className="font-semibold">Total value</dt>
-              <dd className="text-right font-semibold">{lineValue !== null ? formatMoney(lineValue, sym) : "—"}</dd>
+              <dd className="text-right font-semibold">{lineValue !== null ? formatMoney(lineValue, sym) : "-"}</dd>
             </dl>
           </div>
           {error && <p role="alert" className="mt-3 rounded-2xl bg-bad-bg px-3 py-2 text-sm text-bad">{error}</p>}
@@ -361,7 +362,7 @@ export function StockMoveForm({
               </Field>
               <Field label="Supplier" htmlFor="supplier">
                 <Select id="supplier" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
-                  <option value="">— Other / not listed —</option>
+                  <option value="">Other / not listed</option>
                   {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </Select>
               </Field>
@@ -392,9 +393,9 @@ export function StockMoveForm({
               <div className="mt-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Taken by (worker)" htmlFor="worker"
-                    hint={workers.length ? "Who collected the items" : app.can("workers.manage") ? <>No workers yet — <a href="/workers" className="font-semibold text-burgundy underline">add workers</a></> : "No workers added yet"}>
+                    hint={workers.length ? "Who collected the items" : app.can("workers.manage") ? <>No workers yet. <a href="/workers" className="font-semibold text-burgundy underline">add workers</a></> : "No workers added yet"}>
                     <Select id="worker" value={workerId} onChange={(e) => setWorkerId(e.target.value)}>
-                      <option value="">— Not recorded —</option>
+                      <option value="">Not recorded</option>
                       {workers.map((w) => <option key={w.id} value={w.id}>{w.name}{w.department ? ` (${w.department})` : ""}</option>)}
                     </Select>
                   </Field>

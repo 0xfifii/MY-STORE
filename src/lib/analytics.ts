@@ -262,7 +262,7 @@ export async function spendAnalysis(r: Range, by: SpendBy, f: MoneyFilter = {}) 
   return { rows, spent: totals!.spent, receipts: totals!.receipts, opening: totals!.opening };
 }
 
-/** Top N rows by value plus an "Other" slice — for any money breakdown. */
+/** Top N rows by value plus an "Other" slice, for any money breakdown. */
 export function moneySlices(rows: { label: string; value: string; detail?: string; href?: string | null }[], symbol: string, n = 6): PieSlice[] {
   const fmt = (v: number) => `${symbol}${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
   const top: PieSlice[] = rows.slice(0, n).map((x) => ({ label: x.label, value: Number(x.value), detail: x.detail ?? fmt(Number(x.value)), href: x.href ?? undefined }));

@@ -22,7 +22,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
   const { item, current: c, previous: p, prices } = d;
   const u = item.unit;
   const m = (v: string | number) => formatMoney(v, sym);
-  const cost = (v: number | string | null) => (v === null ? "—" : `${formatUnitCost(v, sym)} / ${u}`);
+  const cost = (v: number | string | null) => (v === null ? "-" : `${formatUnitCost(v, sym)} / ${u}`);
   const prevLabel = mLabel(shiftMonth(month, -1));
 
   const rows: { label: string; key: keyof ItemMonthFigures; kind: "qty" | "money" | "count"; good?: "up" | "down" }[] = [
@@ -68,7 +68,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
                     <Td>{r.label}</Td>
                     <Td right><strong>{fmtv(r.kind, c[r.key])}</strong></Td>
                     <Td right><span className="text-muted">{fmtv(r.kind, p[r.key])}</span></Td>
-                    <Td right>{diff === 0 ? <span className="text-xs text-muted">—</span> : <span className={`text-xs font-semibold ${diff > 0 ? "text-[#2a78d6]" : "text-burgundy"}`}>{diff > 0 ? "+" : "−"}{fmtv(r.kind, String(Math.abs(Math.round(diff * 1e6) / 1e6)))}</span>}</Td>
+                    <Td right>{diff === 0 ? <span className="text-xs text-muted">-</span> : <span className={`text-xs font-semibold ${diff > 0 ? "text-[#2a78d6]" : "text-burgundy"}`}>{diff > 0 ? "+" : "−"}{fmtv(r.kind, String(Math.abs(Math.round(diff * 1e6) / 1e6)))}</span>}</Td>
                   </tr>
                 );
               })}
@@ -103,7 +103,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Panel title={`Stock balance · last 12 months (${u})`}>
-          <LineChart format="qty" unit={u} series={[{ name: "Closing stock", color: "#9c2a45", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.closing })) }]} />
+          <LineChart format="qty" unit={u} series={[{ name: "Closing stock", color: "#b3141f", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.closing })) }]} />
         </Panel>
         <Panel title={`Average purchase price · last 12 months (per ${u})`}>
           <LineChart format="money" symbol={sym} markChanges zeroBase={false} emptyText="No purchases in the last 12 months."
@@ -151,7 +151,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
                     <Td right>{x.direction > 0 ? "+" : "−"}{formatQty(x.qty)} {u}<span className="block text-xs text-muted">{x.entered}</span></Td>
                     <Td right>{formatUnitCost(x.unit_cost, sym)}</Td>
                     <Td right>{m(x.value)}</Td>
-                    <Td>{x.txn_type === "stock_in" ? x.supplier ?? "—" : x.who ?? "—"}{x.notes && <span className="block text-xs text-muted">{x.notes}</span>}</Td>
+                    <Td>{x.txn_type === "stock_in" ? x.supplier ?? "-" : x.who ?? "-"}{x.notes && <span className="block text-xs text-muted">{x.notes}</span>}</Td>
                     <Td right>{formatQty(x.balance_after)} {u}</Td>
                     <Td>{x.txn_type !== "reversal" && <ReceiptLink txnId={x.id} txnNo={x.txn_no} />}</Td>
                   </tr>

@@ -80,7 +80,7 @@ export async function db(): Promise<Pool> {
   return rawPool();
 }
 
-/** @deprecated use db() — kept for call sites that already awaited readiness. */
+/** @deprecated use db(), kept for call sites that already awaited readiness. */
 export function pool(): Pool {
   return rawPool();
 }

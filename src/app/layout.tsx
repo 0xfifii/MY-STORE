@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/dm-sans";
+import "@fontsource-variable/dm-sans/opsz.css"; // weight + optical size axes
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
-  title: { default: "MY STORE", template: "%s · MY STORE" },
-  description: "Inventory management for MY STORE",
+  title: { default: "The Velvet Store", template: "%s · The Velvet Store" },
+  description: "Inventory for The Velvet Store",
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
     apple: "/apple-touch-icon.png",
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#5e1528",
+  themeColor: "#9e1018",
   width: "device-width",
   initialScale: 1,
 };

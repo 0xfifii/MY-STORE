@@ -1,5 +1,6 @@
 import { PageHeader, Panel } from "@/components/ui/primitives";
 import { MailComposer } from "@/components/mail-composer";
+import { ResendButton } from "@/components/email-dialog";
 import { requirePageUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { query } from "@/lib/db";
@@ -19,8 +20,8 @@ export default async function MailPage() {
   const [users, ready, log] = await Promise.all([
     query<{ name: string; email: string }>("SELECT name, email FROM users WHERE is_active ORDER BY name"),
     smtpConfigured(),
-    query<{ id: string; sent_at: string; kind: string; recipients: string[]; subject: string; attachments: string[]; status: string; error: string | null; sender: string | null }>(
-      `SELECT e.id::text, e.sent_at, e.kind, e.recipients, e.subject, e.attachments, e.status, e.error, u.name AS sender
+    query<{ id: string; sent_at: string; kind: string; recipients: string[]; subject: string; attachments: string[]; status: string; error: string | null; sender: string | null; can_resend: boolean }>(
+      `SELECT e.id::text, e.sent_at, e.kind, e.recipients, e.subject, e.attachments, e.status, e.error, u.name AS sender, (e.payload IS NOT NULL AND e.kind <> 'scheduled') AS can_resend
          FROM email_log e LEFT JOIN users u ON u.id = e.sent_by ORDER BY e.sent_at DESC LIMIT 40`,
     ),
   ]);
@@ -30,7 +31,7 @@ export default async function MailPage() {
       <PageHeader title="Send Email" description="Email anyone a message, a stock report or the monthly audit report. Receipts can be emailed from any stock out." />
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <Panel title="New email"><MailComposer contacts={contacts} canAudit={can(user, "audit.view")} thisMonth={todayIn(s.timezone).slice(0, 7)} ready={ready} /></Panel>
-        <Panel title="Sent emails" bodyClass="">
+        <Panel title="Sent emails" bodyClass="max-h-[70vh] overflow-y-auto">
           {log.length ? (
             <ul className="divide-y divide-white/80" data-testid="email-log">
               {log.map((e) => (
@@ -42,6 +43,7 @@ export default async function MailPage() {
                   <p className="truncate text-xs text-muted">{KIND[e.kind] ?? e.kind} · to {e.recipients.join(", ")}</p>
                   <p className="text-xs text-muted">{formatDateTime(e.sent_at, s.timezone)}{e.sender ? ` · by ${e.sender}` : ""}{e.attachments.length ? ` · ${e.attachments.join(", ")}` : ""}</p>
                   {e.error && <p className="mt-1 text-xs text-bad">{e.error}</p>}
+                  {e.can_resend && <div className="mt-2"><ResendButton id={e.id} recipients={e.recipients} failed={e.status !== "sent"} /></div>}
                 </li>
               ))}
             </ul>

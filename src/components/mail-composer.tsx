@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { FileSpreadsheet, FileText, Paperclip, Send } from "lucide-react";
+import { FileSpreadsheet, FileText, Paperclip, Send } from "@/components/hand-icons";
 import { Button, Field, Input, Select, Textarea } from "./ui/primitives";
 import { useToast } from "./ui/toast";
 import { api } from "@/lib/client";

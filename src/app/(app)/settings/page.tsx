@@ -26,7 +26,7 @@ export default async function SettingsPage() {
         smtpReady={cfg !== null}
         cronReady={process.env.DISABLE_INTERNAL_SCHEDULER !== "true" || Boolean(process.env.CRON_SECRET && process.env.CRON_SECRET.length >= 16)}
       />
-      <div className="mt-6">
+      <div className="mt-6 scroll-mt-24" id="email">
         <MailAccountForm initial={account} active={cfg ? { source: cfg.source, from: cfg.from } : null} ownerEmail={user.email} />
       </div>
     </div>

@@ -1,34 +1,55 @@
-import { useId } from "react";
+/**
+ * The Velvet Store brand.
+ * Wordmark: monoline VELVET where the first E's middle stroke is a striped shop awning.
+ * Mark: a V under an awning, for the app icon and small spaces.
+ */
+export function VelvetWordmark({ className = "h-10", ink = "#9e1018", paper = "#f4e8d8", tagline = true, title = "The Velvet Store" }: {
+  className?: string; ink?: string; paper?: string; tagline?: boolean; title?: string;
+}) {
+  return (
+    <svg viewBox={tagline ? "-8 -34 306 136" : "-6 -6 302 72"} className={className} role="img" aria-label={title}>
+      <g fill="none" stroke={ink} strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M0 0 19 60 38 0" />
+        <path d="M56 0v60M56 0h28M56 60h28" />
+        <path d="M104 0v60h27" />
+        <path d="M149 0l19 60 19-60" />
+        <path d="M205 0v60M205 0h28M205 30h24M205 60h28" />
+        <path d="M252 0h36M270 0v60" />
+      </g>
+      <g className="velvet-awning" stroke={ink} strokeWidth="1.8" strokeLinejoin="round">
+        <path d="M56 21h11v9H56z" fill={ink} />
+        <path d="M67 21h11v9H67z" fill={paper} />
+        <path d="M78 21h11v9H78z" fill={ink} />
+        <path d="M56 30h11a5.5 5.5 0 0 1-11 0z" fill={ink} />
+        <path d="M67 30h11a5.5 5.5 0 0 1-11 0z" fill={paper} />
+        <path d="M78 30h11a5.5 5.5 0 0 1-11 0z" fill={ink} />
+      </g>
+      {tagline && (
+        <g fill={ink} fontFamily="'DM Sans Variable', 'DM Sans', sans-serif" fontSize="17" fontWeight="700" letterSpacing="8">
+          <text x="0" y="-14">THE</text>
+          <text x="292" y="94" textAnchor="end">STORE</text>
+        </g>
+      )}
+    </svg>
+  );
+}
 
-/** MY STORE mark: a storefront with a striped awning on a burgundy tile. Same artwork as /icon.svg (the favicon). */
+/** Square app mark (same artwork as /icon.svg, the favicon). */
 export function LogoMark({ className = "size-9" }: { className?: string }) {
-  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden>
-      <defs>
-        <linearGradient id={`${id}g`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#b8405c" />
-          <stop offset=".55" stopColor="#7a1f35" />
-          <stop offset="1" stopColor="#4f1022" />
-        </linearGradient>
-        <radialGradient id={`${id}h`} cx=".2" cy=".1" r=".85">
-          <stop offset="0" stopColor="#fff" stopOpacity=".3" />
-          <stop offset="1" stopColor="#fff" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="64" height="64" rx="16" fill={`url(#${id}g)`} />
-      <rect width="64" height="64" rx="16" fill={`url(#${id}h)`} />
-      <path d="M14 30h36v18a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3z" fill="#fff" />
-      <path d="M27 51V39a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12z" fill="#7a1f35" />
-      <circle cx="34" cy="44.5" r="1.4" fill="#f5b51c" />
-      <rect x="18" y="35" width="6" height="6" rx="1.5" fill="#f2c3cf" />
-      <rect x="40" y="35" width="6" height="6" rx="1.5" fill="#f2c3cf" />
-      <path d="M15 13h34a4 4 0 0 1 4 4v7H11v-7a4 4 0 0 1 4-4z" fill="#fff" />
-      <path d="M21.5 13h10.5v11H21.5zM42.5 13H49a4 4 0 0 1 4 4v7H42.5z" fill="#f2c3cf" />
-      <path d="M11 24h10.5a5.25 5.25 0 0 1-10.5 0z" fill="#fff" />
-      <path d="M21.5 24h10.5a5.25 5.25 0 0 1-10.5 0z" fill="#f2c3cf" />
-      <path d="M32 24h10.5a5.25 5.25 0 0 1-10.5 0z" fill="#fff" />
-      <path d="M42.5 24H53a5.25 5.25 0 0 1-10.5 0z" fill="#f2c3cf" />
+      <rect width="64" height="64" rx="16" fill="#9e1018" />
+      <g stroke="#f4e8d8" strokeWidth="1.6" strokeLinejoin="round">
+        <path d="M12 13h10v7H12z" fill="#f4e8d8" />
+        <path d="M22 13h10v7H22z" fill="#9e1018" />
+        <path d="M32 13h10v7H32z" fill="#f4e8d8" />
+        <path d="M42 13h10v7H42z" fill="#9e1018" />
+        <path d="M12 20h10a5 5 0 0 1-10 0z" fill="#f4e8d8" />
+        <path d="M22 20h10a5 5 0 0 1-10 0z" fill="#9e1018" />
+        <path d="M32 20h10a5 5 0 0 1-10 0z" fill="#f4e8d8" />
+        <path d="M42 20h10a5 5 0 0 1-10 0z" fill="#9e1018" />
+      </g>
+      <path d="M19 33l13 20 13-20" fill="none" stroke="#f4e8d8" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

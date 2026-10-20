@@ -4,6 +4,7 @@ type P = { className?: string; strokeWidth?: number };
 export function StockInIcon({ className, strokeWidth = 1.9 }: P) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M13.6 4.9c3.1.3 6 2.6 6.4 5.9.4 3.5-1.6 7.3-5.1 8.4-3.3 1.1-7.4.6-9.4-2.2-1.8-2.6-1.5-6.5.6-9 1.7-2.1 4.9-3.4 7.5-3.1z" fill="currentColor" stroke="none" opacity="0.16" transform="translate(1.4 1.2)" />
       <path d="M12 3v10" />
       <path d="m7.5 8.8 4.5 4.5 4.5-4.5" />
       <path d="M3.5 13.5v3.2A3.3 3.3 0 0 0 6.8 20h10.4a3.3 3.3 0 0 0 3.3-3.3v-3.2" />
@@ -15,22 +16,12 @@ export function StockInIcon({ className, strokeWidth = 1.9 }: P) {
 export function StockOutIcon({ className, strokeWidth = 1.9 }: P) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M13.6 4.9c3.1.3 6 2.6 6.4 5.9.4 3.5-1.6 7.3-5.1 8.4-3.3 1.1-7.4.6-9.4-2.2-1.8-2.6-1.5-6.5.6-9 1.7-2.1 4.9-3.4 7.5-3.1z" fill="currentColor" stroke="none" opacity="0.16" transform="translate(1.4 1.2)" />
       <path d="M12 13.3V3" />
       <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
       <path d="M3.5 13.5v3.2A3.3 3.3 0 0 0 6.8 20h10.4a3.3 3.3 0 0 0 3.3-3.3v-3.2" />
       <path d="M3.5 13.5h3.7l1.3 2.2h7l1.3-2.2h3.7" />
     </svg>
-  );
-}
-
-/** Round arrow knob used on the black pill buttons (from the reference design). */
-export function ArrowKnob({ className }: { className?: string }) {
-  return (
-    <span className={`inline-flex size-7 items-center justify-center rounded-full bg-white/15 ${className ?? ""}`} aria-hidden>
-      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-        <path d="m9 6 6 6-6 6" />
-      </svg>
-    </span>
   );
 }
 

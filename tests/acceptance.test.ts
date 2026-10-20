@@ -1,5 +1,5 @@
 /**
- * End-to-end acceptance tests for MY STORE.
+ * End-to-end acceptance tests for The Velvet Store.
  * Runs against a live server + real PostgreSQL database (see README "Running the tests").
  *
  *   TEST_BASE_URL=http://localhost:3100 TEST_DATABASE_URL=postgres://... npm test
@@ -420,12 +420,12 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
 
   it("weekly and monthly reports cover the right dates and are named accordingly", async () => {
     const w = await owner.get("/api/reports/export?format=csv&preset=this_week");
-    expect(w.headers.get("content-disposition")).toMatch(/mystore-weekly-report-\d{4}-\d{2}-\d{2}(_to_\d{4}-\d{2}-\d{2})?\.csv/);
+    expect(w.headers.get("content-disposition")).toMatch(/velvet-store-weekly-report-\d{4}-\d{2}-\d{2}(_to_\d{4}-\d{2}-\d{2})?\.csv/);
     const wText = (w.data as Buffer).toString();
     expect(wText).toContain("Weekly Inventory Report");
     const m = await owner.get(`/api/reports/export?format=csv&preset=month&month=${today.slice(0, 7)}`);
     const mText = (m.data as Buffer).toString();
-    expect(m.headers.get("content-disposition")).toContain(`mystore-monthly-report-${today.slice(0, 8)}01_to_`);
+    expect(m.headers.get("content-disposition")).toContain(`velvet-store-monthly-report-${today.slice(0, 8)}01_to_`);
     expect(mText).toContain("Monthly Inventory Report");
     // The month's closing equals today's closing (same end state)
     const get = (csv: string, label: string) => csv.split("\r\n").find((l) => l.startsWith(label))!.split(",")[1];
@@ -443,7 +443,7 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
   it("xlsx has General Report / Stock Sheet / Stock In & Out sheets with matching totals", async () => {
     const r = await owner.get("/api/reports/export?format=xlsx&preset=today");
     expect(r.status).toBe(200);
-    expect(r.headers.get("content-disposition")).toMatch(/mystore-report-\d{4}-\d{2}-\d{2}\.xlsx/);
+    expect(r.headers.get("content-disposition")).toMatch(/velvet-store-report-\d{4}-\d{2}-\d{2}\.xlsx/);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(r.data);
     const names = wb.worksheets.map((w) => w.name);
@@ -473,7 +473,7 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
     const f = join(dir, "r.pdf");
     writeFileSync(f, r.data);
     const text = execFileSync("pdftotext", ["-layout", f, "-"]).toString();
-    expect(text).toContain("MY STORE");
+    expect(text).toContain("The Velvet Store");
     expect(text).toContain("Inventory Report");
     expect(text).toMatch(/Page 1 of \d+/);
     expect(text).toContain("Stock sheet");
@@ -514,7 +514,7 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
     const call = () => fetch(`${BASE}/api/cron/daily-report`, { headers: { authorization: `Bearer ${CRON}` } }).then((r) => r.json());
     expect((await call()).status).toBe("disabled");
     const s = await owner.patch("/api/settings", {
-      store_name: "MY STORE", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos",
+      store_name: "The Velvet Store", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos",
       auto_report_enabled: true, auto_report_time: "00:00", auto_report_covers: "same_day",
       auto_report_formats: ["pdf", "xlsx", "csv"], email_enabled: true, email_recipients: ["owner@mystore.test"],
       auto_weekly_enabled: true, auto_monthly_enabled: true,
@@ -523,8 +523,8 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
     const first = await call();
     expect(first.status).toBe("ran");
     expect(first.generated).toHaveLength(9); // daily + weekly + monthly, 3 formats each
-    expect(first.generated.some((f: string) => f.startsWith("mystore-weekly-report-"))).toBe(true);
-    expect(first.generated.some((f: string) => f.startsWith("mystore-monthly-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("velvet-store-weekly-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("velvet-store-monthly-report-"))).toBe(true);
     const second = await call();
     expect(second.generated).toHaveLength(0); // once per day per format
     const { rows } = await db.query("SELECT format, status, delivery_status, period_type FROM generated_reports WHERE trigger='scheduled'");
@@ -540,9 +540,9 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
       const raw = readFileSync(join(MAIL_DIR, mails[mails.length - 1]), "utf8");
       expect(raw).toMatch(/Daily.*Weekly.*Monthly/s);
       expect(raw).toContain("To: owner@mystore.test");
-      for (const ext of ["pdf", "xlsx", "csv"]) expect(raw).toMatch(new RegExp(`mystore-report-\\d{4}-\\d{2}-\\d{2}\\.${ext}`));
-      expect(raw).toContain("mystore-weekly-report-");
-      expect(raw).toContain("mystore-monthly-report-");
+      for (const ext of ["pdf", "xlsx", "csv"]) expect(raw).toMatch(new RegExp(`velvet-store-report-\\d{4}-\\d{2}-\\d{2}\\.${ext}`));
+      expect(raw).toContain("velvet-store-weekly-report-");
+      expect(raw).toContain("velvet-store-monthly-report-");
     } else {
       expect(existsSync("/")).toBe(true);
     }
@@ -685,7 +685,7 @@ describe("16. Deleting items and money analysis", () => {
     }
     const csv = ((await owner.get("/api/usage/export?group=month")).data as Buffer).toString();
     expect(csv).toContain("AMOUNT STOCKED IN AND OUT PER MONTH");
-    expect(csv).toContain("HOW MONEY IS SPENT — BY SUPPLIER");
+    expect(csv).toContain("HOW MONEY IS SPENT BY SUPPLIER");
   });
 });
 
@@ -731,7 +731,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     const id = out.data.txn.id;
     const pdf = await staff.get(`/api/transactions/${id}/receipt`);
     expect(pdf.status).toBe(200);
-    expect(pdf.headers.get("content-disposition")).toContain(`mystore-receipt-${out.data.txn.txn_no}.pdf`);
+    expect(pdf.headers.get("content-disposition")).toContain(`velvet-store-receipt-${out.data.txn.txn_no}.pdf`);
     const dir = mkdtempSync(join(tmpdir(), "rcp-"));
     writeFileSync(join(dir, "r.pdf"), pdf.data);
     const text = execFileSync("pdftotext", ["-layout", join(dir, "r.pdf"), "-"]).toString();
@@ -746,7 +746,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     if (MAIL_DIR) {
       expect(sent.status, JSON.stringify(sent.data)).toBe(200);
       const m = mails().find((x) => x.includes("kitchen@mystore.test") && x.includes("receipt"));
-      expect(m).toContain(`mystore-receipt-${out.data.txn.txn_no}.pdf`);
+      expect(m).toContain(`velvet-store-receipt-${out.data.txn.txn_no}.pdf`);
       const log = await db.query("SELECT status, kind FROM email_log WHERE kind = 'receipt' ORDER BY id DESC LIMIT 1");
       expect(log.rows[0]).toEqual({ status: "sent", kind: "receipt" });
     }
@@ -757,7 +757,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     const r = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Monthly audit", message: "Please review.", attach: { kind: "audit", month, format: "pdf" } });
     if (MAIL_DIR) {
       expect(r.status, JSON.stringify(r.data)).toBe(200);
-      expect(r.data.attachments).toEqual([`mystore-monthly-audit-${month}.pdf`]);
+      expect(r.data.attachments).toEqual([`velvet-store-monthly-audit-${month}.pdf`]);
       const r2 = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Today", message: "Hi", attach: { kind: "report", preset: "today", format: "xlsx" } });
       expect(r2.status).toBe(200);
     }
@@ -832,5 +832,37 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     expect(html).toContain("+₦200.00");
     expect(html).toContain("11.11%");
     expect((await owner.req("DELETE", `/api/items/${pi}`)).status).toBe(200);
+  });
+});
+
+describe("18. Resending emails and welcome emails", () => {
+  it("an owner can (re)send a welcome email with a fresh password", async () => {
+    const id = (await db.query("SELECT id FROM users WHERE email='wale@mystore.test'")).rows[0].id;
+    expect((await staff.post(`/api/users/${id}/welcome`, {})).status).toBe(403);
+    const r = await owner.post(`/api/users/${id}/welcome`, { new_password: "fresh-pass-456" });
+    if (MAIL_DIR) {
+      expect(r.status, JSON.stringify(r.data)).toBe(200);
+      const fresh = new Session();
+      expect((await fresh.post("/api/auth/login", { email: "wale@mystore.test", password: "fresh-pass-456" })).status).toBe(200);
+      const log = await db.query("SELECT status, payload->'attach'->>'userId' AS uid FROM email_log WHERE kind='welcome' ORDER BY id DESC LIMIT 1");
+      expect(log.rows[0]).toEqual({ status: "sent", uid: id });
+      expect((await owner.get("/users")).status).toBe(200);
+    }
+  });
+
+  it("any logged email can be resent, to the same or corrected addresses", async () => {
+    const last = (await db.query("SELECT id FROM email_log WHERE kind='receipt' ORDER BY id DESC LIMIT 1")).rows[0];
+    expect(last).toBeTruthy();
+    expect((await viewer.post(`/api/mail/resend/${last.id}`, {})).status).toBe(403);
+    const r = await owner.post(`/api/mail/resend/${last.id}`, { to: "fixed@mystore.test" });
+    if (MAIL_DIR) {
+      expect(r.status, JSON.stringify(r.data)).toBe(200);
+      expect(r.data.to).toEqual(["fixed@mystore.test"]);
+      const row = (await db.query("SELECT status, resend_of::text, attachments FROM email_log ORDER BY id DESC LIMIT 1")).rows[0];
+      expect(row.status).toBe("sent");
+      expect(row.resend_of).toBe(String(last.id));
+      expect(row.attachments[0]).toMatch(/^velvet-store-receipt-TXN-/);
+    }
+    expect((await owner.post("/api/mail/resend/999999", {})).status).toBe(404);
   });
 });

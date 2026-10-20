@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus } from "@/components/hand-icons";
 import clsx from "clsx";
 import { api } from "@/lib/client";
 import { formatQty, type StockStatus } from "@/lib/format";

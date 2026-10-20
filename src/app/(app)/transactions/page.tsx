@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { History } from "lucide-react";
+import { History } from "@/components/hand-icons";
 import { EmptyState, PageHeader, TxnTypeBadge } from "@/components/ui/primitives";
 import { ListFilters, Pagination } from "@/components/list-filters";
 import { TxnList } from "@/components/txn-list";
@@ -92,7 +92,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                         {t.reference && <span className="block text-muted">Ref {t.reference}</span>}
                         {t.reversed_by_txn_no && <span className="block font-semibold text-warn">Reversed by {t.reversed_by_txn_no}</span>}
                       </td>
-                      <td className="px-4 py-2.5 text-xs">{t.user_name ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-xs">{t.user_name ?? "-"}</td>
                       <td className="px-4 py-2.5 text-right">
                         {t.txn_type !== "reversal" && <ReceiptLink txnId={t.id} txnNo={t.txn_no} />}
                         {canReverse && t.txn_type !== "reversal" && !t.reversed_by_txn_no && (

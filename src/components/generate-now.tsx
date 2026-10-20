@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play } from "lucide-react";
+import { Play } from "@/components/hand-icons";
 import { Button, Select } from "./ui/primitives";
 import { useToast } from "./ui/toast";
 import { api } from "@/lib/client";

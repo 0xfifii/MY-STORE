@@ -19,7 +19,7 @@ export async function GET() {
   if (!/^postgres(ql)?:\/\//.test(raw)) {
     return NextResponse.json({
       ok: false,
-      problem: "DATABASE_URL must start with postgresql:// — remove anything before it (such as psql or quote marks).",
+      problem: "DATABASE_URL must start with postgresql://. Remove anything before it (such as psql or quote marks).",
       starts_with: raw.slice(0, 12),
     }, { status: 503 });
   }

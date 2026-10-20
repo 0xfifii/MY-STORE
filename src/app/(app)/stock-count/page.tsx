@@ -43,7 +43,7 @@ export default async function StockCountPage({ searchParams }: { searchParams: P
                           {d < 0 ? `short ${formatQty(c.difference.slice(1))}` : d > 0 ? `excess ${formatQty(c.difference)}` : "matches"} ({m(c.value_difference)})
                         </span>
                       </p>
-                      <p className="text-xs text-muted">{formatDateTime(c.counted_at, s.timezone)} by {c.counted_by ?? "—"}{c.notes ? ` · ${c.notes}` : ""}</p>
+                      <p className="text-xs text-muted">{formatDateTime(c.counted_at, s.timezone)} by {c.counted_by ?? "-"}{c.notes ? ` · ${c.notes}` : ""}</p>
                     </div>
                     {canApprove ? (
                       <CountDecision id={c.id} countNo={c.count_no}
@@ -79,14 +79,14 @@ export default async function StockCountPage({ searchParams }: { searchParams: P
                 return (
                   <tr key={c.id}>
                     <td className="px-4 py-2.5">{c.count_no}<span className="block text-xs text-muted">{formatDateTime(c.counted_at, s.timezone)}</span></td>
-                    <td className="px-4 py-2.5 font-semibold">{c.item_name}<span className="block text-xs font-normal text-muted">by {c.counted_by ?? "—"}</span></td>
+                    <td className="px-4 py-2.5 font-semibold">{c.item_name}<span className="block text-xs font-normal text-muted">by {c.counted_by ?? "-"}</span></td>
                     <td className="px-4 py-2.5 text-right">{formatQty(c.system_qty)} {c.unit}</td>
                     <td className="px-4 py-2.5 text-right">{formatQty(c.counted_qty)} {c.unit}</td>
                     <td className={`px-4 py-2.5 text-right font-semibold ${d < 0 ? "text-bad" : d > 0 ? "text-sky-700" : "text-ok"}`}>{d > 0 ? "+" : ""}{formatQty(c.difference)}</td>
                     <td className="px-4 py-2.5 text-right">{m(c.value_difference)}</td>
                     <td className="px-4 py-2.5"><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.status === "approved" ? "bg-ok-bg text-ok" : "bg-white text-muted ring-1 ring-line"}`}>{c.status === "approved" ? "Approved" : "Rejected"}</span></td>
-                    <td className="px-4 py-2.5 text-xs">{c.decided_by ?? "—"}{c.decided_at ? <span className="block text-muted">{formatDateTime(c.decided_at, s.timezone)}</span> : null}{c.decision_note ? <span className="block text-muted">{c.decision_note}</span> : null}</td>
-                    <td className="px-4 py-2.5 text-xs">{c.txn_no ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-xs">{c.decided_by ?? "-"}{c.decided_at ? <span className="block text-muted">{formatDateTime(c.decided_at, s.timezone)}</span> : null}{c.decision_note ? <span className="block text-muted">{c.decision_note}</span> : null}</td>
+                    <td className="px-4 py-2.5 text-xs">{c.txn_no ?? "-"}</td>
                   </tr>
                 );
               })}

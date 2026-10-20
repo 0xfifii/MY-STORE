@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 /*
-  MY STORE — "frosted burgundy"
+  The Velvet Store: velvet red and kraft cream
   Soft warm canvas with blurred burgundy glows, frosted-glass panels, pill controls,
   near-black pill buttons with a round arrow, light large numerals (DM Sans).
 */
 @theme {
-  --color-claret: #4f1022;
-  --color-claret-deep: #3a0b18;
-  --color-burgundy: #7a1f35;
-  --color-burgundy-hover: #651a2c;
-  --color-glow: #b83a58;
-  --color-rose: #f6ebee;
-  --color-rose-strong: #ecd6dc;
-  --color-ink: #1d1517;
-  --color-night: #1d1517;
-  --color-muted: #77696d;
-  --color-line: #e8e0e2;
-  --color-paper: #ffffff;
-  --color-canvas: #f3efed;
-  --color-ok: #23704a;
-  --color-ok-bg: #e7f3ec;
+  --color-claret: #520810;
+  --color-claret-deep: #3d050b;
+  --color-burgundy: #9e1018;   /* velvet */
+  --color-burgundy-hover: #82080f;
+  --color-glow: #c9302c;
+  --color-rose: #f7e8dd;
+  --color-rose-strong: #efd6c5;
+  --color-ink: #2b1613;
+  --color-night: #2b1613;
+  --color-muted: #85706a;
+  --color-line: #e9dace;
+  --color-paper: #fffaf3;
+  --color-white: #fffcf8;      /* warm white everywhere */
+  --color-canvas: #f2e6d6;     /* kraft cream */
+  --color-kraft: #e9d6c2;
+  --color-ok: #2a6b45;
+  --color-ok-bg: #e6efdf;
   --color-warn: #a35310;
   --color-warn-bg: #fbefe2;
   --color-bad: #b42318;
@@ -35,8 +37,8 @@
   --color-mint-bg: #e3f6ee;
   --color-plum: #6250d6;
   --color-plum-bg: #eeebfc;
-  --color-coral: #eb6834;
-  --color-coral-bg: #fdede5;
+  --color-coral: #e0603a;
+  --color-coral-bg: #fbe8dd;
 
   --font-sans: "DM Sans Variable", "DM Sans Naira", "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "DM Sans Variable", "DM Sans Naira", "DM Sans", ui-sans-serif, system-ui, sans-serif;
@@ -50,10 +52,17 @@ html {
 
 body {
   background-color: var(--color-canvas);
+  /* faint kraft-paper grain */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-feature-settings: "tnum" 1;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+  font-optical-sizing: auto;
   font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Soft burgundy light behind the whole app (fixed, behind content). */
@@ -63,30 +72,31 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(38rem 30rem at 92% -6%, rgb(184 58 88 / 0.22), transparent 70%),
-    radial-gradient(30rem 26rem at -8% 108%, rgb(122 31 53 / 0.16), transparent 70%),
-    radial-gradient(24rem 20rem at 55% 55%, rgb(255 255 255 / 0.7), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(38rem 30rem at 92% -6%, rgb(158 16 24 / 0.16), transparent 70%),
+    radial-gradient(30rem 26rem at -8% 108%, rgb(158 16 24 / 0.12), transparent 70%),
+    radial-gradient(28rem 22rem at 55% 50%, rgb(255 250 243 / 0.75), transparent 70%),
     var(--color-canvas);
 }
 
 /* Frosted glass surface */
 .glass {
-  background: rgb(255 255 255 / 0.62);
-  border: 1px solid rgb(255 255 255 / 0.75);
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -18px rgb(79 16 34 / 0.28);
+  background: rgb(255 251 245 / 0.72);
+  border: 1px solid rgb(255 250 243 / 0.85);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -18px rgb(82 8 16 / 0.28);
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
 }
 .glass-strong {
-  background: rgb(255 255 255 / 0.82);
+  background: rgb(255 251 245 / 0.88);
   border: 1px solid rgb(255 255 255 / 0.9);
-  box-shadow: 0 16px 40px -20px rgb(79 16 34 / 0.3);
+  box-shadow: 0 16px 40px -20px rgb(82 8 16 / 0.3);
   backdrop-filter: blur(22px) saturate(1.2);
   -webkit-backdrop-filter: blur(22px) saturate(1.2);
 }
 /* The blurred burgundy sphere from the reference */
 .glow-orb {
-  background: radial-gradient(circle at 40% 40%, #d5546f 0%, #9c2a45 38%, rgb(122 31 53 / 0.35) 62%, transparent 72%);
+  background: radial-gradient(circle at 40% 40%, #d9443a 0%, #b3141f 38%, rgb(143 14 22 / 0.35) 62%, transparent 72%);
   filter: blur(6px);
 }
 
@@ -94,10 +104,11 @@ body {
   font-family: var(--font-display);
 }
 
-:focus-visible {
+:focus-visible:not(input):not(textarea):not(select) {
   outline: 2px solid var(--color-burgundy);
   outline-offset: 2px;
 }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -154,7 +165,7 @@ select::-ms-expand { display: none; }
 /* Cards and glass panels respond to the pointer. */
 .lift { transition: transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease; }
 @media (hover: hover) {
-  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 22px 40px -22px rgb(79 16 34 / 0.45); }
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 22px 40px -22px rgb(82 8 16 / 0.45); }
 }
 .lift:active { transform: translateY(0) scale(0.99); }
 
@@ -171,4 +182,30 @@ tbody tr { transition: background-color 150ms ease; }
 }
 @media (hover: hover) { .btn-shine:hover::after { transform: translateX(120%); } }
 
-::selection { background: rgb(184 58 88 / 0.22); }
+::selection { background: rgb(201 48 44 / 0.22); }
+
+/* ---------- Velvy the mascot ---------- */
+@keyframes velvy-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes velvy-jump { 0%, 100% { transform: translateY(0) scale(1, 1); } 30% { transform: translateY(-14px) scale(.97, 1.03); } 55% { transform: translateY(0) scale(1.04, .96); } 70% { transform: translateY(-4px); } }
+@keyframes velvy-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.015, .985); } }
+@keyframes velvy-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes velvy-wave { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-16deg); } 75% { transform: rotate(10deg); } }
+@keyframes velvy-fidget { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(1.5px); } }
+@keyframes velvy-float { 0% { opacity: 0; transform: translateY(4px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+@keyframes velvy-shadow { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.9); } }
+.velvy-bob { animation: velvy-bob 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
+.velvy-jump { animation: velvy-jump 1.3s cubic-bezier(.3,.7,.3,1) infinite; transform-box: fill-box; transform-origin: center bottom; }
+.velvy-breathe { animation: velvy-breathe 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
+.velvy-eyes { animation: velvy-blink 4.2s infinite; transform-box: fill-box; transform-origin: center; }
+.velvy-wave { animation: velvy-wave 1.4s ease-in-out infinite; }
+.velvy-fidget { animation: velvy-fidget .5s ease-in-out infinite; }
+.velvy-zz, .velvy-sparkle { animation: velvy-float 2.4s ease-out infinite; }
+.velvy-shadow { animation: velvy-shadow 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .velvy-bob, .velvy-jump, .velvy-breathe, .velvy-eyes, .velvy-wave, .velvy-fidget, .velvy-zz, .velvy-sparkle, .velvy-shadow { animation: none; }
+}
+
+/* Type: headings tight and confident, small labels a touch looser. */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+.text-xs { letter-spacing: 0.005em; }

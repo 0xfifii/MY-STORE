@@ -67,7 +67,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
         {/* One table: opening, stock in + cost, stock out + cost, closing */}
         {sec.balances && (
-          <Section title={report.periodType === "day" ? "Stock sheet" : "Stock sheet — whole period"} empty={!report.balances.length ? "No items." : null}>
+          <Section title={report.periodType === "day" ? "Stock sheet" : "Stock sheet for the whole period"} empty={!report.balances.length ? "No items." : null}>
             <p className="border-b border-white/80 px-5 py-2 text-xs text-muted">Opening stock, stock in, stock out and their cost for every item in one table. Each closing balance (Bal) is the next day&apos;s opening stock.</p>
             <CombinedTable
               m={m}
@@ -180,8 +180,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                       <Td right>{formatUnitCost(t.entered_unit_cost, sym)}</Td>
                       {sec.stockIn && <Td right>{isIn ? <span className="text-ok">{m(t.total_value)}</span> : ""}</Td>}
                       {sec.stockOut && <Td right>{!isIn ? <span className="text-burgundy">{m(t.total_value)}</span> : ""}</Td>}
-                      <Td>{isIn ? (t.is_opening ? "Opening stock" : t.supplier_label ?? "—") : <>{[t.worker_name, t.recipient].filter(Boolean).join(" · to ") || "—"}<span className="block text-xs text-muted">{reasonLabel(t.reason)}</span></>}</Td>
-                      <Td>{[t.reference, t.notes].filter(Boolean).join(" — ") || "—"}</Td>
+                      <Td>{isIn ? (t.is_opening ? "Opening stock" : t.supplier_label ?? "-") : <>{[t.worker_name, t.recipient].filter(Boolean).join(" · to ") || "-"}<span className="block text-xs text-muted">{reasonLabel(t.reason)}</span></>}</Td>
+                      <Td>{[t.reference, t.notes].filter(Boolean).join(", ") || "-"}</Td>
                     </tr>
                   );
                 })}
@@ -227,7 +227,7 @@ type CombinedRow = {
   adj: string; closing: string; closing_value?: string; status?: "in_stock" | "low" | "out";
 };
 
-/** S/N · Item · Opening · Stock in · Cost of stock in · Stock out · Cost of stock out · Closing (Bal) · Worth — all in one table. */
+/** S/N · Item · Opening · Stock in · Cost of stock in · Stock out · Cost of stock out · Closing (Bal) · Worth, all in one table. */
 function CombinedTable({ rows, totals, adj, m, testId }: {
   rows: CombinedRow[]; totals: { in_value: string; out_value: string; closing_value?: string }; adj: boolean; m: (v: string) => string; testId?: string;
 }) {
@@ -250,9 +250,9 @@ function CombinedTable({ rows, totals, adj, m, testId }: {
             <Td wide><Link href={`/items/${b.id}`} className="font-semibold hover:text-burgundy">{b.name}</Link><span className="block text-xs text-muted">{b.sku}</span></Td>
             <Td right>{formatQty(b.opening)} {b.unit}</Td>
             <Td right><span className="text-ok">{Number(b.in) ? `+${formatQty(b.in)}` : "0"}</span></Td>
-            <Td right>{Number(b.in_value) ? m(b.in_value) : "—"}</Td>
+            <Td right>{Number(b.in_value) ? m(b.in_value) : "-"}</Td>
             <Td right><span className="text-burgundy">{Number(b.out) ? `−${formatQty(b.out)}` : "0"}</span></Td>
-            <Td right>{Number(b.out_value) ? m(b.out_value) : "—"}</Td>
+            <Td right>{Number(b.out_value) ? m(b.out_value) : "-"}</Td>
             {adj && <Td right>{formatQty(b.adj)}</Td>}
             <Td right><strong>{formatQty(b.closing)} {b.unit}</strong></Td>
             {worth && <Td right>{m(b.closing_value ?? "0")}</Td>}

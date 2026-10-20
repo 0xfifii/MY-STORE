@@ -1,10 +1,11 @@
 import { StockInIcon, StockOutIcon } from "@/components/icons";
 import Link from "next/link";
-import { AlertTriangle, Download, Plus, Boxes, History, TrendingDown, TrendingUp } from "lucide-react";
+import { AlertTriangle, Download, Plus, Boxes, History, TrendingDown, TrendingUp } from "@/components/hand-icons";
 import { EmptyState, LinkButton, PageHeader, Panel, StatusBadge } from "@/components/ui/primitives";
 import { TxnList } from "@/components/txn-list";
 import { StockButtons } from "@/components/stock-dialog";
 import { PieChart } from "@/components/pie-chart";
+import { Mascot } from "@/components/mascot";
 import { requirePageUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { dashboardStats } from "@/lib/inventory";
@@ -28,6 +29,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const most = usage.items[0];
   const least = usage.items.length > 1 ? usage.items[usage.items.length - 1] : null;
   const dayName = new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: s.timezone }).format(new Date());
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone: s.timezone }).format(new Date()));
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const firstName = user.name.split(/\s+/)[0];
+  const tip =
+    d.totals.out > 0 ? `${d.totals.out} item${d.totals.out === 1 ? " is" : "s are"} out of stock. Let's restock soon.`
+    : d.totals.low > 0 ? `${d.totals.low} item${d.totals.low === 1 ? " is" : "s are"} running low.`
+    : d.totals.items === 0 ? "Add your first item and I'll keep count."
+    : "Everything is well stocked. Nice work!";
 
   return (
     <div>
@@ -35,8 +44,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <p className="mb-4 rounded-2xl bg-warn-bg px-4 py-3 text-sm text-warn">You don&apos;t have permission to open that page. Ask the store owner.</p>
       )}
       <PageHeader
-        title={`${dayName}`}
-        description={`${formatDate(today)} · ${s.store_name}`}
+        title={`${greeting}, ${firstName}`}
+        description={`${dayName}, ${formatDate(today)} · ${s.store_name}`}
         actions={
           <>
             {can(user, "stock.in") && <LinkButton href="/stock-in" variant="secondary"><StockInIcon className="size-[18px]" /> Stock In</LinkButton>}
@@ -49,12 +58,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         }
       />
 
+      <div className="mb-4 flex items-center gap-3 rounded-[var(--radius-card)] bg-paper/70 px-4 py-2 ring-1 ring-kraft sm:w-fit sm:pr-6">
+        <Mascot mood={d.totals.out > 0 ? "worried" : d.totals.low > 0 ? "thinking" : "happy"} className="h-16 w-14 shrink-0" />
+        <p className="text-sm"><strong className="text-burgundy">Velvy says:</strong> {tip}</p>
+      </div>
+
       {/* Worth + today */}
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,2fr)]">
-        <div className="lift relative overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-br from-night via-[#2b1419] to-claret p-6 text-white">
+        <div className="lift relative overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-br from-night via-[#3a1512] to-claret p-6 text-white">
           <div className="glow-orb pointer-events-none absolute -right-16 -top-20 size-64 rounded-full opacity-70" aria-hidden />
           <p className="relative text-sm text-white/60">Total inventory worth</p>
-          <p className="relative mt-2 text-[40px] font-light leading-none tracking-tight sm:text-5xl" data-testid="inventory-worth">
+          <p className="relative mt-2 text-[40px] font-normal leading-none tracking-tight sm:text-5xl" data-testid="inventory-worth">
             {formatMoney(d.totals.worth, sym)}
           </p>
           <p className="relative mt-3 text-sm text-white/60">{d.totals.items} {d.totals.items === 1 ? "item" : "items"} · weighted-average cost</p>

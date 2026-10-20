@@ -24,9 +24,9 @@ export const POST = handle<Ctx>(async (req, { params }) => {
   ].filter(Boolean).join("\n\n");
   try {
     await sendMail({
-      to: body.to, subject: `${s.store_name} — ${title}`, text, html: emailHtml(s.store_name, title, text),
+      to: body.to, subject: `${s.store_name}: ${title}`, text, html: emailHtml(s.store_name, title, text),
       attachments: [{ filename: receiptFileName(t), content: pdf, contentType: "application/pdf" }],
-      kind: "receipt", userId: user.id, replyTo: user.email,
+      kind: "receipt", userId: user.id, replyTo: user.email, payload: { attach: { kind: "receipt", txnId: t.id } },
     });
   } catch (e) {
     throw new AppError("EMAIL_FAILED", (e as Error).message, 502);
