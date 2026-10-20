@@ -51,7 +51,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* Worth + today */}
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,2fr)]">
-        <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-night p-6 text-white">
+        <div className="lift relative overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-br from-night via-[#2b1419] to-claret p-6 text-white">
           <div className="glow-orb pointer-events-none absolute -right-16 -top-20 size-64 rounded-full opacity-70" aria-hidden />
           <p className="relative text-sm text-white/60">Total inventory worth</p>
           <p className="relative mt-2 text-[40px] font-light leading-none tracking-tight sm:text-5xl" data-testid="inventory-worth">
@@ -66,11 +66,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             </p>
           )}
         </div>
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Received today" value={formatMoney(d.today.in_value, sym)} sub={`${d.today.in_count} receipt${d.today.in_count === 1 ? "" : "s"}`} tone="text-ok" icon={<StockInIcon className="size-5" />} />
-          <Stat label="Issued today" value={formatMoney(d.today.out_value, sym)} sub={`${d.today.out_count} issue${d.today.out_count === 1 ? "" : "s"}`} tone="text-burgundy" icon={<StockOutIcon className="size-5" />} />
-          <Stat label="Low stock" value={String(d.totals.low)} sub="at or below minimum" tone={d.totals.low ? "text-warn" : ""} href="/low-stock" icon={<AlertTriangle className="size-5" />} />
-          <Stat label="Out of stock" value={String(d.totals.out)} sub="need restocking" tone={d.totals.out ? "text-bad" : ""} href="/low-stock?status=out" icon={<Boxes className="size-5" />} />
+        <dl className="stagger grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+          <Stat label="Received today" value={formatMoney(d.today.in_value, sym)} sub={`${d.today.in_count} receipt${d.today.in_count === 1 ? "" : "s"}`} accent="sky" href="/transactions?type=stock_in" icon={<StockInIcon className="size-5" />} />
+          <Stat label="Issued today" value={formatMoney(d.today.out_value, sym)} sub={`${d.today.out_count} issue${d.today.out_count === 1 ? "" : "s"}`} accent="burgundy" href="/transactions?type=stock_out" icon={<StockOutIcon className="size-5" />} />
+          <Stat label="Low stock" value={String(d.totals.low)} sub="at or below minimum" accent="gold" href="/low-stock" icon={<AlertTriangle className="size-5" />} />
+          <Stat label="Out of stock" value={String(d.totals.out)} sub="need restocking" accent="coral" href="/low-stock?status=out" icon={<Boxes className="size-5" />} />
         </dl>
       </section>
 
@@ -131,9 +131,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Panel title="Last 7 days">
             <div className="flex items-end gap-2" role="img" aria-label="Stock received and issued value per day, last 7 days">
               {d.week.map((w) => (
-                <div key={w.day} className="flex flex-1 flex-col items-center gap-1.5">
-                  <div className="flex h-28 w-full items-end justify-center gap-[2px]">
-                    <div className="w-1/2 max-w-3 rounded-t bg-ok/70" style={{ height: `${(Number(w.in_value) / maxDay) * 100}%` }} title={`Received ${formatMoney(w.in_value, sym)}`} />
+                <div key={w.day} className="group flex flex-1 flex-col items-center gap-1.5">
+                  <div className="flex h-28 w-full items-end justify-center gap-[2px] transition-transform duration-200 group-hover:scale-y-105 origin-bottom">
+                    <div className="w-1/2 max-w-3 rounded-t bg-sky" style={{ height: `${(Number(w.in_value) / maxDay) * 100}%` }} title={`Received ${formatMoney(w.in_value, sym)}`} />
                     <div className="w-1/2 max-w-3 rounded-t bg-burgundy" style={{ height: `${(Number(w.out_value) / maxDay) * 100}%` }} title={`Issued ${formatMoney(w.out_value, sym)}`} />
                   </div>
                   <span className="text-[11px] text-muted">{new Date(w.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" })}</span>
@@ -141,7 +141,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               ))}
             </div>
             <div className="mt-3 flex gap-4 text-xs text-muted">
-              <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-ok/70" /> Received (value)</span>
+              <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-sky" /> Received (value)</span>
               <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-burgundy" /> Issued (value)</span>
             </div>
             <div className="sr-only"><table><caption>Daily movement</caption><tbody>{d.week.map((w) => <tr key={w.day}><td>{w.day}</td><td>{w.in_value}</td><td>{w.out_value}</td></tr>)}</tbody></table></div>
@@ -152,21 +152,25 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   );
 }
 
-function Stat({ label, value, sub, tone, href, icon }: { label: string; value: string; sub: string; tone?: string; href?: string; icon: React.ReactNode }) {
-  const inner = (
-    <>
+const ACCENTS = {
+  sky: { icon: "bg-sky text-white", bar: "bg-sky", text: "text-sky" },
+  burgundy: { icon: "bg-burgundy text-white", bar: "bg-burgundy", text: "text-burgundy" },
+  gold: { icon: "bg-gold text-night", bar: "bg-gold", text: "text-warn" },
+  coral: { icon: "bg-coral text-white", bar: "bg-coral", text: "text-bad" },
+};
+
+function Stat({ label, value, sub, accent, href, icon }: { label: string; value: string; sub: string; accent: keyof typeof ACCENTS; href: string; icon: React.ReactNode }) {
+  const a = ACCENTS[accent];
+  return (
+    <Link href={href} className="glass lift group relative block overflow-hidden rounded-[var(--radius-card)] p-4">
+      <span className={`absolute inset-x-0 top-0 h-1 ${a.bar} opacity-80`} aria-hidden />
       <div className="flex items-center justify-between">
         <dt className="text-xs text-muted">{label}</dt>
-        <span className="flex size-9 items-center justify-center rounded-full bg-white text-muted shadow-sm">{icon}</span>
+        <span className={`flex size-9 items-center justify-center rounded-full shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110 ${a.icon}`}>{icon}</span>
       </div>
-      <dd className={`mt-3 text-2xl font-semibold tracking-tight ${tone || "text-ink"}`}>{value}</dd>
+      <dd className={`mt-3 text-2xl font-semibold tracking-tight ${Number(value.replace(/[^\d.]/g, "")) === 0 ? "text-ink" : a.text}`}>{value}</dd>
       <dd className="text-xs text-muted">{sub}</dd>
-    </>
-  );
-  return (
-    <div className="glass rounded-[var(--radius-card)] p-4">
-      {href ? <Link href={href} className="block hover:opacity-80">{inner}</Link> : inner}
-    </div>
+    </Link>
   );
 }
 

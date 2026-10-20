@@ -225,8 +225,36 @@ with sync_playwright() as p:
     shot(page, "37-usage")
     page.goto(BASE + "/audit?group=week&range=12w&spend=category")
     shot(page, "37b-usage-week")
-    page.goto(BASE + "/audit?group=month&range=12m&spend=supplier")
+    page.goto(BASE + "/audit?tab=usage&group=month&range=12m&spend=supplier")
     shot(page, "37c-usage-month")
+    # Stock count: record a shortage, approve it
+    page.goto(BASE + "/stock-count")
+    page.get_by_role("combobox").fill("sugar")
+    page.get_by_role("option", name=re.compile("Granulated sugar")).click()
+    page.fill("#cnt-q", "18")
+    page.fill("#cnt-n", "Torn bag")
+    shot(page, "50-count-form")
+    page.get_by_role("button", name="Save count").click()
+    expect(page.get_by_test_id("pending-counts")).to_be_visible()
+    page.get_by_role("button", name="Approve").first.click()
+    page.get_by_role("button", name="Approve and adjust").click()
+    expect(page.get_by_text("approved").first).to_be_visible()
+    shot(page, "51-count-approved")
+    # Audit dashboard tabs
+    for q, name in [("", "52-audit-overview"), ("?mode=quantity", "53-audit-qty"), ("?mode=out&by=category&p=year", "54-audit-out-year"),
+                    ("?tab=purchases", "55-audit-purchases"), ("?tab=stockout", "56-audit-stockout"), ("?tab=prices", "57-audit-prices"),
+                    (f"?tab=item&item={sugar}", "58-audit-item")]:
+        page.goto(BASE + "/audit" + q)
+        no_hscroll(page, f"desktop /audit{q}")
+        shot(page, name)
+    page.goto(BASE + "/audit?tab=item")
+    page.get_by_label("Search items").fill("gra")
+    page.get_by_role("option", name=re.compile("Granulated sugar")).click()
+    expect(page.get_by_test_id("item-month")).to_be_visible()
+    page.goto(BASE + "/mail")
+    shot(page, "59-mail")
+    page.goto(BASE + "/settings")
+    shot(page, "60-settings")
     page.goto(BASE + "/audit?tab=changes")
     shot(page, "38-changes")
     page.goto(BASE + "/reports")
@@ -238,7 +266,7 @@ with sync_playwright() as p:
         page.click("a:has-text('Excel (.xlsx)')")
     d.value.save_as(f"{OUT}/sample-report.xlsx")
 
-    for path in ["/dashboard", "/inventory", "/reports", "/transactions", f"/items/{sugar}", "/audit", "/workers", "/users"]:
+    for path in ["/dashboard", "/inventory", "/reports", "/transactions", f"/items/{sugar}", "/audit", "/workers", "/users", "/stock-count", "/mail", "/settings"]:
         page.goto(BASE + path)
         no_hscroll(page, f"desktop {path}")
 
@@ -275,7 +303,8 @@ with sync_playwright() as p:
     pp = phone.new_page()
     for path, name in [("/dashboard", "22-dashboard-phone"), ("/inventory", "23-inventory-phone"), ("/reports", "24-reports-phone"),
                        (f"/items/{sugar}", "25-item-phone"), ("/transactions", "26-transactions-phone"), ("/low-stock", "27-lowstock-phone"),
-                       ("/audit", "39-usage-phone"), ("/workers", "40-workers-phone")]:
+                       ("/audit", "39-audit-phone"), ("/audit?tab=prices", "39b-prices-phone"), (f"/audit?tab=item&item={sugar}", "39c-item-phone"),
+                       ("/audit?tab=purchases", "39d-purchases-phone"), ("/stock-count", "39e-count-phone"), ("/mail", "39f-mail-phone"), ("/workers", "40-workers-phone")]:
         pp.goto(BASE + path)
         no_hscroll(pp, f"phone {path}")
         shot(pp, name)
@@ -292,6 +321,10 @@ with sync_playwright() as p:
     pp.get_by_role("button", name="Review stock out").click()
     pp.get_by_test_id("confirm-stock").click()
     expect(pp.get_by_text("108").first).to_be_visible()
+    expect(pp.get_by_test_id("receipt-actions")).to_be_visible()
+    with pp.expect_download() as d:
+        pp.get_by_role("link", name="Download receipt").click()
+    d.value.save_as(f"{OUT}/sample-receipt.pdf")
     shot(pp, "29-stockout-done-phone")
     # Phone dialog from inventory card
     pp.goto(BASE + "/inventory")

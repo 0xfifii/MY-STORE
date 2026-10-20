@@ -68,6 +68,8 @@ export type TxnRow = {
   worker_id: number | null;
   worker_name: string | null;
   category_name: string | null;
+  /** "count" = adjustment from an approved stock count. */
+  source: string | null;
 };
 
 const ITEM_SELECT = `
@@ -94,7 +96,7 @@ export const TXN_SELECT = `
          t.reason, coalesce(sp.name, t.supplier_name) AS supplier_label, t.recipient, t.reference, t.notes,
          t.reverses_id::text, ot.txn_no AS reverses_txn_no, rv.txn_no AS reversed_by_txn_no,
          t.correction_reason, t.occurred_at, t.created_at, us.name AS user_name,
-         t.worker_id, wk.name AS worker_name, c.name AS category_name
+         t.worker_id, wk.name AS worker_name, c.name AS category_name, t.source
     FROM stock_transactions t
     JOIN items i ON i.id = t.item_id
     JOIN units eu ON eu.id = t.entered_unit_id

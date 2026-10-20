@@ -1,21 +1,34 @@
 import { useId } from "react";
 
-/** MY STORE mark: a packed box on a burgundy tile. Same artwork as /icon.svg (the favicon). */
+/** MY STORE mark: a storefront with a striped awning on a burgundy tile. Same artwork as /icon.svg (the favicon). */
 export function LogoMark({ className = "size-9" }: { className?: string }) {
-  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "") + "lg";
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden>
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#9c2a45" />
+        <linearGradient id={`${id}g`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#b8405c" />
+          <stop offset=".55" stopColor="#7a1f35" />
           <stop offset="1" stopColor="#4f1022" />
         </linearGradient>
+        <radialGradient id={`${id}h`} cx=".2" cy=".1" r=".85">
+          <stop offset="0" stopColor="#fff" stopOpacity=".3" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
       </defs>
-      <rect width="64" height="64" rx="16" fill={`url(#${id})`} />
-      <path d="M32 13 49 22.5 32 32 15 22.5z" fill="#fff" />
-      <path d="M15 25.5 30.5 34.2V52L15 43.3z" fill="#fff" fillOpacity=".82" />
-      <path d="M49 25.5 33.5 34.2V52L49 43.3z" fill="#f2c3cf" />
-      <path d="M23.5 17.8 40.5 27.3" stroke="#9c2a45" strokeWidth="2.6" strokeLinecap="round" />
+      <rect width="64" height="64" rx="16" fill={`url(#${id}g)`} />
+      <rect width="64" height="64" rx="16" fill={`url(#${id}h)`} />
+      <path d="M14 30h36v18a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3z" fill="#fff" />
+      <path d="M27 51V39a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12z" fill="#7a1f35" />
+      <circle cx="34" cy="44.5" r="1.4" fill="#f5b51c" />
+      <rect x="18" y="35" width="6" height="6" rx="1.5" fill="#f2c3cf" />
+      <rect x="40" y="35" width="6" height="6" rx="1.5" fill="#f2c3cf" />
+      <path d="M15 13h34a4 4 0 0 1 4 4v7H11v-7a4 4 0 0 1 4-4z" fill="#fff" />
+      <path d="M21.5 13h10.5v11H21.5zM42.5 13H49a4 4 0 0 1 4 4v7H42.5z" fill="#f2c3cf" />
+      <path d="M11 24h10.5a5.25 5.25 0 0 1-10.5 0z" fill="#fff" />
+      <path d="M21.5 24h10.5a5.25 5.25 0 0 1-10.5 0z" fill="#f2c3cf" />
+      <path d="M32 24h10.5a5.25 5.25 0 0 1-10.5 0z" fill="#fff" />
+      <path d="M42.5 24H53a5.25 5.25 0 0 1-10.5 0z" fill="#f2c3cf" />
     </svg>
   );
 }

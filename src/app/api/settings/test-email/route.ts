@@ -1,24 +1,24 @@
-import { handle, ok } from "@/lib/api";
+import { z } from "zod";
+import { handle, ok, readJson } from "@/lib/api";
 import { requireApiUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
-import { sendMail, smtpConfigured } from "@/lib/mailer";
+import { emailHtml, sendMail, smtpConfigured } from "@/lib/mailer";
 import { getSettings } from "@/lib/settings";
 
-export const POST = handle(async () => {
-  await requireApiUser("settings.write");
-  if (!smtpConfigured()) {
-    throw new AppError("SMTP_MISSING", "Email isn't set up on the server yet. Add the SMTP_* settings (see README) and redeploy.", 409);
+/** Sends a test email to the given address (default: the signed-in owner). */
+export const POST = handle(async (req) => {
+  const user = await requireApiUser("settings.write");
+  const body = z.object({ to: z.string().email().optional() }).parse(await readJson(req).catch(() => ({})));
+  if (!(await smtpConfigured())) {
+    throw new AppError("SMTP_MISSING", "Email isn't set up yet. Fill in the mail account under Store Settings → Email and save.", 409);
   }
   const s = await getSettings();
-  if (!s.email_recipients.length) throw new AppError("NO_RECIPIENTS", "Add at least one recipient email and save first.");
+  const to = body.to ?? user.email;
+  const text = `This is a test email from ${s.store_name}.\n\nIf you can read this, emails from the app (receipts, reports and messages) will be delivered.`;
   try {
-    const id = await sendMail({
-      to: s.email_recipients,
-      subject: `${s.store_name} — test email`,
-      text: `This is a test email from ${s.store_name}. Daily reports will be delivered to this address.`,
-    });
-    return ok({ ok: true, messageId: id });
+    const id = await sendMail({ to: [to], subject: `${s.store_name} — test email`, text, html: emailHtml(s.store_name, "Email is working", text), kind: "test", userId: user.id });
+    return ok({ ok: true, messageId: id, to });
   } catch (e) {
-    throw new AppError("SMTP_FAILED", `The mail server rejected the message: ${(e as Error).message}`, 502);
+    throw new AppError("SMTP_FAILED", (e as Error).message, 502);
   }
 });

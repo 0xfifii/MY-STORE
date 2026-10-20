@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail } from "lucide-react";
 import { Button, Field, Input, Panel, Select } from "./ui/primitives";
 import { useToast } from "./ui/toast";
 import { api } from "@/lib/client";
@@ -28,7 +27,6 @@ const CURRENCIES = [
 export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { initial: S; timezones: string[]; smtpReady: boolean; cronReady: boolean }) {
   const [s, setS] = useState({ ...initial, auto_report_time: initial.auto_report_time.slice(0, 5), recipients: initial.email_recipients.join(", ") });
   const [busy, setBusy] = useState(false);
-  const [testing, setTesting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const toast = useToast();
   const router = useRouter();
@@ -46,11 +44,6 @@ export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { ini
       toast.success("Settings saved");
       router.refresh();
     } catch (e2) { setErr((e2 as Error).message); } finally { setBusy(false); }
-  };
-  const testEmail = async () => {
-    setTesting(true);
-    try { await api("/api/settings/test-email", { method: "POST" }); toast.success("Test email sent", "Check the recipients' inboxes."); }
-    catch (e) { toast.error("Test email not sent", (e as Error).message); } finally { setTesting(false); }
   };
   const toggleFormat = (f: "pdf" | "xlsx" | "csv") =>
     setS({ ...s, auto_report_formats: s.auto_report_formats.includes(f) ? s.auto_report_formats.filter((x) => x !== f) : [...s.auto_report_formats, f] });
@@ -137,10 +130,10 @@ export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { ini
         </div>
       </Panel>
 
-      <Panel title="Email delivery">
+      <Panel title="Automatic report emails">
         {!smtpReady && (
-          <p className="mb-4 rounded-2xl bg-canvas px-3 py-2 text-sm text-muted ring-1 ring-line">
-            The server has no mail account configured, so reports are only saved to Report History. To email them, add the SMTP settings described in the README.
+          <p className="mb-4 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">
+            No mail account is set up yet, so reports are only saved to Report History. Add one under <strong>Email account</strong> below.
           </p>
         )}
         <label className="flex items-start gap-3">
@@ -155,9 +148,6 @@ export function SettingsForm({ initial, timezones, smtpReady, cronReady }: { ini
             <Input id="rcp" value={s.recipients} onChange={(e) => setS({ ...s, recipients: e.target.value })} placeholder="owner@example.com, manager@example.com" />
           </Field>
         </div>
-        <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={testEmail} loading={testing} disabled={!smtpReady}>
-          <Mail className="size-4" /> Send test email
-        </Button>
       </Panel>
 
       {err && <p role="alert" className="rounded-2xl bg-bad-bg px-4 py-3 text-sm text-bad">{err}</p>}

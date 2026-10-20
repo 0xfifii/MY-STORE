@@ -3,6 +3,7 @@ import { hashPassword, requireApiUser } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { query, queryOne } from "@/lib/db";
 import { userCreateSchema } from "@/lib/validation";
+import { appUrl, sendWelcomeEmail } from "@/lib/notify";
 
 export const GET = handle(async () => {
   await requireApiUser("users.manage");
@@ -20,5 +21,8 @@ export const POST = handle(async (req) => {
     [u.name, u.email, await hashPassword(u.password), u.role],
   );
   await audit(me.id, "user.create", "user", row!.id, { email: u.email, role: u.role });
-  return ok({ id: row!.id }, 201);
+  const welcome = u.send_welcome
+    ? await sendWelcomeEmail({ ...u, password: u.include_password ? u.password : null }, { by: { id: me.id, name: me.name }, url: appUrl(req) })
+    : { status: "off" as const };
+  return ok({ id: row!.id, welcome }, 201);
 });

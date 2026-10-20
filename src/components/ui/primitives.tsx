@@ -8,8 +8,8 @@ type Variant = "primary" | "accent" | "secondary" | "ghost" | "danger" | "outlin
 type Size = "sm" | "md" | "lg";
 
 const variantClass: Record<Variant, string> = {
-  primary: "bg-night text-white hover:bg-claret disabled:bg-night/40",
-  accent: "bg-burgundy text-white hover:bg-burgundy-hover disabled:bg-burgundy/50",
+  primary: "btn-shine bg-night text-white shadow-[0_8px_18px_-10px_rgb(29_21_23/0.7)] hover:bg-claret hover:shadow-[0_12px_24px_-10px_rgb(79_16_34/0.7)] disabled:bg-night/40 disabled:shadow-none",
+  accent: "btn-shine bg-gradient-to-br from-[#9c2a45] to-burgundy text-white shadow-[0_8px_18px_-10px_rgb(122_31_53/0.8)] hover:from-burgundy hover:to-claret disabled:opacity-50",
   secondary: "bg-white/80 text-ink border border-white shadow-sm hover:bg-white hover:text-burgundy disabled:opacity-60",
   ghost: "text-burgundy hover:bg-rose/70 disabled:opacity-50",
   danger: "bg-bad text-white hover:bg-bad/90 disabled:opacity-60",
@@ -23,7 +23,7 @@ const sizeClass: Record<Size, string> = {
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", extra?: string) {
   return clsx(
-    "inline-flex items-center justify-center rounded-full font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed",
+    "inline-flex items-center justify-center rounded-full font-semibold whitespace-nowrap transition-all duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100",
     variantClass[variant],
     sizeClass[size],
     extra,
@@ -102,8 +102,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttrib
 
 export function StatusBadge({ status }: { status: StockStatus }) {
   const map = {
-    in_stock: { cls: "bg-ok-bg text-ok", label: "In stock" },
-    low: { cls: "bg-warn-bg text-warn", label: "Low stock" },
+    in_stock: { cls: "bg-mint-bg text-ok", label: "In stock" },
+    low: { cls: "bg-gold-bg text-warn", label: "Low stock" },
     out: { cls: "bg-bad-bg text-bad", label: "Out of stock" },
   }[status];
   return (
@@ -125,8 +125,8 @@ export function TxnTypeBadge({ type, direction }: { type: string; direction: num
 }
 
 export function PageHeader({
-  title, description, actions, back,
-}: { title: string; description?: React.ReactNode; actions?: React.ReactNode; back?: { href: string; label: string } }) {
+  title, description, actions,
+}: { title: string; description?: React.ReactNode; actions?: React.ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
@@ -142,7 +142,7 @@ export function Panel({ title, actions, children, className, bodyClass }: {
   title?: React.ReactNode; actions?: React.ReactNode; children: React.ReactNode; className?: string; bodyClass?: string;
 }) {
   return (
-    <section className={clsx("glass rounded-[var(--radius-card)]", className)}>
+    <section className={clsx("glass rounded-[var(--radius-card)] transition-shadow duration-300", className)}>
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-6">
           {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}

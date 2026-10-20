@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, X, ArchiveRestore,
-  HardHat, ChartPie,
+  HardHat, ChartPie, ClipboardCheck, Mail,
 } from "lucide-react";
 import { useApp } from "./app-context";
 import { LogoMark } from "./logo";
@@ -24,11 +24,13 @@ const MAIN: NavItem[] = [
   { href: "/stock-out", label: "Stock Out", icon: StockOutIcon, perm: "stock.out" },
   { href: "/transactions", label: "Transactions", icon: History },
   { href: "/low-stock", label: "Low Stock", icon: AlertTriangle },
+  { href: "/stock-count", label: "Stock Count", icon: ClipboardCheck, perm: "stock.count" },
 ];
 const REPORTS: NavItem[] = [
   { href: "/reports", label: "Reports", icon: FileBarChart },
   { href: "/reports/history", label: "Report History", icon: ArchiveRestore },
-  { href: "/audit", label: "Usage & Audit", icon: ChartPie, perm: "audit.view" },
+  { href: "/audit", label: "Audit & Analytics", icon: ChartPie, perm: "audit.view" },
+  { href: "/mail", label: "Send Email", icon: Mail, perm: "mail.send" },
 ];
 const SETUP: NavItem[] = [
   { href: "/categories", label: "Categories", icon: Tags },
@@ -95,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main className="mx-auto w-full max-w-7xl px-4 pb-32 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-9">
-        <StockDialogProvider>{children}</StockDialogProvider>
+        <StockDialogProvider><div key={pathname} className="page-enter">{children}</div></StockDialogProvider>
       </main>
 
       {/* Mobile bottom navigation */}
@@ -107,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold", active ? "bg-night text-white" : "text-muted")}
+              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-90", active ? "bg-gradient-to-br from-[#9c2a45] to-claret text-white shadow-md" : "text-muted hover:text-ink")}
               aria-current={active ? "page" : undefined}
             >
               <span className="flex h-6 items-center justify-center">
@@ -148,12 +150,13 @@ function SidebarNav({ pathname }: { pathname: string }) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={clsx(
-                    "flex items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
-                    active ? "bg-white text-claret shadow-sm" : "text-white/80 hover:bg-white/10 hover:text-white",
+                    "group flex items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200",
+                    active ? "bg-white text-claret shadow-[0_8px_20px_-10px_rgb(0_0_0/0.5)]" : "text-white/80 hover:translate-x-1 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  <Icon className="size-[18px]" />
+                  <Icon className={clsx("size-[18px] transition-transform duration-200 group-hover:scale-110", active && "text-burgundy")} />
                   {item.label}
+                  {active && <span className="ml-auto size-1.5 rounded-full bg-gold" aria-hidden />}
                 </Link>
               </li>
             );

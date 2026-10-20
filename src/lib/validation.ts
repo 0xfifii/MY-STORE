@@ -142,6 +142,8 @@ export const userCreateSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
   role: z.enum(["owner", "staff", "viewer"]),
   password: passwordSchema,
+  send_welcome: z.boolean().optional().default(true),
+  include_password: z.boolean().optional().default(false),
 });
 
 export const userUpdateSchema = z.object({
@@ -177,3 +179,9 @@ export const userPermissionsSchema = z.object({
   permissions: z.array(z.string()).max(30).nullable(),
   allowed_category_ids: z.array(z.coerce.number().int().positive()).max(200).nullable(),
 });
+
+/** One or more email addresses, as an array or a comma/semicolon/space separated string. */
+export const emailListSchema = z
+  .union([z.array(z.string()), z.string()])
+  .transform((v) => (Array.isArray(v) ? v : v.split(/[,;\s]+/)).map((x) => x.trim().toLowerCase()).filter(Boolean))
+  .pipe(z.array(z.string().email("One of the email addresses isn't valid")).min(1, "Add at least one email address").max(25, "Up to 25 recipients"));

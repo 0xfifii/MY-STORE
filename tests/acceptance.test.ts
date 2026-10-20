@@ -676,8 +676,8 @@ describe("16. Deleting items and money analysis", () => {
   });
 
   it("usage page shows money by day, week and month and spending breakdowns", async () => {
-    for (const q of ["", "?group=week&range=12w", "?group=month&range=12m", "?spend=category", "?spend=supplier"]) {
-      const r = await owner.get(`/audit${q}`);
+    for (const q of ["", "&group=week&range=12w", "&group=month&range=12m", "&spend=category", "&spend=supplier"]) {
+      const r = await owner.get(`/audit?tab=usage${q}`);
       expect(r.status, q).toBe(200);
       const html = (r.data as Buffer | string).toString();
       expect(html, q).toContain("How money is spent");
@@ -686,5 +686,151 @@ describe("16. Deleting items and money analysis", () => {
     const csv = ((await owner.get("/api/usage/export?group=month")).data as Buffer).toString();
     expect(csv).toContain("AMOUNT STOCKED IN AND OUT PER MONTH");
     expect(csv).toContain("HOW MONEY IS SPENT — BY SUPPLIER");
+  });
+});
+
+describe("17. Email, receipts, stock counts and the audit dashboard", () => {
+  let today = "";
+  beforeAll(async () => {
+    today = (await db.query("SELECT (now() AT TIME ZONE 'Africa/Lagos')::date::text t")).rows[0].t;
+  });
+  const mails = () => (MAIL_DIR && existsSync(MAIL_DIR) ? readdirSync(MAIL_DIR).filter((f) => f.endsWith(".eml")).map((f) => readFileSync(join(MAIL_DIR, f), "utf8")) : []);
+
+  it("the mail account password never leaves the server", async () => {
+    const put = await owner.req("PUT", "/api/settings/email", { smtp_host: "smtp.gmail.com", smtp_port: 465, smtp_user: "store@gmail.com", smtp_pass: "abcd efgh ijkl mnop", smtp_from: "", welcome_email_enabled: true });
+    expect(put.status, JSON.stringify(put.data)).toBe(200);
+    expect(put.data.account.has_password).toBe(true);
+    expect(JSON.stringify(put.data)).not.toContain("abcd");
+    const settings = await owner.get("/api/settings");
+    expect(JSON.stringify(settings.data)).not.toMatch(/smtp_pass|abcdefgh/);
+    expect((await db.query("SELECT smtp_pass FROM settings")).rows[0].smtp_pass).toBe("abcdefghijklmnop");
+    expect((await staff.get("/api/settings/email")).status).toBe(403);
+    // Server SMTP_* variables (the test sink) take priority over the saved account.
+    const got = await owner.get("/api/settings/email");
+    expect(got.data.active.source).toBe(MAIL_DIR ? "server" : got.data.active.source);
+    expect((await owner.req("DELETE", "/api/settings/email")).status).toBe(200);
+  });
+
+  it("a new user gets a welcome email with the sign-in link", async () => {
+    const r = await owner.post("/api/users", { name: "Wale Welcome", email: "wale@mystore.test", role: "staff", password: "wale-pass-123", include_password: true });
+    expect(r.status).toBe(201);
+    if (MAIL_DIR) {
+      expect(r.data.welcome.status).toBe("sent");
+      const m = mails().find((x) => x.includes("To: wale@mystore.test"));
+      expect(m).toBeTruthy();
+      expect(m).toContain("/login");
+      expect(m).toContain("wale-pass-123");
+    }
+    const quiet = await owner.post("/api/users", { name: "No Mail", email: "nomail@mystore.test", role: "viewer", password: "nomail-pass-1", send_welcome: false });
+    expect(quiet.data.welcome.status).toBe("off");
+  });
+
+  it("every stock out has a downloadable PDF receipt that can be emailed", async () => {
+    const out = await stockOut(staff, rice, "0.5", "bags", { worker_id: null, recipient: "Main kitchen" });
+    expect(out.status).toBe(201);
+    const id = out.data.txn.id;
+    const pdf = await staff.get(`/api/transactions/${id}/receipt`);
+    expect(pdf.status).toBe(200);
+    expect(pdf.headers.get("content-disposition")).toContain(`mystore-receipt-${out.data.txn.txn_no}.pdf`);
+    const dir = mkdtempSync(join(tmpdir(), "rcp-"));
+    writeFileSync(join(dir, "r.pdf"), pdf.data);
+    const text = execFileSync("pdftotext", ["-layout", join(dir, "r.pdf"), "-"]).toString();
+    expect(text).toContain("Stock-out receipt");
+    expect(text).toContain(out.data.txn.txn_no);
+    expect(text).toContain("Rice (50kg bag)");
+    expect(text).toContain("Received by");
+    expect(text).toContain("₦");
+    expect((await viewer.post(`/api/transactions/${id}/receipt/email`, { to: "a@b.co" })).status).toBe(403);
+    expect((await staff.post(`/api/transactions/${id}/receipt/email`, { to: "not-an-email" })).status).toBe(400);
+    const sent = await staff.post(`/api/transactions/${id}/receipt/email`, { to: "kitchen@mystore.test, chef@mystore.test", message: "Your rice" });
+    if (MAIL_DIR) {
+      expect(sent.status, JSON.stringify(sent.data)).toBe(200);
+      const m = mails().find((x) => x.includes("kitchen@mystore.test") && x.includes("receipt"));
+      expect(m).toContain(`mystore-receipt-${out.data.txn.txn_no}.pdf`);
+      const log = await db.query("SELECT status, kind FROM email_log WHERE kind = 'receipt' ORDER BY id DESC LIMIT 1");
+      expect(log.rows[0]).toEqual({ status: "sent", kind: "receipt" });
+    }
+  });
+
+  it("send email page sends a message with a report or the monthly audit report attached", async () => {
+    const month = today.slice(0, 7);
+    const r = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Monthly audit", message: "Please review.", attach: { kind: "audit", month, format: "pdf" } });
+    if (MAIL_DIR) {
+      expect(r.status, JSON.stringify(r.data)).toBe(200);
+      expect(r.data.attachments).toEqual([`mystore-monthly-audit-${month}.pdf`]);
+      const r2 = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Today", message: "Hi", attach: { kind: "report", preset: "today", format: "xlsx" } });
+      expect(r2.status).toBe(200);
+    }
+    expect((await viewer.post("/api/mail/send", { to: "x@y.co", subject: "a", message: "b" })).status).toBe(403);
+    expect((await owner.get("/mail")).status).toBe(200);
+  });
+
+  it("stock counts: shortage and excess are only posted when approved, and show in the audit", async () => {
+    const before = Number((await item(sugar)).quantity);
+    const short = await staff.post("/api/counts", { item_id: sugar, counted_qty: String(before - 1.5), notes: "torn bag" });
+    expect(short.status, JSON.stringify(short.data)).toBe(201);
+    expect(Number((await item(sugar)).quantity)).toBe(before); // nothing changes yet
+    const cid = (await db.query("SELECT id FROM stock_counts WHERE count_no = $1", [short.data.count_no])).rows[0].id;
+    expect((await staff.post(`/api/counts/${cid}`, { decision: "approve" })).status).toBe(403);
+    const ok = await owner.post(`/api/counts/${cid}`, { decision: "approve", note: "checked" });
+    expect(ok.status, JSON.stringify(ok.data)).toBe(200);
+    expect(Number((await item(sugar)).quantity)).toBeCloseTo(before - 1.5, 6);
+    const t = await db.query("SELECT txn_type, source, reason FROM stock_transactions WHERE id = $1", [ok.data.txn_id]);
+    expect(t.rows[0]).toEqual({ txn_type: "stock_out", source: "count", reason: "other" });
+    expect((await owner.post(`/api/counts/${cid}`, { decision: "approve" })).status).toBe(409);
+
+    const ex = await staff.post("/api/counts", { item_id: coke, counted_qty: String(Number((await item(coke)).quantity) + 2) });
+    const exId = (await db.query("SELECT id FROM stock_counts WHERE count_no = $1", [ex.data.count_no])).rows[0].id;
+    const exOk = await owner.post(`/api/counts/${exId}`, { decision: "approve" });
+    expect((await db.query("SELECT txn_type, source FROM stock_transactions WHERE id = $1", [exOk.data.txn_id])).rows[0]).toEqual({ txn_type: "stock_in", source: "count" });
+    const rej = await staff.post("/api/counts", { item_id: rice, counted_qty: "999" });
+    const rejId = (await db.query("SELECT id FROM stock_counts WHERE count_no = $1", [rej.data.count_no])).rows[0].id;
+    const q0 = (await item(rice)).quantity;
+    expect((await owner.post(`/api/counts/${rejId}`, { decision: "reject" })).status).toBe(200);
+    expect((await item(rice)).quantity).toBe(q0);
+    expect((await staff.post("/api/counts", { item_id: coke, counted_qty: "1.5" })).status).toBe(400); // whole units only
+
+    const html = ((await owner.get("/audit")).data as Buffer).toString();
+    expect(html).toContain("Count shortages");
+    expect((await owner.get("/stock-count")).status).toBe(200);
+    expect((await viewer.get("/stock-count")).status).toBe(307);
+  });
+
+  it("audit tabs render with real data and the monthly audit report downloads", async () => {
+    const month = today.slice(0, 7);
+    for (const q of ["", "?mode=quantity", "?mode=in&by=category", "?mode=out", "?p=year", "?p=week", "?p=day", "?p=custom&from=2020-01-01&to=" + today,
+      "?tab=purchases", "?tab=purchases&sort=qty", "?tab=stockout", "?tab=stockout&sort=turnover", "?tab=prices", "?tab=prices&dir=up", "?tab=prices&q=rice",
+      `?tab=item&item=${rice}&month=${month}`, "?tab=item", "?tab=usage", "?tab=changes"]) {
+      const r = await owner.get(`/audit${q}`);
+      expect(r.status, q).toBe(200);
+    }
+    const item = ((await owner.get(`/audit?tab=item&item=${sugar}&month=${month}`)).data as Buffer).toString();
+    expect(item).toContain("This month vs last month");
+    expect(item).toContain("Purchase prices this month");
+    const s = await owner.get(`/api/audit/items?q=sug`);
+    expect(s.data.items.some((x: { name: string }) => x.name.startsWith("Sugar"))).toBe(true);
+
+    const pdf = await owner.get(`/api/audit/export?month=${month}&format=pdf`);
+    expect(pdf.status).toBe(200);
+    const dir = mkdtempSync(join(tmpdir(), "aud-"));
+    writeFileSync(join(dir, "a.pdf"), pdf.data);
+    const text = execFileSync("pdftotext", ["-layout", join(dir, "a.pdf"), "-"]).toString();
+    for (const t of ["Monthly Audit Report", "Opening and closing balances", "Most purchased items", "Purchase price changes", "Monthly expenditure", "Physical stock counts", "Prepared by", "Ada Owner"]) expect(text).toContain(t);
+    const x = await owner.get(`/api/audit/export?month=${month}&format=xlsx`);
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(x.data);
+    expect(wb.worksheets.map((w) => w.name)).toEqual(expect.arrayContaining(["Summary", "Balances", "Most Purchased", "Stock Out", "Price Changes", "Price History", "Monthly Trend", "Stock Counts", "Low Stock", "Damaged & Expired"]));
+    expect((await viewer.get(`/api/audit/export?month=${month}`)).status).toBe(403);
+    expect((await owner.get(`/api/audit/export?month=2026-13`)).status).toBe(400);
+  });
+
+  it("price tracking compares per base unit with correct change and percentage", async () => {
+    const pi = await createItem("Price Test Rice", "kg");
+    expect((await stockIn(owner, pi, "10", "kg", "1800")).status).toBe(201);
+    expect((await stockIn(owner, pi, "5", "kg", "2000")).status).toBe(201);
+    const html = ((await owner.get(`/audit?tab=prices&q=price+test&pitem=${pi}`)).data as Buffer).toString().replace(/<!-- -->/g, "");
+    expect(html).toContain("+₦200.00");
+    expect(html).toContain("11.11%");
+    expect((await owner.req("DELETE", `/api/items/${pi}`)).status).toBe(200);
   });
 });

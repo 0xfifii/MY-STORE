@@ -74,6 +74,7 @@ export function UsageFilters({ tab, workers, items, categories, users }: { tab: 
               <option value="category">Categories</option>
               <option value="supplier">Suppliers</option>
               <option value="settings">Settings</option>
+              <option value="stock_count">Stock counts</option>
             </Select>
           </>
         )}

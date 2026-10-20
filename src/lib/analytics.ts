@@ -175,7 +175,8 @@ export async function auditEntries(r: Range, f: { userId?: string | null; area?:
                  WHEN a.entity_type = 'user' THEN (SELECT name FROM users WHERE id::text = a.entity_id)
                  WHEN a.entity_type = 'worker' THEN (SELECT name FROM workers WHERE id::text = a.entity_id)
                  WHEN a.entity_type = 'category' THEN (SELECT name FROM categories WHERE id::text = a.entity_id)
-                 WHEN a.entity_type = 'supplier' THEN (SELECT name FROM suppliers WHERE id::text = a.entity_id) END AS entity_label
+                 WHEN a.entity_type = 'supplier' THEN (SELECT name FROM suppliers WHERE id::text = a.entity_id)
+                 WHEN a.entity_type = 'stock_count' THEN (SELECT sc.count_no || ' · ' || i.name FROM stock_counts sc JOIN items i ON i.id = sc.item_id WHERE sc.id::text = a.entity_id) END AS entity_label
        FROM audit_logs a LEFT JOIN users u ON u.id = a.user_id
       WHERE ${where}
       ORDER BY a.created_at DESC, a.id DESC LIMIT $6 OFFSET $7`,

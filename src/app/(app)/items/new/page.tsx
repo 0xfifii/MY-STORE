@@ -13,8 +13,7 @@ export default async function NewItemPage({ searchParams }: { searchParams: Prom
     <div className="mx-auto max-w-3xl">
       <PageHeader
         title="Add New Item"
-        back={{ href: sp.then === "stock-in" ? "/stock-in" : "/inventory", label: sp.then === "stock-in" ? "Stock In" : "Inventory" }}
-        description={sp.then === "stock-in" ? "Add the item first — you'll go straight back to Stock In afterwards." : undefined}
+                description={sp.then === "stock-in" ? "Add the item first — you'll go straight back to Stock In afterwards." : undefined}
       />
       <ItemForm
         mode="create"

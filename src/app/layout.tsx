@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/urbanist";
+import "@fontsource-variable/dm-sans";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 

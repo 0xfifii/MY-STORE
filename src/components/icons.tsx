@@ -33,3 +33,16 @@ export function ArrowKnob({ className }: { className?: string }) {
     </span>
   );
 }
+
+/** Small "download receipt" link for a transaction row. */
+export function ReceiptLink({ txnId, txnNo }: { txnId: string; txnNo: string }) {
+  return (
+    <a href={`/api/transactions/${txnId}/receipt`} download title={`Download receipt ${txnNo}`} aria-label={`Download receipt ${txnNo}`}
+      className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-muted transition-colors hover:bg-rose hover:text-burgundy">
+      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" />
+      </svg>
+      Receipt
+    </a>
+  );
+}

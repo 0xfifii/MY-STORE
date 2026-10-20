@@ -15,7 +15,10 @@ export type Action =
   | "report.generate"
   | "audit.view"          // usage analysis & audit log
   | "settings.write"
-  | "users.manage";
+  | "users.manage"
+  | "mail.send"           // send emails, receipts and reports from the app
+  | "stock.count"         // record physical stock counts
+  | "count.approve";      // approve / reject counts (posts the shortage or excess)
 
 /** Permissions an owner can switch on or off per user (owners always have everything). */
 export const TOGGLEABLE: { action: Exclude<Action, "view" | "stock.move" | "settings.write" | "users.manage" | "conversion.global">; label: string; hint: string }[] = [
@@ -29,14 +32,17 @@ export const TOGGLEABLE: { action: Exclude<Action, "view" | "stock.move" | "sett
   { action: "txn.reverse", label: "Reverse wrong transactions", hint: "Corrections are recorded with a reason" },
   { action: "item.archive", label: "Archive items, categories and suppliers", hint: "" },
   { action: "item.delete", label: "Delete items permanently", hint: "Removes the item and all its stock history" },
+  { action: "mail.send", label: "Send emails", hint: "Email messages, receipts and reports to people" },
+  { action: "stock.count", label: "Record stock counts", hint: "Enter what was physically counted on the shelf" },
+  { action: "count.approve", label: "Approve stock counts", hint: "Posts shortages and excesses to the stock balance" },
 ];
 
 export const ROLE_DEFAULTS: Record<Role, Action[]> = {
   owner: [
     "view", "stock.in", "stock.out", "item.write", "item.archive", "item.delete", "catalog.write", "workers.manage", "conversion.global",
-    "txn.reverse", "report.generate", "audit.view", "settings.write", "users.manage",
+    "txn.reverse", "report.generate", "audit.view", "settings.write", "users.manage", "mail.send", "stock.count", "count.approve",
   ],
-  staff: ["view", "stock.in", "stock.out", "item.write", "catalog.write", "workers.manage", "report.generate"],
+  staff: ["view", "stock.in", "stock.out", "item.write", "catalog.write", "workers.manage", "report.generate", "mail.send", "stock.count"],
   viewer: ["view"],
 };
 

@@ -3,7 +3,7 @@
 /*
   MY STORE — "frosted burgundy"
   Soft warm canvas with blurred burgundy glows, frosted-glass panels, pill controls,
-  near-black pill buttons with a round arrow, light large numerals (Urbanist).
+  near-black pill buttons with a round arrow, light large numerals (DM Sans).
 */
 @theme {
   --color-claret: #4f1022;
@@ -26,8 +26,20 @@
   --color-bad: #b42318;
   --color-bad-bg: #fbe9e7;
 
-  --font-sans: "Urbanist Variable", "Urbanist", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Urbanist Variable", "Urbanist", ui-sans-serif, system-ui, sans-serif;
+  /* Accents that sit with burgundy (validated for colour-blind separation in charts) */
+  --color-gold: #f5b51c;
+  --color-gold-bg: #fff6dc;
+  --color-sky: #2a78d6;
+  --color-sky-bg: #e8f1fc;
+  --color-mint: #1baf7a;
+  --color-mint-bg: #e3f6ee;
+  --color-plum: #6250d6;
+  --color-plum-bg: #eeebfc;
+  --color-coral: #eb6834;
+  --color-coral-bg: #fdede5;
+
+  --font-sans: "DM Sans Variable", "DM Sans Naira", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Sans Variable", "DM Sans Naira", "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1.5rem;
 }
@@ -117,3 +129,46 @@ summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
 select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none; }
 select::-ms-expand { display: none; }
+
+/* DM Sans has no Naira sign; this tiny face supplies a matching ₦ (built by scripts/build-fonts.py). */
+@font-face { font-family: "DM Sans Naira"; src: url("/fonts/dm-sans-naira-400.ttf") format("truetype"); font-weight: 100 449; unicode-range: U+20A6; font-display: swap; }
+@font-face { font-family: "DM Sans Naira"; src: url("/fonts/dm-sans-naira-500.ttf") format("truetype"); font-weight: 450 599; unicode-range: U+20A6; font-display: swap; }
+@font-face { font-family: "DM Sans Naira"; src: url("/fonts/dm-sans-naira-700.ttf") format("truetype"); font-weight: 600 1000; unicode-range: U+20A6; font-display: swap; }
+
+/* ---------- Interaction ---------- */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+/* Page content eases in on navigation; lists and cards stagger slightly. */
+.page-enter { animation: rise-in 260ms cubic-bezier(.2,.8,.2,1) both; }
+.stagger > * { animation: rise-in 320ms cubic-bezier(.2,.8,.2,1) both; }
+.stagger > *:nth-child(2) { animation-delay: 30ms; }
+.stagger > *:nth-child(3) { animation-delay: 60ms; }
+.stagger > *:nth-child(4) { animation-delay: 90ms; }
+.stagger > *:nth-child(5) { animation-delay: 120ms; }
+.stagger > *:nth-child(6) { animation-delay: 150ms; }
+.stagger > *:nth-child(7) { animation-delay: 180ms; }
+.stagger > *:nth-child(n+8) { animation-delay: 210ms; }
+
+/* Cards and glass panels respond to the pointer. */
+.lift { transition: transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease; }
+@media (hover: hover) {
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 22px 40px -22px rgb(79 16 34 / 0.45); }
+}
+.lift:active { transform: translateY(0) scale(0.99); }
+
+/* Table rows highlight under the pointer. */
+tbody tr { transition: background-color 150ms ease; }
+@media (hover: hover) { tbody tr:hover { background-color: rgb(255 255 255 / 0.55); } }
+
+/* Shine across primary buttons on hover. */
+.btn-shine { position: relative; overflow: hidden; isolation: isolate; }
+.btn-shine::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; transform: translateX(-120%);
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.22) 50%, transparent 70%);
+  transition: transform 600ms ease;
+}
+@media (hover: hover) { .btn-shine:hover::after { transform: translateX(120%); } }
+
+::selection { background: rgb(184 58 88 / 0.22); }

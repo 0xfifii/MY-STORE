@@ -20,6 +20,19 @@ export function ListFilters({
   const [q, setQ] = useState(sp.get("q") ?? "");
   const [pending, start] = useTransition();
   const first = useRef(true);
+  const box = useRef<HTMLInputElement>(null);
+
+  // Ready to type: focus the search on computers (not phones, where it would pop the keyboard),
+  // and "/" jumps back to it from anywhere on the page.
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches && !document.querySelector("[role=dialog]")) box.current?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(t.tagName) && !t.isContentEditable) { e.preventDefault(); box.current?.focus(); box.current?.select(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const push = (patch: Record<string, string>) => {
     const next = new URLSearchParams(sp.toString());
@@ -40,8 +53,12 @@ export function ListFilters({
       <div className="relative min-w-0 flex-1 sm:min-w-64">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
         <input
+          ref={box}
+          type="search"
+          enterKeyHint="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Escape" && q) { e.preventDefault(); setQ(""); } }}
           placeholder={searchPlaceholder}
           aria-label={searchPlaceholder}
           className="h-12 w-full rounded-full border border-white bg-white/75 pl-11 pr-10 text-[15px] shadow-[inset_0_1px_2px_rgb(79_16_34/0.06)] focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10"

@@ -1,19 +1,20 @@
 import { PageHeader } from "@/components/ui/primitives";
 import { SettingsForm } from "@/components/settings-form";
 import { requirePageUser } from "@/lib/auth";
-import { getSettings } from "@/lib/settings";
-import { smtpConfigured } from "@/lib/mailer";
+import { getMailAccount, getSettings } from "@/lib/settings";
+import { mailConfig } from "@/lib/mailer";
+import { MailAccountForm } from "@/components/mail-account-form";
 
 export const metadata = { title: "Store Settings" };
 
 export default async function SettingsPage() {
-  await requirePageUser("settings.write");
-  const s = await getSettings();
+  const user = await requirePageUser("settings.write");
+  const [s, account, cfg] = await Promise.all([getSettings(), getMailAccount(), mailConfig()]);
   const zones = Intl.supportedValuesOf("timeZone");
   if (!zones.includes(s.timezone)) zones.unshift(s.timezone);
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Store Settings" description="Store name, currency, time zone and the automatic daily, weekly and monthly reports." />
+      <PageHeader title="Store Settings" description="Store name, currency, time zone, automatic reports and the email account the app sends from." />
       <SettingsForm
         initial={{
           store_name: s.store_name, currency_code: s.currency_code, currency_symbol: s.currency_symbol, timezone: s.timezone,
@@ -22,9 +23,12 @@ export default async function SettingsPage() {
           auto_weekly_enabled: s.auto_weekly_enabled, auto_monthly_enabled: s.auto_monthly_enabled,
         }}
         timezones={zones}
-        smtpReady={smtpConfigured()}
+        smtpReady={cfg !== null}
         cronReady={process.env.DISABLE_INTERNAL_SCHEDULER !== "true" || Boolean(process.env.CRON_SECRET && process.env.CRON_SECRET.length >= 16)}
       />
+      <div className="mt-6">
+        <MailAccountForm initial={account} active={cfg ? { source: cfg.source, from: cfg.from } : null} ownerEmail={user.email} />
+      </div>
     </div>
   );
 }

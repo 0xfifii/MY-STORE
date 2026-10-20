@@ -28,8 +28,8 @@ export default async function ReportHistoryPage({ searchParams }: { searchParams
 
   return (
     <div>
-      <PageHeader title="Report History" back={{ href: "/reports", label: "Daily Reports" }}
-        description="Saved and automatically generated reports. Each file is kept exactly as it was generated."
+      <PageHeader title="Report History"
+                description="Saved and automatically generated reports. Each file is kept exactly as it was generated."
         actions={can(user, "report.generate") ? <GenerateNow /> : undefined} />
 
       <div className="mb-4 flex items-start gap-3 glass rounded-[var(--radius-card)] px-4 py-3 text-sm">
@@ -41,7 +41,7 @@ export default async function ReportHistoryPage({ searchParams }: { searchParams
               s.auto_weekly_enabled && "weekly (Mondays, previous week)",
               s.auto_monthly_enabled && "monthly (1st, previous month)"].filter(Boolean).join(", ")}
             , generated after {s.auto_report_time.slice(0, 5)} ({s.timezone}) as {s.auto_report_formats.map((f) => f.toUpperCase()).join(", ")}.
-            {s.email_enabled && (smtpConfigured() ? ` Emailed to ${s.email_recipients.join(", ")}.` : " Email is switched on but the mail server isn't configured, so nothing is emailed.")}
+            {s.email_enabled && ((await smtpConfigured()) ? ` Emailed to ${s.email_recipients.join(", ")}.` : " Email is switched on but the mail server isn't configured, so nothing is emailed.")}
             {can(user, "settings.write") && <> <Link href="/settings" className="font-semibold text-burgundy hover:underline">Change</Link></>}
           </p>
         ) : (

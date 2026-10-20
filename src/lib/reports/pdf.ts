@@ -10,12 +10,12 @@ const PdfPrinter = require("pdfmake");
 
 const BURGUNDY = "#7A1F35";
 const fontDir = join(process.cwd(), "assets", "fonts");
-const fonts = {
-  Inter: {
-    normal: join(fontDir, "Inter-Regular.otf"),
-    bold: join(fontDir, "Inter-Bold.otf"),
-    italics: join(fontDir, "Inter-Regular.otf"),
-    bolditalics: join(fontDir, "Inter-Bold.otf"),
+export const PDF_FONTS = {
+  DMSans: {
+    normal: join(fontDir, "DMSans-Regular.ttf"),
+    bold: join(fontDir, "DMSans-Bold.ttf"),
+    italics: join(fontDir, "DMSans-Regular.ttf"),
+    bolditalics: join(fontDir, "DMSans-Bold.ttf"),
   },
 };
 
@@ -210,7 +210,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     pageOrientation: "landscape",
     pageMargins: [36, 36, 36, 40],
     info: { title: `${r.settings.store_name} — ${r.title} — ${r.periodLabel}`, author: r.settings.store_name },
-    defaultStyle: { font: "Inter", fontSize: 8, color: "#111" },
+    defaultStyle: { font: "DMSans", fontSize: 8, color: "#111" },
     styles: {
       brand: { fontSize: 20, bold: true, color: BURGUNDY },
       title: { fontSize: 12, bold: true, margin: [0, 2, 0, 0] },
@@ -229,8 +229,22 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     }),
   };
 
-  const printer = new PdfPrinter(fonts);
-  const doc = printer.createPdfKitDocument(docDefinition);
+  return renderPdf(docDefinition);
+}
+
+/** Renders a pdfmake document definition (DM Sans) to a Buffer. */
+export function renderPdf(docDefinition: Record<string, unknown>): Promise<Buffer> {
+  const printer = new PdfPrinter(PDF_FONTS);
+  const doc = printer.createPdfKitDocument({
+    ...docDefinition,
+    defaultStyle: { font: "DMSans", ...(docDefinition.defaultStyle as object) },
+    // Never leave a section heading alone at the bottom of a page.
+    pageBreakBefore: (node: { style?: string | string[]; startPosition?: { top: number; pageInnerHeight: number } }) => {
+      const st = Array.isArray(node.style) ? node.style : [node.style];
+      if (!st.includes("h2") || !node.startPosition) return false;
+      return node.startPosition.top > node.startPosition.pageInnerHeight * 0.82;
+    },
+  });
   return new Promise<Buffer>((resolve, reject) => {
     const chunks: Buffer[] = [];
     doc.on("data", (d: Buffer) => chunks.push(d));
@@ -240,9 +254,9 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   });
 }
 
-function tableBlock(body: Cell[][], widths: (number | string)[]) {
+export function tableBlock(body: Cell[][], widths: (number | string)[]) {
   return {
-    table: { headerRows: 1, widths, body, dontBreakRows: true },
+    table: { headerRows: 1, keepWithHeaderRows: 1, widths, body, dontBreakRows: true },
     layout: {
       hLineWidth: (i: number) => (i === 0 ? 0 : 0.5),
       vLineWidth: () => 0,

@@ -5,13 +5,21 @@ import { PieChart } from "@/components/pie-chart";
 import { Pagination } from "@/components/list-filters";
 import { UsageFilters } from "@/components/usage-filters";
 import { requirePageUser } from "@/lib/auth";
+import { can } from "@/lib/permissions";
+import { PeriodBar } from "@/components/period-bar";
+import { AuditItemSearch } from "@/components/audit-item-search";
+import type { DistMode } from "@/lib/audit-analytics";
+import { resolvePeriod } from "./period";
+import { OverviewTab } from "./overview";
+import { ItemTab } from "./item";
+import { PricesTab, PurchasesTab, StockOutTab } from "./analysis";
 import { auditEntries, categoryUsage, moneyByPeriod, moneySlices, spendAnalysis, toSlices, usageAnalysis, userActivity, workerItems, type Grouping, type PeriodMoney, type SpendBy } from "@/lib/analytics";
 import { listCategories, listWorkers } from "@/lib/catalog";
 import { query } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
-import { addDays, formatDate, formatDateTime, formatMoney, formatQty, reasonLabel, todayIn } from "@/lib/format";
+import { addDays, formatDateTime, formatMoney, formatQty, reasonLabel, todayIn } from "@/lib/format";
 
-export const metadata = { title: "Usage & Audit" };
+export const metadata = { title: "Audit & Analytics" };
 
 const D = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -25,16 +33,43 @@ const LABELS: Record<string, string> = {
   "worker.create": "Added worker", "worker.update": "Changed worker", "worker.archive": "Archived worker", "worker.restore": "Restored worker",
   "unit.create": "Added unit", "unit_conversion.set": "Set conversion rule", "unit_conversion.remove": "Removed conversion rule",
   "setup.owner_created": "Created owner account",
+  "count.record": "Recorded a stock count", "count.approve": "Approved a stock count", "count.reject": "Rejected a stock count",
+  "settings.email": "Changed the email account",
 };
 
-type SP = { tab?: string; group?: string; spend?: string; range?: string; from?: string; to?: string; worker?: string; item?: string; category?: string; user?: string; area?: string; page?: string };
+type SP = {
+  tab?: string; group?: string; spend?: string; range?: string; from?: string; to?: string; worker?: string; item?: string; category?: string;
+  user?: string; area?: string; page?: string; p?: string; d?: string; mode?: string; by?: string; unit?: string; month?: string; sort?: string;
+  q?: string; dir?: string; pitem?: string;
+};
+
+const TABS: [string, string][] = [
+  ["overview", "Overview"], ["item", "Item performance"], ["purchases", "Purchases"], ["stockout", "Stock out"],
+  ["prices", "Price tracking"], ["usage", "Usage & spending"], ["changes", "Change log"],
+];
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<SP> }) {
-  await requirePageUser("audit.view");
+  const user = await requirePageUser("audit.view");
   const sp = await searchParams;
   const s = await getSettings();
   const sym = s.currency_symbol;
   const today = todayIn(s.timezone);
+  const tab = TABS.some(([k]) => k === sp.tab) ? sp.tab! : "overview";
+  const link = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]);
+    for (const [k, v] of Object.entries(patch)) { if (v) next.set(k, v); else next.delete(k); }
+    if (patch.tab !== undefined) { next.delete("page"); next.delete("sort"); }
+    return `/audit?${next}`;
+  };
+  const tabHref = (k: string) => {
+    const keep = ["p", "d", "from", "to", "range"].filter((x) => sp[x as keyof SP]);
+    const next = new URLSearchParams(keep.map((x) => [x, sp[x as keyof SP]!]));
+    if (k !== "overview") next.set("tab", k);
+    if (k === "item" && sp.item) { next.set("item", sp.item); if (sp.month) next.set("month", sp.month); }
+    return `/audit?${next}`;
+  };
+
+  // Usage & change-log tabs keep their own range presets.
   const presets: Record<string, [string, string]> = {
     "7": [addDays(today, -6), today],
     "30": [addDays(today, -29), today],
@@ -46,62 +81,80 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   let [from, to] = presets[sp.range ?? "30"] ?? presets["30"];
   if (sp.range === "custom" && sp.from && D.test(sp.from)) { from = sp.from; to = sp.to && D.test(sp.to) ? sp.to : today; }
   if (to < from) [from, to] = [to, from];
-  const r = { from, to, tz: s.timezone };
   const f = {
     workerId: /^\d+$/.test(sp.worker ?? "") ? Number(sp.worker) : null,
     itemId: /^[0-9a-f-]{36}$/i.test(sp.item ?? "") ? sp.item! : null,
     categoryId: /^\d+$/.test(sp.category ?? "") ? Number(sp.category) : null,
   };
-  const tab = sp.tab === "changes" ? "changes" : "usage";
   const group: Grouping = sp.group === "week" || sp.group === "month" ? sp.group : "day";
   const spendBy: SpendBy = sp.spend === "category" || sp.spend === "supplier" ? sp.spend : "item";
-  const page = Math.max(1, Number(sp.page ?? 1) || 1);
+  const period = resolvePeriod(sp, today);
+  const pr = { from: period.from, to: period.to, tz: s.timezone };
+  const month = sp.month && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.month) && sp.month <= today.slice(0, 7) ? sp.month : today.slice(0, 7);
+  const usesPeriod = ["overview", "purchases", "stockout", "prices"].includes(tab);
+  const usesRange = tab === "usage" || tab === "changes";
 
-  const [workers, categories, items, users] = await Promise.all([
-    listWorkers(true), listCategories(), query<{ id: string; name: string }>("SELECT id, name FROM items ORDER BY lower(name)"),
-    query<{ id: string; name: string }>("SELECT id, name FROM users ORDER BY name"),
+  const [workers, categories, items, users, itemName] = await Promise.all([
+    usesRange ? listWorkers(true) : Promise.resolve([]),
+    usesRange ? listCategories() : Promise.resolve([]),
+    usesRange ? query<{ id: string; name: string }>("SELECT id, name FROM items ORDER BY lower(name)") : Promise.resolve([]),
+    usesRange ? query<{ id: string; name: string }>("SELECT id, name FROM users ORDER BY name") : Promise.resolve([]),
+    tab === "item" && f.itemId ? query<{ name: string }>("SELECT name FROM items WHERE id = $1", [f.itemId]).then((x) => x[0]?.name ?? null) : Promise.resolve(null),
   ]);
-  const qs = new URLSearchParams(Object.entries({ ...sp, tab: undefined, page: undefined }).filter(([, v]) => v) as [string, string][]);
 
   return (
     <div>
       <PageHeader
-        title="Usage & Audit"
-        description={`${formatDate(from)} – ${formatDate(to)} · how items were used in the store and every change made`}
+        title="Audit & Analytics"
+        description="Inventory value, purchases, stock out, purchase prices, stock counts and every change — from the real stock records."
         actions={tab === "usage" ? (
           <a href={`/api/usage/export?from=${from}&to=${to}&group=${group}${f.workerId ? `&worker=${f.workerId}` : ""}${f.itemId ? `&item=${f.itemId}` : ""}${f.categoryId ? `&category=${f.categoryId}` : ""}`}
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-night px-5 text-sm font-semibold text-white hover:bg-claret">
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-night px-5 text-sm font-semibold text-white transition hover:bg-claret active:scale-95">
             <Download className="size-4" /> Download analysis
           </a>
-        ) : undefined}
+        ) : (
+          <a href={`/api/audit/export?month=${(usesPeriod ? period.from : month + "-01").slice(0, 7)}&format=pdf`}
+            className="inline-flex h-10 items-center gap-2 rounded-full bg-night px-5 text-sm font-semibold text-white transition hover:bg-claret active:scale-95">
+            <Download className="size-4" /> Monthly audit report
+          </a>
+        )}
       />
 
-      <div className="mb-4 flex gap-1.5 rounded-full bg-white/60 p-1 ring-1 ring-white sm:w-fit">
-        {[["usage", "Usage analysis"], ["changes", "Change log"]].map(([k, l]) => (
-          <Link key={k} href={`/audit?${new URLSearchParams({ ...Object.fromEntries(qs), tab: k })}`}
-            className={`flex-1 rounded-full px-5 py-2 text-center text-sm font-semibold sm:flex-none ${tab === k ? "bg-night text-white" : "text-muted hover:text-ink"}`}>
-            {l}
-          </Link>
-        ))}
-      </div>
+      <nav className="-mx-4 mb-4 overflow-x-auto px-4 sm:mx-0 sm:px-0" aria-label="Audit sections">
+        <div className="flex w-max gap-1 rounded-full bg-white/60 p-1 ring-1 ring-white">
+          {TABS.map(([k, l]) => (
+            <Link key={k} href={tabHref(k)} scroll={false} aria-current={tab === k ? "page" : undefined}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#9c2a45] to-[#5e1528] text-white shadow-md" : "text-muted hover:bg-white hover:text-ink"}`}>
+              {l}
+            </Link>
+          ))}
+        </div>
+      </nav>
 
-      <UsageFilters
-        tab={tab}
-        workers={workers.map((w) => ({ value: String(w.id), label: w.name }))}
-        items={items.map((i) => ({ value: i.id, label: i.name }))}
-        categories={categories.map((c) => ({ value: String(c.id), label: c.name }))}
-        users={users.map((u) => ({ value: u.id, label: u.name }))}
-      />
+      {usesPeriod && <div className="mb-4"><PeriodBar kind={period.kind} label={period.label} prev={period.prev} next={period.next} from={period.from} to={period.to} /></div>}
+      {usesRange && (
+        <UsageFilters
+          tab={tab}
+          workers={workers.map((w) => ({ value: String(w.id), label: w.name }))}
+          items={items.map((i) => ({ value: i.id, label: i.name }))}
+          categories={categories.map((c) => ({ value: String(c.id), label: c.name }))}
+          users={users.map((u) => ({ value: u.id, label: u.name }))}
+        />
+      )}
+      {tab === "item" && <div className="mb-4"><AuditItemSearch month={month} maxMonth={today.slice(0, 7)} itemName={itemName} /></div>}
 
-      {tab === "usage" ? (
-        <UsageTab r={r} f={f} sym={sym} group={group} spendBy={spendBy}
-          link={(patch) => {
-            const next = new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]);
-            for (const [k, v] of Object.entries(patch)) { if (v) next.set(k, v); else next.delete(k); }
-            return `/audit?${next}`;
-          }} />
-      ) : (
-        <ChangesTab r={r} userId={/^[0-9a-f-]{36}$/i.test(sp.user ?? "") ? sp.user! : null} area={sp.area ?? null} page={page} tz={s.timezone} />
+      {tab === "overview" && (
+        <OverviewTab period={period} sym={sym} tz={s.timezone} link={link} canMail={can(user, "mail.send")}
+          mode={(["value", "quantity", "in", "out"].includes(sp.mode ?? "") ? sp.mode : "value") as DistMode}
+          by={sp.by === "category" ? "category" : "item"} unit={sp.unit ?? null} />
+      )}
+      {tab === "item" && <ItemTab itemId={f.itemId} month={month} sym={sym} tz={s.timezone} />}
+      {tab === "purchases" && <PurchasesTab r={pr} period={period} sym={sym} sort={sp.sort ?? "spend"} link={link} />}
+      {tab === "stockout" && <StockOutTab r={pr} period={period} sym={sym} sort={sp.sort ?? "issues"} link={link} />}
+      {tab === "prices" && <PricesTab r={pr} period={period} sym={sym} q={sp.q ?? null} dir={sp.dir === "up" || sp.dir === "down" ? sp.dir : "all"} pitem={sp.pitem ?? null} link={link} />}
+      {tab === "usage" && <UsageTab r={{ from, to, tz: s.timezone }} f={f} sym={sym} group={group} spendBy={spendBy} link={link} />}
+      {tab === "changes" && (
+        <ChangesTab r={{ from, to, tz: s.timezone }} userId={/^[0-9a-f-]{36}$/i.test(sp.user ?? "") ? sp.user! : null} area={sp.area ?? null} page={Math.max(1, Number(sp.page ?? 1) || 1)} tz={s.timezone} />
       )}
     </div>
   );

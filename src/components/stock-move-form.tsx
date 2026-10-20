@@ -1,4 +1,5 @@
 "use client";
+import { ReceiptActions } from "./email-dialog";
 import { StockInIcon, StockOutIcon } from "@/components/icons";
 
 import { useCallback, useEffect, useState } from "react";
@@ -68,7 +69,7 @@ export function StockMoveForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
-  const [lastTxn, setLastTxn] = useState<{ txn_no: string } | null>(null);
+  const [lastTxn, setLastTxn] = useState<{ id: string; txn_no: string } | null>(null);
 
   const loadItem = useCallback(async (id: string) => {
     setLoadingItem(true);
@@ -164,7 +165,7 @@ export function StockMoveForm({
               item_id: item.id, quantity: qty, unit_id: unit.unit_id, reason, recipient, reference, notes, request_id: requestId,
               worker_id: workerId || null,
             };
-      const res = await api<{ txn: { txn_no: string }; item: FullItem }>(`/api/stock/${mode}`, { method: "POST", json: body });
+      const res = await api<{ txn: { id: string; txn_no: string }; item: FullItem }>(`/api/stock/${mode}`, { method: "POST", json: body });
       setItem(res.item);
       setLastTxn(res.txn);
       setStep("done");
@@ -240,6 +241,11 @@ export function StockMoveForm({
           </p>
           <div className="mt-2 flex justify-center"><StatusBadge status={item.status as StockStatus} /></div>
         </div>
+        {lastTxn && (
+          <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row" data-testid="receipt-actions">
+            <ReceiptActions txnId={lastTxn.id} txnNo={lastTxn.txn_no} canEmail={app.can("mail.send")} />
+          </div>
+        )}
         <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
           <Button onClick={() => resetForNext(true)}><RefreshCcw className="size-4" /> {verb} more {item.name}</Button>
           <Button variant="secondary" onClick={() => resetForNext(false)}>Choose another item</Button>

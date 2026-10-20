@@ -163,18 +163,21 @@ Reports are generated on the server after the chosen time (in the store's time z
 period and format, and kept in **Report History** for download. If a scheduled run is missed (e.g. the
 server was off), the next run catches up.
 
-**Email** is optional. Add these environment variables and redeploy, then tick *Email the automatic
-reports*, enter recipients and press **Send test email**:
+**Email** — set it up once in **Store Settings → Email account** (no redeploy needed):
 
-```
-SMTP_HOST=smtp.gmail.com        # or your provider's SMTP host
-SMTP_PORT=587
-SMTP_USER=you@gmail.com
-SMTP_PASS=your-app-password     # Gmail: Google Account → Security → App passwords
-SMTP_FROM="MY STORE <you@gmail.com>"
-```
+1. Use a Gmail account (or any mailbox with SMTP). Turn on 2-Step Verification in the Google account.
+2. Create an app password at myaccount.google.com/apppasswords (name it "My Store") and copy the 16 letters.
+3. In Store Settings → Email account: server `smtp.gmail.com`, port `465`, the Gmail address, the app password. Save, then **Test**.
 
-Without SMTP settings nothing is emailed and Report History says *Email not set up* — it never claims an
+The password is stored on the server only and is never shown again. Server variables (`SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`), if set, take priority over the form. Once email works:
+
+- tick *Email the automatic reports* and add recipients;
+- new users get a **welcome email** with the sign-in link (optional, per user);
+- any stock movement's **receipt** can be emailed; **Send Email** sends messages with a report or the monthly audit report attached;
+- every email is listed (sent / failed) on the Send Email page.
+
+Without an email account nothing is emailed and Report History says *Email not set up* — it never claims an
 email was sent when it wasn't.
 
 ---
@@ -222,10 +225,19 @@ contains the complete history.
 - **Permissions** (Users → Permissions): for each staff or viewer account, tick exactly what they may do
   (Stock In, Stock Out, add items, manage workers, see usage analysis, …) and optionally limit Stock In/Out
   to certain categories. Enforced on the server.
-- **Usage & Audit**: money spent on stock (big pie by item, category or supplier, with insights), the
-  amount stocked in and stocked out per **day, week or month** (chart + table), most and least taken items
-  (big pie), who took what, reasons, categories, which staff account recorded what, and a filterable log of
-  every change. Downloadable as CSV.
+- **Audit & Analytics**: summary cards (inventory value, purchases, stock out, price increases/decreases,
+  low stock, count shortages/excesses — click any card for the records); a large pie of stock value,
+  quantity (per unit), stock in or stock out by item or category; **item performance** for any month
+  (opening, in, out, closing, money spent, price history, 12-month charts, vs previous month); **most
+  purchased** (by money, quantity, purchases, restocks); **stock out** (most frequent, fastest moving,
+  reasons); **price tracking** (previous vs latest price per base unit, change and %, high/low,
+  weighted and simple averages, line chart); day/week/month/year/custom periods; and a **monthly audit
+  report** (PDF/Excel) with balances, purchases, price changes, 12-month trend, stock-count discrepancies,
+  low stock and damaged/expired stock, with who prepared it and an approval line.
+- **Stock Count**: record what is physically on the shelf; an owner approves it and the shortage or excess
+  is posted (at average cost) and shown in the audit. Rejected counts change nothing.
+- **Receipts**: every stock out (and stock in) has a printable PDF receipt with signature lines — download or
+  email it right after recording, or from any transaction.
 - **Reports** open with a general summary (total stock value, opening value, cost of stock in, cost of stock
   out, net change, items low/out) and then one stock sheet per item: S/N, item, opening stock, stock in,
   cost of stock in, stock out, cost of stock out, closing balance (Bal) and worth — all in one table — plus

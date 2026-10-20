@@ -131,9 +131,9 @@ export async function runScheduledReports(now = new Date()) {
     const ids = generated.map((g) => g.id);
     if (!settings.email_enabled || settings.email_recipients.length === 0) {
       await query("UPDATE generated_reports SET delivery_status='not_requested' WHERE id = ANY($1::bigint[])", [ids]);
-    } else if (!smtpConfigured()) {
+    } else if (!(await smtpConfigured())) {
       await query(
-        "UPDATE generated_reports SET delivery_status='not_configured', delivery_detail='Email is switched on but SMTP settings are missing on the server.' WHERE id = ANY($1::bigint[])",
+        "UPDATE generated_reports SET delivery_status='not_configured', delivery_detail='Email is switched on but no mail account is set up (Store Settings → Email).' WHERE id = ANY($1::bigint[])",
         [ids],
       );
     } else {
@@ -148,6 +148,7 @@ export async function runScheduledReports(now = new Date()) {
             `Current inventory worth: ${formatMoney(totals?.v ?? 0, settings.currency_symbol)}\n\n` +
             `This email was sent automatically by ${settings.store_name}.`,
           attachments: generated.map((g) => ({ filename: g.fileName, content: g.content })),
+          kind: "scheduled",
         });
         await query(
           "UPDATE generated_reports SET delivery_status='sent', delivery_detail=$2 WHERE id = ANY($1::bigint[])",

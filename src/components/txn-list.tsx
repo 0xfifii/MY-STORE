@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ReceiptLink } from "./icons";
 import { formatDateTime, formatMoney, formatQty, reasonLabel } from "@/lib/format";
 import type { TxnRow } from "@/lib/inventory";
 import { TxnTypeBadge } from "./ui/primitives";
@@ -38,6 +39,7 @@ export function TxnList({ rows, symbol, timeZone, showItem = true }: { rows: Txn
                 {formatQty(t.entered_quantity)} {t.entered_unit_symbol}
               </p>
               <p className="text-xs text-muted">{formatMoney(t.total_value, symbol)}</p>
+              {t.txn_type !== "reversal" && <div className="-mr-2 mt-0.5"><ReceiptLink txnId={t.id} txnNo={t.txn_no} /></div>}
             </div>
           </li>
         );

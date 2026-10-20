@@ -20,7 +20,7 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
   ]);
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title={`Edit ${item.name}`} back={{ href: `/items/${id}`, label: item.name }}
+      <PageHeader title={`Edit ${item.name}`}
         description="Balances can't be edited here — they only change through Stock In, Stock Out and corrections." />
       <ItemForm
         mode="edit"

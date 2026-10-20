@@ -26,6 +26,7 @@ export function UsersManager({ users, meId, categories }: { users: U[]; meId: st
   const [modal, setModal] = useState<null | { kind: "new" } | { kind: "password"; user: U }>(null);
   const [permUser, setPermUser] = useState<U | null>(null);
   const [f, setF] = useState({ name: "", email: "", role: "staff" as Role, password: "" });
+  const [welcome, setWelcome] = useState({ send_welcome: true, include_password: true });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -41,8 +42,12 @@ export function UsersManager({ users, meId, categories }: { users: U[]; meId: st
     setBusy(true); setErr(null);
     try {
       if (modal?.kind === "new") {
-        await api("/api/users", { method: "POST", json: f });
-        toast.success("User added", `${f.name} can now sign in with ${f.email}.`);
+        const d = await api<{ welcome: { status: string; detail?: string } }>("/api/users", { method: "POST", json: { ...f, ...welcome } });
+        const w = d.welcome.status;
+        if (w === "sent") toast.success("User added", `A welcome email was sent to ${f.email}.`);
+        else if (w === "failed") toast.error("User added, but the welcome email failed", d.welcome.detail ?? "");
+        else if (w === "not_configured") toast.success("User added", `${f.name} can sign in with ${f.email}. (No welcome email: set up the email account in Store Settings.)`);
+        else toast.success("User added", `${f.name} can now sign in with ${f.email}.`);
       } else if (modal?.kind === "password") {
         await api(`/api/users/${modal.user.id}`, { method: "PATCH", json: { password: f.password } });
         toast.success("Password changed", `${modal.user.name} has been signed out of other devices.`);
@@ -113,6 +118,20 @@ export function UsersManager({ users, meId, categories }: { users: U[]; meId: st
           <Field label={modal?.kind === "new" ? "Temporary password" : "New password"} htmlFor="nu-pw" required hint="At least 8 characters. Share it with the person privately.">
             <Input id="nu-pw" type="text" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />
           </Field>
+          {modal?.kind === "new" && (
+            <div className="space-y-2 rounded-2xl bg-white/70 p-3 text-sm ring-1 ring-white">
+              <label className="flex items-start gap-2.5">
+                <input type="checkbox" className="mt-0.5 size-4 accent-burgundy" checked={welcome.send_welcome} onChange={(e) => setWelcome({ ...welcome, send_welcome: e.target.checked })} />
+                <span><span className="font-medium">Send a welcome email</span><span className="block text-xs text-muted">With the sign-in link and their login email.</span></span>
+              </label>
+              {welcome.send_welcome && (
+                <label className="flex items-start gap-2.5 pl-6">
+                  <input type="checkbox" className="mt-0.5 size-4 accent-burgundy" checked={welcome.include_password} onChange={(e) => setWelcome({ ...welcome, include_password: e.target.checked })} />
+                  <span>Include the temporary password in the email</span>
+                </label>
+              )}
+            </div>
+          )}
           {err && <p role="alert" className="text-sm text-bad">{err}</p>}
           <button type="submit" className="hidden" />
         </form>

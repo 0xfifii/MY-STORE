@@ -1,21 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AtSign, KeyRound, Loader2 } from "lucide-react";
 
 const pill =
   "flex h-14 items-center gap-3 rounded-full bg-white/70 pl-2 pr-2 shadow-[inset_0_1px_2px_rgb(79_16_34/0.06)] ring-1 ring-white focus-within:bg-white focus-within:ring-burgundy/25";
 const knob = "flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-ink shadow-sm";
 
-export function LoginForm({ next }: { next: string }) {
-  const [email, setEmail] = useState("");
+export function LoginForm({ next, initialError = null, initialEmail = "" }: { next: string; initialError?: string | null; initialEmail?: string }) {
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [busy, setBusy] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passRef = useRef<HTMLInputElement>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Enter in the email box moves on to the password instead of submitting half a form.
+    if (!email.trim()) { emailRef.current?.focus(); return; }
+    if (!password) { passRef.current?.focus(); return; }
     setBusy(true);
     setError(null);
     try {
@@ -30,23 +35,28 @@ export function LoginForm({ next }: { next: string }) {
     } catch (err) {
       setError((err as Error).message === "Failed to fetch" ? "Can't reach the server. Check your internet connection." : (err as Error).message);
       setBusy(false);
+      // Keep the cursor in the form so the person can just retype.
+      setTimeout(() => { passRef.current?.focus(); passRef.current?.select(); }, 0);
     }
   };
 
   return (
-    <form onSubmit={submit} className="space-y-3" noValidate>
+    // method/action make Enter work even before the page script has loaded (the server signs in and redirects).
+    <form onSubmit={submit} method="post" action="/api/auth/login" className="space-y-3" noValidate>
+      <input type="hidden" name="next" value={next} />
       <label className={pill}>
         <span className={knob}><AtSign className="size-4" /></span>
         <span className="sr-only">Email address</span>
-        <input id="email" type="email" autoComplete="email" placeholder="e-mail address" value={email}
+        <input id="email" name="email" ref={emailRef} autoFocus={!initialEmail} type="email" inputMode="email" autoCapitalize="none" autoComplete="email" placeholder="e-mail address" value={email}
+          onKeyDown={(e) => { if (e.key === "Enter" && !password) { e.preventDefault(); passRef.current?.focus(); } }}
           onChange={(e) => setEmail(e.target.value)} className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-ink/60" />
       </label>
       <label className={pill}>
         <span className={knob}><KeyRound className="size-4" /></span>
         <span className="sr-only">Password</span>
-        <input id="password" type={show ? "text" : "password"} autoComplete="current-password" placeholder="password" value={password}
+        <input id="password" name="password" ref={passRef} autoFocus={!!initialEmail} type={show ? "text" : "password"} autoComplete="current-password" placeholder="password" value={password}
           onChange={(e) => setPassword(e.target.value)} className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-ink/60" />
-        <button type="button" onClick={() => setShow(!show)} className="h-9 shrink-0 rounded-full bg-white px-4 text-xs font-semibold shadow-sm">
+        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { setShow(!show); passRef.current?.focus(); }} className="h-9 shrink-0 rounded-full bg-white px-4 text-xs font-semibold shadow-sm">
           {show ? "Hide" : "Show"}
         </button>
       </label>

@@ -3,6 +3,7 @@ import { History } from "lucide-react";
 import { EmptyState, PageHeader, TxnTypeBadge } from "@/components/ui/primitives";
 import { ListFilters, Pagination } from "@/components/list-filters";
 import { TxnList } from "@/components/txn-list";
+import { ReceiptLink } from "@/components/icons";
 import { ReverseButton } from "@/components/item-actions";
 import { DateRange } from "@/components/date-range";
 import { requirePageUser } from "@/lib/auth";
@@ -14,7 +15,7 @@ import { addDays, formatDateTime, formatMoney, formatQty, formatUnitCost, reason
 
 export const metadata = { title: "Transactions" };
 
-type SP = { q?: string; type?: string; from?: string; to?: string; page?: string };
+type SP = { q?: string; type?: string; from?: string; to?: string; page?: string; item?: string };
 const D = /^\d{4}-\d{2}-\d{2}$/;
 
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<SP> }) {
@@ -33,6 +34,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
     from = r.f; to = r.t;
   }
   const data = await listTransactions({
+    itemId: /^[0-9a-f-]{36}$/i.test(sp.item ?? "") ? sp.item : undefined,
     q: sp.q, type: (["stock_in", "stock_out", "reversal"].includes(sp.type ?? "") ? sp.type : null) as "stock_in" | null,
     from, to, limit: pageSize, offset: (page - 1) * pageSize,
   });
@@ -92,6 +94,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                       </td>
                       <td className="px-4 py-2.5 text-xs">{t.user_name ?? "—"}</td>
                       <td className="px-4 py-2.5 text-right">
+                        {t.txn_type !== "reversal" && <ReceiptLink txnId={t.id} txnNo={t.txn_no} />}
                         {canReverse && t.txn_type !== "reversal" && !t.reversed_by_txn_no && (
                           <ReverseButton txnId={t.id} txnNo={t.txn_no}
                             summary={`${t.txn_type === "stock_in" ? "Stock in" : "Stock out"} of ${formatQty(t.entered_quantity)} ${t.entered_unit_symbol} ${t.item_name} (${formatMoney(t.total_value, sym)}).`} />

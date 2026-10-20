@@ -10,6 +10,7 @@ import { listItems, type ItemListParams } from "@/lib/inventory";
 import { can } from "@/lib/permissions";
 import { getSettings } from "@/lib/settings";
 import { formatMoney, formatQty, formatUnitCost } from "@/lib/format";
+import { accentFor, initials } from "@/lib/colors";
 
 export const metadata = { title: "Inventory" };
 
@@ -77,49 +78,62 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
           />
         </div>
       ) : (
-        <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" data-testid="item-cards">
+        <ul className="stagger mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" data-testid="item-cards">
           {data.rows.map((it) => {
             const min = Number(it.min_stock_level);
             const qty = Number(it.quantity);
             const level = min > 0 ? Math.min(100, (qty / (min * 3)) * 100) : qty > 0 ? 100 : 0;
+            const a = accentFor(it.category_id);
+            const ring = it.status === "out" ? "ring-2 ring-bad/40" : it.status === "low" ? "ring-2 ring-gold/60" : "";
             return (
-              <li key={it.id} className="glass group relative flex flex-col rounded-[var(--radius-card)] p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="truncate rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-muted ring-1 ring-white">
-                    {it.category_name ?? "Uncategorised"}
-                  </span>
-                  <StatusBadge status={it.status} />
-                </div>
-
-                <Link href={`/items/${it.id}`} className="mt-4 block">
-                  <h2 className="line-clamp-2 text-lg font-semibold leading-snug group-hover:text-burgundy">{it.name}</h2>
-                  <p className="text-xs text-muted">{it.sku}</p>
-                </Link>
-
-                <div className="mt-4 flex items-end justify-between gap-3">
-                  <p className="text-[40px] font-light leading-none tracking-tight">
-                    {formatQty(it.quantity)}
-                    <span className="ml-1.5 text-base font-medium text-muted">{it.unit_symbol}</span>
-                  </p>
-                  <div className="text-right text-xs text-muted">
-                    <p className="text-sm font-semibold text-ink">{formatMoney(it.stock_value, sym)}</p>
-                    <p>{formatUnitCost(it.avg_cost, sym)} / {it.unit_symbol}</p>
+              <li key={it.id} className={`glass lift group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] p-5 ${ring}`}>
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-70" style={{ background: `linear-gradient(180deg, ${a.soft}, transparent)` }} aria-hidden />
+                <div className="relative flex items-start gap-3">
+                  <Link href={`/items/${it.id}`} aria-hidden tabIndex={-1}
+                    className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-bold text-white shadow-md transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105"
+                    style={{ background: `linear-gradient(135deg, ${a.solid}, ${a.text})` }}>
+                    {initials(it.name)}
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/items/${it.id}`} className="block">
+                      <h2 className="line-clamp-2 text-[17px] font-semibold leading-snug transition-colors group-hover:text-burgundy">{it.name}</h2>
+                    </Link>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                      <span>{it.sku}</span>
+                      <span className="rounded-full px-2 py-0.5 font-semibold" style={{ background: a.soft, color: a.text }}>{it.category_name ?? "Uncategorised"}</span>
+                    </p>
                   </div>
                 </div>
 
-                <div className="mt-3" aria-hidden>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-white ring-1 ring-white">
-                    <div className={`h-full rounded-full ${it.status === "out" ? "bg-bad" : it.status === "low" ? "bg-warn" : "bg-burgundy"}`} style={{ width: `${level}%` }} />
+                <div className="relative mt-5 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted">In stock</p>
+                    <p className="text-[38px] font-light leading-none tracking-tight">
+                      {formatQty(it.quantity)}
+                      <span className="ml-1.5 text-base font-medium text-muted">{it.unit_symbol}</span>
+                    </p>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted">Minimum {formatQty(it.min_stock_level)} {it.unit_symbol}</p>
+                  <div className="text-right">
+                    <StatusBadge status={it.status} />
+                    <p className="mt-1.5 text-sm font-semibold text-ink">{formatMoney(it.stock_value, sym)}</p>
+                    <p className="text-[11px] text-muted">{formatUnitCost(it.avg_cost, sym)} / {it.unit_symbol}</p>
+                  </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/80 pt-4">
+                <div className="relative mt-3" aria-hidden>
+                  <div className="h-2 overflow-hidden rounded-full bg-white ring-1 ring-white">
+                    <div className="h-full rounded-full transition-[width] duration-700 ease-out"
+                      style={{ width: `${level}%`, background: it.status === "out" ? "var(--color-bad)" : it.status === "low" ? "linear-gradient(90deg, #eb6834, #f5b51c)" : `linear-gradient(90deg, ${a.text}, ${a.solid})` }} />
+                  </div>
+                  <p className="mt-1 flex justify-between text-[11px] text-muted"><span>Minimum {formatQty(it.min_stock_level)} {it.unit_symbol}</span>{min > 0 && <span>{Math.round((qty / min) * 100)}% of minimum</span>}</p>
+                </div>
+
+                <div className="relative mt-4 flex items-center justify-between gap-2 border-t border-white/80 pt-4">
                   <StockButtons itemId={it.id} name={it.name} />
                   <div className="flex gap-1.5">
                     {can(user, "item.write") && (
                       <Link href={`/items/${it.id}/edit`} aria-label={`Edit ${it.name}`}
-                        className="flex size-8 items-center justify-center rounded-full bg-white/80 text-muted ring-1 ring-white hover:text-burgundy">
+                        className="flex size-8 items-center justify-center rounded-full bg-white/80 text-muted ring-1 ring-white transition hover:scale-110 hover:text-burgundy active:scale-95">
                         <Pencil className="size-3.5" />
                       </Link>
                     )}

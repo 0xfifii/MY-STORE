@@ -29,6 +29,10 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/reports/**": reportFiles,
     "/api/cron/**": reportFiles,
+    "/api/transactions/**": reportFiles,
+    "/api/audit/**": reportFiles,
+    "/api/mail/**": reportFiles,
+    "/api/settings/**": reportFiles,
   },
   poweredByHeader: false,
   async headers() {

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { EmptyState, LinkButton, PageHeader, Panel, StatusBadge, TxnTypeBadge } from "@/components/ui/primitives";
 import { StockButtons } from "@/components/stock-dialog";
+import { ReceiptLink } from "@/components/icons";
 import { ArchiveButton, ConversionManager, DeleteItemButton, ReverseButton } from "@/components/item-actions";
 import { requirePageUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
@@ -169,7 +170,8 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
                       {t.reversed_by_txn_no && <span className="block font-semibold text-warn">Reversed by {t.reversed_by_txn_no}</span>}
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      {canReverse && t.txn_type !== "reversal" && !t.reversed_by_txn_no && (
+                      {t.txn_type !== "reversal" && <ReceiptLink txnId={t.id} txnNo={t.txn_no} />}
+                        {canReverse && t.txn_type !== "reversal" && !t.reversed_by_txn_no && (
                         <ReverseButton txnId={t.id} txnNo={t.txn_no}
                           summary={`${t.txn_type === "stock_in" ? "Stock in" : "Stock out"} of ${formatQty(t.entered_quantity)} ${t.entered_unit_symbol} ${item.name} (${formatMoney(t.total_value, sym)}) on ${formatDateTime(t.occurred_at, s.timezone)}.`} />
                       )}
