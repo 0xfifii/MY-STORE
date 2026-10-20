@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   title: { default: "The Velvet Store", template: "%s · The Velvet Store" },
   description: "Inventory for The Velvet Store",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }],
-    apple: "/apple-touch-icon.png",
+    icon: [{ url: "/icon.svg?v=velvet2", type: "image/svg+xml" }, { url: "/favicon-32.png?v=velvet2", sizes: "32x32", type: "image/png" }],
+    apple: "/apple-touch-icon.png?v=velvet2",
   },
   manifest: "/manifest.webmanifest",
 };

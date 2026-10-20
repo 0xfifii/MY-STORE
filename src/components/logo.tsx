@@ -34,22 +34,19 @@ export function VelvetWordmark({ className = "h-10", ink = "#9e1018", paper = "#
   );
 }
 
-/** Square app mark (same artwork as /icon.svg, the favicon). */
+/** Square app mark: VELVET stacked (VEL / VET), same artwork as /icon.svg, the favicon. */
 export function LogoMark({ className = "size-9" }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden>
-      <rect width="64" height="64" rx="16" fill="#9e1018" />
-      <g stroke="#f4e8d8" strokeWidth="1.6" strokeLinejoin="round">
-        <path d="M12 13h10v7H12z" fill="#f4e8d8" />
-        <path d="M22 13h10v7H22z" fill="#9e1018" />
-        <path d="M32 13h10v7H32z" fill="#f4e8d8" />
-        <path d="M42 13h10v7H42z" fill="#9e1018" />
-        <path d="M12 20h10a5 5 0 0 1-10 0z" fill="#f4e8d8" />
-        <path d="M22 20h10a5 5 0 0 1-10 0z" fill="#9e1018" />
-        <path d="M32 20h10a5 5 0 0 1-10 0z" fill="#f4e8d8" />
-        <path d="M42 20h10a5 5 0 0 1-10 0z" fill="#9e1018" />
+      <rect width="64" height="64" rx="14" fill="#9e1018" />
+      <g fill="none" stroke="#f4e8d8" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 9l6.5 19L24 9" /><path d="M30 9v19M30 9h9M30 28h9" /><path d="M45 9v19h9" />
+        <path d="M11 37l6.5 19L24 37" /><path d="M30 37v19M30 37h9M30 46.5h8M30 56h9" /><path d="M44 37h12M50 37v19" />
       </g>
-      <path d="M19 33l13 20 13-20" fill="none" stroke="#f4e8d8" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <g stroke="#f4e8d8" strokeWidth=".9" strokeLinejoin="round">
+        <path d="M30 15h4v3.6h-4z" fill="#f4e8d8" /><path d="M34 15h4v3.6h-4z" fill="#9e1018" /><path d="M38 15h4v3.6h-4z" fill="#f4e8d8" />
+        <path d="M30 18.6h4a2 2 0 0 1-4 0z" fill="#f4e8d8" /><path d="M34 18.6h4a2 2 0 0 1-4 0z" fill="#9e1018" /><path d="M38 18.6h4a2 2 0 0 1-4 0z" fill="#f4e8d8" />
+      </g>
     </svg>
   );
 }
