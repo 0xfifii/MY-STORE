@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/format";
 export const metadata = { title: "Workers" };
 
 export default async function WorkersPage() {
-  const user = await requirePageUser("view");
+  const user = await requirePageUser("page.setup");
   const rows = await listWorkers(true);
   return (
     <div className="mx-auto max-w-3xl">

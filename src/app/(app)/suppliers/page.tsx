@@ -7,7 +7,7 @@ import { can } from "@/lib/permissions";
 export const metadata = { title: "Suppliers" };
 
 export default async function SuppliersPage() {
-  const user = await requirePageUser("view");
+  const user = await requirePageUser("page.setup");
   const rows = await listSuppliers(true);
   return (
     <div className="mx-auto max-w-3xl">

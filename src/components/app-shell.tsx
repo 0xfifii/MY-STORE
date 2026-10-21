@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, X, ArchiveRestore,
-  HardHat, ChartPie, ClipboardCheck, Mail,
+  HardHat, ChartPie, ClipboardCheck, Mail, Bell,
 } from "@/components/hand-icons";
+import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
 import { useApp } from "./app-context";
 import { VelvetWordmark } from "./logo";
 import { StockDialogProvider } from "./stock-dialog";
@@ -22,21 +23,22 @@ const MAIN: NavItem[] = [
   { href: "/inventory", label: "Inventory", icon: Boxes, match: ["/inventory", "/items"] },
   { href: "/stock-in", label: "Stock In", icon: StockInIcon, perm: "stock.in" },
   { href: "/stock-out", label: "Stock Out", icon: StockOutIcon, perm: "stock.out" },
-  { href: "/transactions", label: "Transactions", icon: History },
-  { href: "/low-stock", label: "Low Stock", icon: AlertTriangle },
+  { href: "/transactions", label: "Transactions", icon: History, perm: "page.transactions" },
+  { href: "/low-stock", label: "Low Stock", icon: AlertTriangle, perm: "page.low_stock" },
   { href: "/stock-count", label: "Stock Count", icon: ClipboardCheck, perm: "stock.count" },
 ];
 const REPORTS: NavItem[] = [
-  { href: "/reports", label: "Reports", icon: FileBarChart },
-  { href: "/reports/history", label: "Report History", icon: ArchiveRestore },
+  { href: "/reports", label: "Reports", icon: FileBarChart, perm: "page.reports" },
+  { href: "/reports/history", label: "Report History", icon: ArchiveRestore, perm: "page.report_history" },
   { href: "/audit", label: "Audit & Analytics", icon: ChartPie, perm: "audit.view" },
   { href: "/mail", label: "Send Email", icon: Mail, perm: "mail.send" },
+  { href: "/activity", label: "Activity", icon: Bell },
 ];
 const SETUP: NavItem[] = [
-  { href: "/categories", label: "Categories", icon: Tags },
-  { href: "/suppliers", label: "Suppliers", icon: Truck },
-  { href: "/workers", label: "Workers", icon: HardHat },
-  { href: "/units", label: "Units", icon: Ruler },
+  { href: "/categories", label: "Categories", icon: Tags, perm: "page.setup" },
+  { href: "/suppliers", label: "Suppliers", icon: Truck, perm: "page.setup" },
+  { href: "/workers", label: "Workers", icon: HardHat, perm: "page.setup" },
+  { href: "/units", label: "Units", icon: Ruler, perm: "page.setup" },
   { href: "/users", label: "Users", icon: Users, perm: "users.manage" },
   { href: "/settings", label: "Store Settings", icon: Settings, perm: "settings.write" },
 ];
@@ -46,7 +48,7 @@ const BOTTOM: NavItem[] = [
   { href: "/inventory", label: "Inventory", icon: Boxes, match: ["/inventory", "/items"] },
   { href: "/stock-in", label: "Stock In", icon: StockInIcon, perm: "stock.in" },
   { href: "/stock-out", label: "Stock Out", icon: StockOutIcon, perm: "stock.out" },
-  { href: "/reports", label: "Reports", icon: FileBarChart },
+  { href: "/reports", label: "Reports", icon: FileBarChart, perm: "page.reports" },
 ];
 
 function isActive(pathname: string, item: NavItem) {
@@ -65,6 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
+    <ActivityProvider>
     <div className="min-h-dvh lg:pl-[17.5rem]">
       {/* Desktop sidebar: a floating burgundy panel */}
       <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-burgundy to-claret text-white shadow-[0_20px_50px_-25px_rgb(82_8_16/0.7)] lg:flex">
@@ -77,9 +80,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/dashboard" className="flex items-center" aria-label={app.storeName}>
           <VelvetWordmark className="h-8 w-auto" tagline={false} title={app.storeName} />
         </Link>
-        <button onClick={() => setDrawer(true)} className="flex size-10 items-center justify-center rounded-full bg-burgundy text-white transition active:scale-90" aria-label="Open menu">
-          <Menu className="size-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <BellButton />
+          <button onClick={() => setDrawer(true)} className="flex size-10 items-center justify-center rounded-full bg-burgundy text-white transition active:scale-90" aria-label="Open menu">
+            <Menu className="size-5" />
+          </button>
+        </div>
       </header>
 
       {/* Mobile drawer */}
@@ -100,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Mobile bottom navigation */}
-      <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid grid-cols-5 rounded-full px-1 py-1 lg:hidden" aria-label="Quick navigation">
+      <nav className="glass-strong fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid rounded-full px-1 py-1 lg:hidden" style={{ gridTemplateColumns: `repeat(${BOTTOM.filter((i) => !i.perm || app.can(i.perm)).length}, minmax(0, 1fr))` }} aria-label="Quick navigation">
         {BOTTOM.filter((i) => !i.perm || app.can(i.perm)).map((item) => {
           const active = isActive(pathname, item);
           const Icon = item.icon;
@@ -120,6 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
     </div>
+    </ActivityProvider>
   );
 }
 
@@ -155,7 +162,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
                 >
                   <Icon className={clsx("size-[18px] transition-transform duration-200 group-hover:scale-110", active && "text-burgundy")} />
                   {item.label}
-                  {active && <span className="ml-auto size-1.5 rounded-full bg-gold" aria-hidden />}
+                  {item.href === "/activity" && !active ? <UnreadBadge className="ml-auto" /> : active && <span className="ml-auto size-1.5 rounded-full bg-gold" aria-hidden />}
                 </Link>
               </li>
             );

@@ -18,32 +18,55 @@ export type Action =
   | "users.manage"
   | "mail.send"           // send emails, receipts and reports from the app
   | "stock.count"         // record physical stock counts
-  | "count.approve";      // approve / reject counts (posts the shortage or excess)
+  | "count.approve"       // approve / reject counts (posts the shortage or excess)
+  | "activity.view"       // see what everyone does in the app, with notifications
+  | "page.transactions"   // open the Transactions page
+  | "page.low_stock"      // open the Low Stock page
+  | "page.reports"        // open Reports (and download them)
+  | "page.report_history" // open Report History
+  | "page.setup";         // open Categories, Suppliers, Workers and Units
 
 /** Permissions an owner can switch on or off per user (owners always have everything). */
-export const TOGGLEABLE: { action: Exclude<Action, "view" | "stock.move" | "settings.write" | "users.manage" | "conversion.global">; label: string; hint: string }[] = [
-  { action: "stock.in", label: "Record Stock In", hint: "Receive stock into the store" },
-  { action: "stock.out", label: "Record Stock Out", hint: "Issue or remove stock from the store" },
-  { action: "item.write", label: "Add and edit items", hint: "Register new items and change item details" },
-  { action: "catalog.write", label: "Manage categories, suppliers and units", hint: "" },
-  { action: "workers.manage", label: "Manage the workers list", hint: "Add or edit names of workers who take items" },
-  { action: "report.generate", label: "Save reports to Report History", hint: "Viewing and downloading reports is always allowed" },
-  { action: "audit.view", label: "See usage analysis and audit log", hint: "Who took what, when, and every change made" },
-  { action: "txn.reverse", label: "Reverse wrong transactions", hint: "Corrections are recorded with a reason" },
-  { action: "item.archive", label: "Archive items, categories and suppliers", hint: "" },
-  { action: "item.delete", label: "Delete items permanently", hint: "Removes the item and all its stock history" },
-  { action: "mail.send", label: "Send emails", hint: "Email messages, receipts and reports to people" },
-  { action: "stock.count", label: "Record stock counts", hint: "Enter what was physically counted on the shelf" },
-  { action: "count.approve", label: "Approve stock counts", hint: "Posts shortages and excesses to the stock balance" },
+export type Toggle = {
+  action: Exclude<Action, "view" | "stock.move" | "settings.write" | "users.manage" | "conversion.global">;
+  label: string; hint: string;
+  /** "page" = a sidebar page they can open; "action" = something they can do. */
+  group: "page" | "action";
+};
+export const TOGGLEABLE: Toggle[] = [
+  // Sidebar pages
+  { group: "page", action: "page.transactions", label: "Transactions", hint: "Every stock movement with receipts" },
+  { group: "page", action: "page.low_stock", label: "Low Stock", hint: "Items running low or out" },
+  { group: "page", action: "stock.count", label: "Stock Count", hint: "Enter what was physically counted on the shelf" },
+  { group: "page", action: "page.reports", label: "Reports", hint: "View and download stock reports" },
+  { group: "page", action: "page.report_history", label: "Report History", hint: "Saved and emailed reports" },
+  { group: "page", action: "audit.view", label: "Audit & Analytics", hint: "Spending, usage, prices and the change log" },
+  { group: "page", action: "activity.view", label: "Activity (everyone)", hint: "See what every user does, with notifications. Without it they only see their own." },
+  { group: "page", action: "mail.send", label: "Send Email", hint: "Email messages, receipts and reports to people" },
+  { group: "page", action: "page.setup", label: "Categories, Suppliers, Workers and Units", hint: "The setup lists" },
+  // What they can do
+  { group: "action", action: "stock.in", label: "Record Stock In", hint: "Receive stock into the store" },
+  { group: "action", action: "stock.out", label: "Record Stock Out", hint: "Issue or remove stock from the store" },
+  { group: "action", action: "item.write", label: "Add and edit items", hint: "Register new items and change item details" },
+  { group: "action", action: "catalog.write", label: "Manage categories, suppliers and units", hint: "" },
+  { group: "action", action: "workers.manage", label: "Manage the workers list", hint: "Add or edit names of workers who take items" },
+  { group: "action", action: "report.generate", label: "Save reports to Report History", hint: "" },
+  { group: "action", action: "txn.reverse", label: "Reverse wrong transactions", hint: "Corrections are recorded with a reason" },
+  { group: "action", action: "item.archive", label: "Archive items, categories and suppliers", hint: "" },
+  { group: "action", action: "item.delete", label: "Delete items permanently", hint: "Removes the item and all its stock history" },
+  { group: "action", action: "count.approve", label: "Approve stock counts", hint: "Posts shortages and excesses to the stock balance" },
 ];
+
+const PAGES: Action[] = ["page.transactions", "page.low_stock", "page.reports", "page.report_history", "page.setup"];
 
 export const ROLE_DEFAULTS: Record<Role, Action[]> = {
   owner: [
     "view", "stock.in", "stock.out", "item.write", "item.archive", "item.delete", "catalog.write", "workers.manage", "conversion.global",
     "txn.reverse", "report.generate", "audit.view", "settings.write", "users.manage", "mail.send", "stock.count", "count.approve",
+    "activity.view", ...PAGES,
   ],
-  staff: ["view", "stock.in", "stock.out", "item.write", "catalog.write", "workers.manage", "report.generate", "mail.send", "stock.count"],
-  viewer: ["view"],
+  staff: ["view", "stock.in", "stock.out", "item.write", "catalog.write", "workers.manage", "report.generate", "mail.send", "stock.count", ...PAGES],
+  viewer: ["view", ...PAGES],
 };
 
 export type Subject = Role | { role: Role; permissions?: string[] | null } | null | undefined;

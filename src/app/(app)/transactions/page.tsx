@@ -19,7 +19,7 @@ type SP = { q?: string; type?: string; from?: string; to?: string; page?: string
 const D = /^\d{4}-\d{2}-\d{2}$/;
 
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<SP> }) {
-  const user = await requirePageUser("view");
+  const user = await requirePageUser("page.transactions");
   const sp = await searchParams;
   const s = await getSettings();
   const page = Math.max(1, Number(sp.page ?? 1) || 1);

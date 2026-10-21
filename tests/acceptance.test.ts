@@ -919,3 +919,52 @@ describe("19. Brevo API email (most reliable on Vercel)", () => {
     expect((await owner.req("DELETE", "/api/settings/email")).status).toBe(200);
   });
 });
+
+describe("20. Activity notifications and page permissions", () => {
+  it("owners get notified of what others do; staff only see their own activity", async () => {
+    await owner.post("/api/activity/seen");
+    expect((await owner.get("/api/activity/unread")).data.count).toBe(0);
+    await stockIn(staff, coke, "24", "btl", "250");
+    expect((await stockOut(staff, coke, "6", "btl", { reason: "bar_usage" })).status).toBe(201);
+    const u = (await owner.get("/api/activity/unread")).data;
+    expect(u.enabled).toBe(true);
+    expect(u.count).toBeGreaterThanOrEqual(2);
+    expect(u.latest[0].title).toBe("Took out 6 btl of Coke 50cl");
+    expect(u.latest[0].user_name).toBe("Sam Staff");
+    expect(u.latest[0].detail).toContain("Bar usage");
+
+    // the owner's own actions never notify the owner
+    await stockOut(owner, coke, "1", "btl");
+    expect((await owner.get("/api/activity/unread")).data.count).toBe(u.count);
+
+    const page = ((await owner.get("/activity")).data as Buffer).toString().replace(/<!-- -->/g, "");
+    expect(page).toContain("Sam Staff");
+    expect(page).toContain("took out 6 btl of Coke 50cl");
+    expect((await owner.get("/api/activity/unread")).data.count).toBe(0); // opening Activity marks it seen
+
+    // staff (no activity.view) see only themselves, and get no bell
+    expect((await staff.get("/api/activity/unread")).data.enabled).toBe(false);
+    const mine = ((await staff.get("/activity")).data as Buffer).toString().replace(/<!-- -->/g, "");
+    expect(mine).toContain("Everything you have done");
+    expect(mine).not.toContain("took out 1 btl of Coke 50cl");
+  });
+
+  it("pages can be switched on and off per person, including Audit and Activity", async () => {
+    const staffId = (await db.query("SELECT id FROM users WHERE email='staff@mystore.test'")).rows[0].id;
+    expect((await staff.get("/transactions")).status).toBe(200);
+    expect((await staff.get("/audit")).status).toBe(307);
+    expect((await owner.req("PUT", `/api/users/${staffId}/permissions`, {
+      permissions: ["stock.out", "audit.view", "activity.view", "page.reports"], allowed_category_ids: null,
+    })).status).toBe(200);
+    expect((await staff.get("/audit")).status).toBe(200);
+    expect((await staff.get("/reports")).status).toBe(200);
+    for (const p of ["/transactions", "/low-stock", "/reports/history", "/categories", "/suppliers", "/workers", "/units"]) {
+      expect((await staff.get(p)).status, p).toBe(307);
+    }
+    expect((await staff.get("/api/activity/unread")).data.enabled).toBe(true);
+    const all = ((await staff.get("/activity")).data as Buffer).toString();
+    expect(all).toContain("Everything people do in the app");
+    expect((await owner.req("PUT", `/api/users/${staffId}/permissions`, { permissions: null, allowed_category_ids: null })).status).toBe(200);
+    expect((await staff.get("/transactions")).status).toBe(200);
+  });
+});

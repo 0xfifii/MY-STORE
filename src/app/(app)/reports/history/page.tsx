@@ -20,7 +20,7 @@ const DELIVERY: Record<string, string> = {
 };
 
 export default async function ReportHistoryPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const user = await requirePageUser("view");
+  const user = await requirePageUser("page.report_history");
   const { page: p } = await searchParams;
   const page = Math.max(1, Number(p ?? 1) || 1);
   const s = await getSettings();

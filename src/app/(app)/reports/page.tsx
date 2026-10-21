@@ -12,7 +12,7 @@ import { formatDateTime, formatMoney, formatQty, formatUnitCost, reasonLabel } f
 export const metadata = { title: "Reports" };
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
-  await requirePageUser("view");
+  await requirePageUser("page.reports");
   const raw = await searchParams;
   const s = await getSettings();
   const params = normaliseParams(raw.preset || raw.from || raw.month ? raw : { ...raw, preset: "today" }, s.timezone);

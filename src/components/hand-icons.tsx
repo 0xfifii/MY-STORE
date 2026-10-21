@@ -111,6 +111,9 @@ export const Play = (p: P) => (<I {...p}><path d="M7.4 5.1c0-.8.9-1.3 1.6-.8l9.5
 export const Check = (p: P) => (<I {...p}><path d="m5 12.6 4.4 4.3L19.1 7" /></I>);
 export const CheckCircle2 = (p: P) => (<I {...p}><path d="M12 3.6a8.4 8.4 0 1 1-.1 16.8A8.4 8.4 0 0 1 12 3.6z" /><path d="m8.3 12.3 2.6 2.6 5-5.3" /></I>);
 export const Clock = (p: P) => (<I {...p}><path d="M12 3.7a8.3 8.3 0 1 1-.1 16.6A8.3 8.3 0 0 1 12 3.7z" /><path d="M12 7.6v4.6l3 1.9" /></I>);
+export const Bell = (p: P) => (
+  <I {...p}><path d="M6.2 16.6c.9-1 1.3-2 1.3-3.6v-2.4a4.6 4.6 0 0 1 9.1-.1V13c0 1.6.4 2.6 1.3 3.6.3.4 0 .9-.4.9H6.6c-.5 0-.7-.5-.4-.9z" /><path d="M10.1 19.9a2.1 2.1 0 0 0 3.9 0" /><path d="M12 3.3v1.4" /></I>
+);
 export const KeyRound = (p: P) => (
   <I {...p}><circle cx="15.3" cy="8.7" r="4.6" /><path d="M11.9 11.9 4.3 19.6v1.1h2.6l.7-.8v-1.8h1.8l.7-.7v-1.7h1.8l1.8-1.8" /><path d="M16.4 7.6h.01" /></I>
 );

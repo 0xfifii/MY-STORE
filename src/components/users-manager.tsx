@@ -69,7 +69,6 @@ export function UsersManager({ users, meId, categories, mailReady = true }: { us
       </div>
       <ul className="stagger space-y-3">
         {users.map((u) => {
-          const perms = permissionsOf(u).filter((p) => p !== "view").map((p) => TOGGLEABLE.find((t) => t.action === p)?.label).filter(Boolean) as string[];
           const cats = u.allowed_category_ids?.length ? u.allowed_category_ids.map((id) => categories.find((c) => c.id === id)?.name).filter(Boolean) : null;
           const initials = u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
           return (
@@ -97,16 +96,26 @@ export function UsersManager({ users, meId, categories, mailReady = true }: { us
               {/* What they can do */}
               <div className="border-t border-burgundy/10 bg-burgundy/[0.03] px-4 py-3 sm:px-5">
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy/60">
-                  {u.role === "owner" ? "Access" : "Can do"}
+                  Access
                 </p>
                 {u.role === "owner" ? (
-                  <span className="inline-flex rounded-full bg-burgundy px-3 py-1 text-xs font-semibold text-paper">Everything (owner)</span>
-                ) : perms.length ? (
-                  <ul className="flex flex-wrap gap-1.5">
-                    {perms.map((p) => <li key={p} className="rounded-full bg-paper px-2.5 py-1 text-xs font-medium text-burgundy ring-1 ring-burgundy/20">{p}</li>)}
-                  </ul>
+                  <span className="inline-flex rounded-lg bg-burgundy px-3 py-1 text-xs font-semibold text-paper">Everything (owner)</span>
                 ) : (
-                  <span className="inline-flex rounded-full bg-paper px-2.5 py-1 text-xs font-medium text-muted ring-1 ring-burgundy/15">View only</span>
+                  <div className="space-y-2">
+                    {(["page", "action"] as const).map((g) => {
+                      const list = TOGGLEABLE.filter((t) => t.group === g && permissionsOf(u).includes(t.action as never));
+                      return (
+                        <div key={g} className="flex flex-col gap-1.5 sm:flex-row sm:items-start">
+                          <span className="w-20 shrink-0 pt-1 text-xs font-medium text-muted">{g === "page" ? "Pages" : "Actions"}</span>
+                          {list.length ? (
+                            <ul className="flex flex-wrap gap-1.5">
+                              {list.map((t) => <li key={t.action} className={`rounded-lg px-2.5 py-1 text-xs font-medium ring-1 ${g === "page" ? "bg-burgundy/[0.07] text-burgundy ring-burgundy/20" : "bg-paper text-burgundy ring-burgundy/20"}`}>{t.label}</li>)}
+                            </ul>
+                          ) : <span className="rounded-lg bg-paper px-2.5 py-1 text-xs font-medium text-muted ring-1 ring-burgundy/15">{g === "page" ? "Dashboard and Inventory only" : "View only"}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
                 {cats && u.role !== "owner" && (
                   <p className="mt-2 text-xs text-muted">Only these categories: <span className="font-medium text-ink">{cats.join(", ")}</span></p>
@@ -212,20 +221,40 @@ function PermissionsModal({ user, categories, onClose }: { user: U; categories: 
   return (
     <Modal open onClose={onClose} title={`What can ${user.name} do?`} busy={busy} wide
       footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={save} loading={busy} disabled={limit && cats.size === 0}>Save permissions</Button></>}>
-      <p className="text-sm text-muted">Everyone can view inventory and download reports. Tick what else this person may do.</p>
-      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-        {TOGGLEABLE.map((t) => (
-          <li key={t.action}>
-            <label className={`flex h-full cursor-pointer items-start gap-3 rounded-2xl p-3 ring-1 transition-colors ${perms.has(t.action) ? "bg-rose ring-burgundy/25" : "bg-white/70 ring-white"}`}>
-              <input type="checkbox" className="mt-0.5 size-5 accent-burgundy" checked={perms.has(t.action)} onChange={() => toggle(t.action)} />
-              <span>
-                <span className="block text-sm font-semibold">{t.label}</span>
-                {t.hint && <span className="block text-xs text-muted">{t.hint}</span>}
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
+      <p className="text-sm text-muted">The Dashboard, Inventory and their own Activity are always open. Tick everything else this person may use.</p>
+      {(["page", "action"] as const).map((g) => {
+        const list = TOGGLEABLE.filter((t) => t.group === g);
+        const allOn = list.every((t) => perms.has(t.action));
+        return (
+          <section key={g} className="mt-5">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy/70">{g === "page" ? "Pages they can open in the sidebar" : "What they can do"}</h3>
+              <button type="button" className="rounded-md px-1.5 py-0.5 text-xs font-semibold text-burgundy hover:underline"
+                onClick={() => setPerms((p) => { const n = new Set(p); for (const t of list) { if (allOn) n.delete(t.action); else n.add(t.action); } return n; })}>
+                {allOn ? "Untick all" : "Tick all"}
+              </button>
+            </div>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {list.map((t) => (
+                <li key={t.action}>
+                  <label className={`flex h-full cursor-pointer items-start gap-3 rounded-2xl p-3 ring-1 transition-colors ${perms.has(t.action) ? "bg-burgundy/[0.07] ring-burgundy/30" : "bg-paper ring-burgundy/10"}`}>
+                    <input type="checkbox" className="mt-0.5 size-5 shrink-0 accent-burgundy" checked={perms.has(t.action)} onChange={() => toggle(t.action)} />
+                    <span>
+                      <span className="block text-sm font-semibold">{t.label}</span>
+                      {t.hint && <span className="block text-xs text-muted">{t.hint}</span>}
+                    </span>
+                  </label>
+                </li>
+              ))}
+              {g === "page" && (
+                <li className="flex items-start gap-3 rounded-2xl bg-paper/60 p-3 text-xs text-muted border border-dashed border-burgundy/15 sm:col-span-2">
+                  Users and Store Settings stay with owners. To give someone those, change their role to Owner / Admin.
+                </li>
+              )}
+            </ul>
+          </section>
+        );
+      })}
       {(perms.has("stock.in") || perms.has("stock.out")) && (
         <div className="mt-5 rounded-2xl bg-white/70 p-4 ring-1 ring-white">
           <label className="flex items-center gap-3 text-sm font-semibold">

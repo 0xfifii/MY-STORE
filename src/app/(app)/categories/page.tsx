@@ -7,7 +7,7 @@ import { can } from "@/lib/permissions";
 export const metadata = { title: "Categories" };
 
 export default async function CategoriesPage() {
-  const user = await requirePageUser("view");
+  const user = await requirePageUser("page.setup");
   const rows = await listCategories(true);
   return (
     <div className="mx-auto max-w-3xl">

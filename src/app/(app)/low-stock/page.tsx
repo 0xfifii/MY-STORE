@@ -10,7 +10,7 @@ import { formatMoney, formatQty } from "@/lib/format";
 export const metadata = { title: "Low Stock" };
 
 export default async function LowStockPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  await requirePageUser("view");
+  await requirePageUser("page.low_stock");
   const sp = await searchParams;
   const status = sp.status === "out" ? "out" : sp.status === "low" ? "low" : "attention";
   const s = await getSettings();

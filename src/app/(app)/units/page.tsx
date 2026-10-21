@@ -7,7 +7,7 @@ import { can } from "@/lib/permissions";
 export const metadata = { title: "Units" };
 
 export default async function UnitsPage() {
-  const user = await requirePageUser("view");
+  const user = await requirePageUser("page.setup");
   const [units, rules] = await Promise.all([listUnits(), listGlobalConversions()]);
   return (
     <div>
