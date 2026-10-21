@@ -161,6 +161,35 @@ export async function purchaseRanking(r: Range) {
   );
 }
 
+export type DailyPurchaseRow = {
+  day: string; item_id: string; name: string; sku: string; unit: string; category: string | null; opening: boolean;
+  qty: string; unit_price: string; amount: string; entries: number; prices: number; suppliers: string | null;
+};
+
+/**
+ * Money spent on each item on each day: quantity received x unit price, from stock in.
+ * Purchases from suppliers, plus opening stock flagged separately. Reversed entries and count adjustments are left out.
+ */
+export async function dailyPurchases(r: Range, itemId: string | null) {
+  return query<DailyPurchaseRow>(
+    `SELECT to_char((t.occurred_at AT TIME ZONE $3)::date, 'YYYY-MM-DD') AS day,
+            i.id AS item_id, i.name, i.sku, u.symbol AS unit, c.name AS category, t.is_opening AS opening,
+            trim_scale(sum(t.quantity))::text AS qty,
+            round(sum(t.total_value) / nullif(sum(t.quantity), 0), 4)::text AS unit_price,
+            sum(t.total_value)::numeric(20,2)::text AS amount,
+            count(*)::int AS entries,
+            count(DISTINCT t.unit_cost)::int AS prices,
+            string_agg(DISTINCT coalesce(sp.name, t.supplier_name), ', ') AS suppliers
+       FROM stock_transactions t JOIN items i ON i.id = t.item_id JOIN units u ON u.id = i.unit_id
+       LEFT JOIN categories c ON c.id = i.category_id LEFT JOIN suppliers sp ON sp.id = t.supplier_id
+      WHERE t.txn_type = 'stock_in' AND coalesce(t.source,'') <> 'count' AND ${NOT_REVERSED}
+        AND t.occurred_at >= ${B} AND t.occurred_at < ${E} AND ($4::uuid IS NULL OR t.item_id = $4::uuid)
+      GROUP BY 1, i.id, i.name, i.sku, u.symbol, c.name, t.is_opening
+      ORDER BY 1 DESC, sum(t.total_value) DESC`,
+    [r.from, r.to, r.tz, itemId],
+  );
+}
+
 // ---------------------------------------------------------------------------------------------
 // Stock-out analysis
 // ---------------------------------------------------------------------------------------------

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Panel } from "@/components/ui/primitives";
 import { LineChart } from "@/components/line-chart";
 import { ListFilters } from "@/components/list-filters";
-import { priceTracking, purchaseRanking, reasonTotals, stockOutAnalysis } from "@/lib/audit-analytics";
+import { UrlSelect } from "@/components/url-select";
+import { dailyPurchases, priceTracking, purchaseRanking, reasonTotals, stockOutAnalysis } from "@/lib/audit-analytics";
 import { formatDate, formatMoney, formatQty, formatUnitCost, reasonLabel } from "@/lib/format";
 import type { Period } from "./period";
 import { Change, Empty, Seg, ShareBar, Td, Th } from "./ui";
@@ -22,9 +23,10 @@ function Callout({ label, title, sub, tone = "white" }: { label: string; title: 
 }
 
 // ------------------------------------------------------------------------------------------- Purchases
-export async function PurchasesTab({ r, period, sym, sort, link }: { r: R; period: Period; sym: string; sort: string; link: Link_ }) {
-  const rows = await purchaseRanking(r);
+export async function PurchasesTab({ r, period, sym, sort, link, ditem }: { r: R; period: Period; sym: string; sort: string; link: Link_; ditem: string | null }) {
+  const [rows, allDaily] = await Promise.all([purchaseRanking(r), dailyPurchases(r, null)]);
   const m = (v: string | number) => formatMoney(v, sym);
+  const daily = ditem ? allDaily.filter((x) => x.item_id === ditem) : allDaily;
   const spent = rows.reduce((a, x) => a + Number(x.spend), 0);
   const sorted = [...rows].sort((a, b) =>
     sort === "qty" ? a.unit.localeCompare(b.unit) || Number(b.qty) - Number(a.qty)
@@ -40,6 +42,7 @@ export async function PurchasesTab({ r, period, sym, sort, link }: { r: R; perio
 
   return (
     <div className="space-y-4">
+      <DailySpending daily={daily} allDaily={allDaily} period={period} sym={sym} ditem={ditem} link={link} />
       {rows.length > 0 && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Callout tone="night" label="Cost the most money" title={topSpend.name} sub={`${m(topSpend.spend)} · ${((Number(topSpend.spend) / (spent || 1)) * 100).toFixed(0)}% of all spending`} />
@@ -82,6 +85,109 @@ export async function PurchasesTab({ r, period, sym, sort, link }: { r: R; perio
       </Panel>
       <p className="text-xs text-muted">Purchases are stock-in entries from suppliers. Opening stock, stock-count excesses and reversed entries are left out. Average price = amount spent ÷ quantity, per base unit.</p>
     </div>
+  );
+}
+
+// ------------------------------------------------------------------------------------------- Daily spending
+type Daily = Awaited<ReturnType<typeof dailyPurchases>>;
+const dayLabel = (d: string) => new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+
+function DailySpending({ daily, allDaily, period, sym, ditem, link }: { daily: Daily; allDaily: Daily; period: Period; sym: string; ditem: string | null; link: Link_ }) {
+  const m = (v: string | number) => formatMoney(v, sym);
+  const sum = (xs: Daily) => xs.reduce((a, x) => a + Number(x.amount), 0);
+  const bought = daily.filter((x) => !x.opening);
+  const opening = daily.filter((x) => x.opening);
+  const total = sum(daily);
+  const days = [...new Set(daily.map((x) => x.day))];
+  const buyDays = new Set(bought.map((x) => x.day)).size;
+  const items = new Map<string, string>();
+  for (const x of allDaily) items.set(x.item_id, x.name);
+  const itemName = ditem ? items.get(ditem) : null;
+  const byUnit = new Map<string, number>();
+  for (const x of daily) byUnit.set(x.unit, (byUnit.get(x.unit) ?? 0) + Number(x.qty));
+
+  // one point per calendar day in the period, so quiet days show as zero
+  const chart: { x: string; y: number }[] = [];
+  if (period.from !== period.to) {
+    const per = new Map<string, number>();
+    for (const x of daily) per.set(x.day, (per.get(x.day) ?? 0) + Number(x.amount));
+    for (let d = period.from; d <= period.to && chart.length < 400; ) {
+      chart.push({ x: new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }), y: per.get(d) ?? 0 });
+      const n = new Date(d + "T12:00:00Z"); n.setUTCDate(n.getUTCDate() + 1); d = n.toISOString().slice(0, 10);
+    }
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="stockin-worth">
+        <div className="rounded-3xl bg-gradient-to-br from-burgundy to-claret p-4 text-paper shadow-[0_14px_30px_-18px_rgb(26_4_6/0.9)]">
+          <p className="text-xs opacity-80">Total stock-in worth{itemName ? ` · ${itemName}` : ""}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight tabular-nums">{m(total)}</p>
+          <p className="text-sm opacity-80">quantity received × unit price · {period.label}</p>
+        </div>
+        <Callout label="Bought from suppliers" title={m(sum(bought))} sub={`${bought.reduce((a, x) => a + x.entries, 0)} stock-in entries`} />
+        <Callout label="Opening stock entered" title={m(sum(opening))} sub={opening.length ? `${opening.length} item${opening.length === 1 ? "" : "s"} set up with stock` : "none in this period"} />
+        <Callout tone="rose" label="Average spent per buying day" title={m(buyDays ? sum(bought) / buyDays : 0)} sub={`${buyDays} day${buyDays === 1 ? "" : "s"} with purchases · ${[...byUnit].map(([u, q]) => `${formatQty(String(q))} ${u}`).slice(0, 3).join(" · ") || "nothing received"}`} />
+      </div>
+
+      <Panel
+        title={<span>Daily spending per item <span className="font-normal text-muted">· {period.label}</span></span>}
+        actions={<UrlSelect name="ditem" label="Show one item" allLabel="All items" options={[...items].sort((a, b) => a[1].localeCompare(b[1])).map(([value, label]) => ({ value, label }))} />}
+      >
+        {chart.length > 1 && daily.length > 0 && (
+          <div className="mb-5">
+            <LineChart format="money" symbol={sym} height={200} series={[{ name: itemName ? `Spent on ${itemName}` : "Spent per day", color: "#b3141f", points: chart }]} />
+          </div>
+        )}
+        {days.length ? (
+          <div className="space-y-4" data-testid="daily-spending">
+            {days.map((d) => {
+              const rowsOfDay = daily.filter((x) => x.day === d);
+              return (
+                <section key={d} className="overflow-hidden rounded-2xl bg-paper ring-1 ring-burgundy/12">
+                  <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-burgundy/10 bg-burgundy/[0.04] px-4 py-2.5">
+                    <h3 className="font-semibold">{dayLabel(d)}</h3>
+                    <p className="text-sm text-muted">{rowsOfDay.length} item{rowsOfDay.length === 1 ? "" : "s"} · <strong className="text-base text-burgundy tabular-nums">{m(sum(rowsOfDay))}</strong></p>
+                  </header>
+                  <ul className="divide-y divide-burgundy/8 sm:hidden">
+                    {rowsOfDay.map((x) => (
+                      <li key={x.item_id + String(x.opening)} className="px-4 py-3">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <Link href={link({ tab: "item", item: x.item_id, month: d.slice(0, 7) })} className="min-w-0 truncate font-semibold">{x.name}</Link>
+                          <strong className="shrink-0 tabular-nums text-burgundy">{m(x.amount)}</strong>
+                        </div>
+                        <p className="mt-0.5 text-sm tabular-nums text-ink/80">{formatQty(x.qty)} {x.unit} × {formatUnitCost(x.unit_price, sym)}{x.prices > 1 ? " avg" : ""}</p>
+                        <p className="text-xs text-muted">{x.sku}{x.opening ? " · opening stock" : ""}{x.suppliers ? ` · ${x.suppliers}` : ""}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden overflow-x-auto sm:block">
+                    <table className="w-full min-w-[640px] text-sm">
+                      <thead><tr className="text-left text-muted"><Th>Item</Th><Th right>Quantity</Th><Th right>Unit price</Th><Th right>Amount</Th><Th>Supplier</Th></tr></thead>
+                      <tbody className="divide-y divide-burgundy/8">
+                        {rowsOfDay.map((x) => (
+                          <tr key={x.item_id + String(x.opening)} className="transition-colors hover:bg-burgundy/[0.03]">
+                            <Td>
+                              <Link href={link({ tab: "item", item: x.item_id, month: d.slice(0, 7) })} className="font-semibold hover:text-burgundy">{x.name}</Link>
+                              <span className="block text-xs text-muted">{x.sku}{x.opening ? " · opening stock" : ""}{x.entries > 1 ? ` · ${x.entries} entries` : ""}</span>
+                            </Td>
+                            <Td right><span className="tabular-nums">{formatQty(x.qty)}</span> {x.unit}</Td>
+                            <Td right><span className="tabular-nums">{formatUnitCost(x.unit_price, sym)}</span><span className="block text-xs text-muted">each {x.unit}{x.prices > 1 ? " (average)" : ""}</span></Td>
+                            <Td right><strong className="tabular-nums">{m(x.amount)}</strong></Td>
+                            <Td><span className="text-xs text-muted">{x.suppliers ?? "-"}</span></Td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        ) : <Empty>{itemName ? `No ${itemName} was received in this period.` : "Nothing was received into the store in this period."}</Empty>}
+        <p className="mt-4 text-xs text-muted">Amount = quantity received × unit price. Where an item was bought more than once in a day at different prices, the unit price shown is the average. Reversed entries and stock-count adjustments are left out.</p>
+      </Panel>
+    </>
   );
 }
 

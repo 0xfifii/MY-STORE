@@ -40,11 +40,11 @@ const LABELS: Record<string, string> = {
 type SP = {
   tab?: string; group?: string; spend?: string; range?: string; from?: string; to?: string; worker?: string; item?: string; category?: string;
   user?: string; area?: string; page?: string; p?: string; d?: string; mode?: string; by?: string; unit?: string; month?: string; sort?: string;
-  q?: string; dir?: string; pitem?: string;
+  q?: string; dir?: string; pitem?: string; ditem?: string;
 };
 
 const TABS: [string, string][] = [
-  ["overview", "Overview"], ["item", "Item performance"], ["purchases", "Purchases"], ["stockout", "Stock out"],
+  ["overview", "Overview"], ["item", "Item performance"], ["purchases", "Purchases & spending"], ["stockout", "Stock out"],
   ["prices", "Price tracking"], ["usage", "Usage & spending"], ["changes", "Change log"],
 ];
 
@@ -149,7 +149,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
           by={sp.by === "category" ? "category" : "item"} unit={sp.unit ?? null} />
       )}
       {tab === "item" && <ItemTab itemId={f.itemId} month={month} sym={sym} tz={s.timezone} />}
-      {tab === "purchases" && <PurchasesTab r={pr} period={period} sym={sym} sort={sp.sort ?? "spend"} link={link} />}
+      {tab === "purchases" && <PurchasesTab r={pr} period={period} sym={sym} sort={sp.sort ?? "spend"} link={link} ditem={sp.ditem && /^[0-9a-f-]{36}$/i.test(sp.ditem) ? sp.ditem : null} />}
       {tab === "stockout" && <StockOutTab r={pr} period={period} sym={sym} sort={sp.sort ?? "issues"} link={link} />}
       {tab === "prices" && <PricesTab r={pr} period={period} sym={sym} q={sp.q ?? null} dir={sp.dir === "up" || sp.dir === "down" ? sp.dir : "all"} pitem={sp.pitem ?? null} link={link} />}
       {tab === "usage" && <UsageTab r={{ from, to, tz: s.timezone }} f={f} sym={sym} group={group} spendBy={spendBy} link={link} />}

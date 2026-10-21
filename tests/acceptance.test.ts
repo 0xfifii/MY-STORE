@@ -804,6 +804,17 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
       const r = await owner.get(`/audit${q}`);
       expect(r.status, q).toBe(200);
     }
+    // Daily spending: every stock-in day shows qty x price per item, and the day totals add up to the stock-in worth.
+    const dsp = ((await owner.get(`/audit?tab=purchases&p=custom&from=2020-01-01&to=${today}`)).data as Buffer).toString();
+    expect(dsp).toContain("Daily spending per item");
+    expect(dsp).toContain("Total stock-in worth");
+    const { rows: [w] } = await db.query(
+      "SELECT sum(total_value)::numeric(20,2)::text AS v FROM stock_transactions t WHERE txn_type='stock_in' AND coalesce(source,'')<>'count' AND NOT EXISTS (SELECT 1 FROM stock_transactions r WHERE r.reverses_id=t.id)");
+    expect(dsp.replace(/<!-- -->/g, "")).toContain(Number(w.v).toLocaleString("en-NG", { minimumFractionDigits: 2 }));
+    const one = ((await owner.get(`/audit?tab=purchases&ditem=${sugar}`)).data as Buffer).toString();
+    expect(one.replace(/<!-- -->/g, "")).toMatch(/Total stock-in worth · Sugar/);
+    expect((await owner.get(`/audit?tab=purchases&ditem=not-a-uuid`)).status).toBe(200);
+
     const item = ((await owner.get(`/audit?tab=item&item=${sugar}&month=${month}`)).data as Buffer).toString();
     expect(item).toContain("This month vs last month");
     expect(item).toContain("Purchase prices this month");
