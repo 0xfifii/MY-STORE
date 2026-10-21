@@ -60,56 +60,90 @@ export function UsersManager({ users, meId, categories, mailReady = true }: { us
   };
 
   return (
-    <div className="glass overflow-hidden rounded-[var(--radius-card)]">
-      <div className="flex items-center justify-between border-b border-white/80 px-4 py-3 sm:px-5">
-        <p className="text-sm text-muted">{users.filter((u) => u.is_active).length} active users</p>
+    <div>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-burgundy/70">{users.filter((u) => u.is_active).length} active users</p>
         <Button size="sm" onClick={() => { setF({ name: "", email: "", role: "staff", password: "" }); setErr(null); setModal({ kind: "new" }); }}>
           <Plus className="size-4" /> Add user
         </Button>
       </div>
-      <ul className="divide-y divide-white/80">
-        {users.map((u) => (
-          <li key={u.id} className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:px-5 ${u.is_active ? "" : "opacity-60"}`}>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold">{u.name}{u.id === meId && <span className="ml-2 text-xs font-normal text-muted">(you)</span>}{!u.is_active && <span className="ml-2 text-xs font-normal text-bad">deactivated</span>}</p>
-              <p className="truncate text-xs text-muted">{u.email} · last sign-in {u.last_login ?? "never"}</p>
-              {u.id !== meId && (
-                <p className={`mt-0.5 text-xs ${u.welcome?.status === "sent" ? "text-ok" : u.welcome ? "text-bad" : "text-muted"}`}>
-                  {u.welcome?.status === "sent" ? `Welcome email sent ${u.welcome.at}` : u.welcome ? `Welcome email not delivered (${u.welcome.at}): ${u.welcome.error ?? "failed"}` : "No welcome email sent yet"}
+      <ul className="stagger space-y-3">
+        {users.map((u) => {
+          const perms = permissionsOf(u).filter((p) => p !== "view").map((p) => TOGGLEABLE.find((t) => t.action === p)?.label).filter(Boolean) as string[];
+          const cats = u.allowed_category_ids?.length ? u.allowed_category_ids.map((id) => categories.find((c) => c.id === id)?.name).filter(Boolean) : null;
+          const initials = u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+          return (
+            <li key={u.id} className={`overflow-hidden rounded-[var(--radius-card)] bg-paper shadow-[0_12px_30px_-22px_rgb(82_8_16/0.6)] ring-1 ring-burgundy/12 ${u.is_active ? "" : "opacity-60"}`}>
+              {/* Who */}
+              <div className="flex flex-col gap-3 px-4 pb-3 pt-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-burgundy to-claret text-sm font-bold tracking-wide text-paper">{initials}</span>
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-x-2 text-[16px] font-semibold tracking-[-0.01em]">
+                      {u.name}
+                      {u.id === meId && <span className="rounded-full bg-burgundy/10 px-2 py-0.5 text-[11px] font-semibold text-burgundy">You</span>}
+                      {!u.is_active && <span className="rounded-full bg-bad-bg px-2 py-0.5 text-[11px] font-semibold text-bad">Deactivated</span>}
+                    </p>
+                    <p className="truncate text-sm text-muted">{u.email}</p>
+                    <p className="mt-0.5 text-xs text-muted">Last sign-in {u.last_login ?? "never"}</p>
+                  </div>
+                </div>
+                <Select aria-label={`Role for ${u.name}`} value={u.role} disabled={u.id === meId} onChange={(e) => patch(u, { role: e.target.value }, "Role updated")}
+                  className="h-10 w-full rounded-xl border-burgundy/15 bg-paper text-sm font-semibold text-burgundy sm:w-56">
+                  {(Object.keys(ROLE_LABELS) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                </Select>
+              </div>
+
+              {/* What they can do */}
+              <div className="border-t border-burgundy/10 bg-burgundy/[0.03] px-4 py-3 sm:px-5">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy/60">
+                  {u.role === "owner" ? "Access" : "Can do"}
                 </p>
-              )}
-              {u.role !== "owner" && (
-                <p className="mt-1 truncate text-xs text-ink/70">
-                  Can: {permissionsOf(u).filter((p) => p !== "view").map((p) => TOGGLEABLE.find((t) => t.action === p)?.label).filter(Boolean).join(", ") || "view only"}
-                  {u.allowed_category_ids?.length ? ` · only ${u.allowed_category_ids.map((id) => categories.find((c) => c.id === id)?.name).filter(Boolean).join(", ")}` : ""}
-                </p>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Select aria-label={`Role for ${u.name}`} value={u.role} disabled={u.id === meId} onChange={(e) => patch(u, { role: e.target.value }, "Role updated")} className="h-9 w-48 text-sm">
-                {(Object.keys(ROLE_LABELS) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-              </Select>
-              {u.role !== "owner" && (
-                <Button size="sm" variant="secondary" onClick={() => setPermUser(u)}>
-                  <ShieldCheck className="size-4" /> Permissions
+                {u.role === "owner" ? (
+                  <span className="inline-flex rounded-full bg-burgundy px-3 py-1 text-xs font-semibold text-paper">Everything (owner)</span>
+                ) : perms.length ? (
+                  <ul className="flex flex-wrap gap-1.5">
+                    {perms.map((p) => <li key={p} className="rounded-full bg-paper px-2.5 py-1 text-xs font-medium text-burgundy ring-1 ring-burgundy/20">{p}</li>)}
+                  </ul>
+                ) : (
+                  <span className="inline-flex rounded-full bg-paper px-2.5 py-1 text-xs font-medium text-muted ring-1 ring-burgundy/15">View only</span>
+                )}
+                {cats && u.role !== "owner" && (
+                  <p className="mt-2 text-xs text-muted">Only these categories: <span className="font-medium text-ink">{cats.join(", ")}</span></p>
+                )}
+                {u.id !== meId && (
+                  <p className={`mt-2 flex items-center gap-1.5 text-xs ${u.welcome?.status === "sent" ? "text-ok" : u.welcome ? "text-bad" : "text-muted"}`}>
+                    <Mail className="size-3.5 shrink-0" />
+                    {u.welcome?.status === "sent" ? `Welcome email sent ${u.welcome.at}` : u.welcome ? `Welcome email not delivered (${u.welcome.at}): ${u.welcome.error ?? "failed"}` : "No welcome email sent yet"}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 border-t border-burgundy/10 px-4 py-3 sm:px-5">
+                {u.role !== "owner" && (
+                  <Button size="sm" variant="secondary" onClick={() => setPermUser(u)}>
+                    <ShieldCheck className="size-4" /> Permissions
+                  </Button>
+                )}
+                <Button size="sm" variant="secondary" onClick={() => { setF({ ...f, password: "" }); setErr(null); setModal({ kind: "password", user: u }); }}>
+                  <KeyRound className="size-4" /> Password
                 </Button>
-              )}
-              <Button size="sm" variant="secondary" onClick={() => { setF({ ...f, password: "" }); setErr(null); setModal({ kind: "password", user: u }); }}>
-                <KeyRound className="size-4" /> Password
-              </Button>
-              {u.id !== meId && u.is_active && (
-                <Button size="sm" variant="secondary" onClick={() => setWelcomeUser(u)}>
-                  <Mail className="size-4" /> {u.welcome?.status === "sent" ? "Resend welcome email" : "Send welcome email"}
-                </Button>
-              )}
-              {u.id !== meId && (
-                <Button size="sm" variant={u.is_active ? "outline-danger" : "secondary"} onClick={() => patch(u, { is_active: !u.is_active }, u.is_active ? "User deactivated" : "User reactivated")}>
-                  {u.is_active ? <UserX className="size-4" /> : <UserCheck className="size-4" />} {u.is_active ? "Deactivate" : "Reactivate"}
-                </Button>
-              )}
-            </div>
-          </li>
-        ))}
+                {u.id !== meId && u.is_active && (
+                  <Button size="sm" variant="secondary" onClick={() => setWelcomeUser(u)}>
+                    <Mail className="size-4" /> {u.welcome?.status === "sent" ? "Resend welcome email" : "Send welcome email"}
+                  </Button>
+                )}
+                {u.id !== meId && (
+                  <Button size="sm" variant={u.is_active ? "outline-danger" : "secondary"} className="sm:ml-auto"
+                    onClick={() => patch(u, { is_active: !u.is_active }, u.is_active ? "User deactivated" : "User reactivated")}>
+                    {u.is_active ? <UserX className="size-4" /> : <UserCheck className="size-4" />} {u.is_active ? "Deactivate" : "Reactivate"}
+                  </Button>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <Modal open={!!modal} onClose={() => setModal(null)} busy={busy}

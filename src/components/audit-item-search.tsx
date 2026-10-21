@@ -65,7 +65,7 @@ export function AuditItemSearch({ month, maxMonth, itemName }: { month: string; 
           role="combobox"
           aria-expanded={open}
           aria-controls="audit-item-results"
-          className="h-12 w-full rounded-full border border-white bg-white/80 pl-11 pr-10 text-[15px] transition focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-10 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
         />
         {loading && <Spinner className="absolute right-4 top-1/2 size-4 -translate-y-1/2" />}
         {open && q.trim() && (
@@ -85,7 +85,7 @@ export function AuditItemSearch({ month, maxMonth, itemName }: { month: string; 
       <label className="flex items-center gap-2 text-sm">
         <span className="font-medium text-muted">Month</span>
         <input type="month" value={month} max={maxMonth} onChange={(e) => e.target.value && go({ month: e.target.value })}
-          className="h-12 rounded-full bg-white/80 px-4 ring-1 ring-white focus:outline-none focus:ring-4 focus:ring-burgundy/10" />
+          className="h-12 rounded-2xl border border-burgundy/15 bg-paper px-4 focus:outline-none focus:ring-4 focus:ring-burgundy/10" />
       </label>
     </div>
   );

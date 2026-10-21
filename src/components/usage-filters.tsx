@@ -40,32 +40,32 @@ export function UsageFilters({ tab, workers, items, categories, users }: { tab: 
       <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
         {range === "custom" && (
           <>
-            <input type="date" aria-label="From" value={sp.get("from") ?? ""} onChange={(e) => set({ from: e.target.value })} className="h-11 rounded-full bg-white/75 px-4 text-sm ring-1 ring-white" />
-            <input type="date" aria-label="To" value={sp.get("to") ?? ""} onChange={(e) => set({ to: e.target.value })} className="h-11 rounded-full bg-white/75 px-4 text-sm ring-1 ring-white" />
+            <input type="date" aria-label="From" value={sp.get("from") ?? ""} onChange={(e) => set({ from: e.target.value })} className="h-11 rounded-2xl bg-paper px-4 text-sm ring-1 ring-burgundy/15" />
+            <input type="date" aria-label="To" value={sp.get("to") ?? ""} onChange={(e) => set({ to: e.target.value })} className="h-11 rounded-2xl bg-paper px-4 text-sm ring-1 ring-burgundy/15" />
           </>
         )}
         {tab === "usage" ? (
           <>
-            <Select aria-label="Worker" value={sp.get("worker") ?? ""} onChange={(e) => set({ worker: e.target.value })} className="rounded-full">
+            <Select aria-label="Worker" value={sp.get("worker") ?? ""} onChange={(e) => set({ worker: e.target.value })} className="rounded-2xl">
               <option value="">All workers</option>
               {workers.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
-            <Select aria-label="Category" value={sp.get("category") ?? ""} onChange={(e) => set({ category: e.target.value })} className="rounded-full">
+            <Select aria-label="Category" value={sp.get("category") ?? ""} onChange={(e) => set({ category: e.target.value })} className="rounded-2xl">
               <option value="">All categories</option>
               {categories.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
-            <Select aria-label="Item" value={sp.get("item") ?? ""} onChange={(e) => set({ item: e.target.value })} className="col-span-2 rounded-full lg:col-span-1">
+            <Select aria-label="Item" value={sp.get("item") ?? ""} onChange={(e) => set({ item: e.target.value })} className="col-span-2 rounded-2xl lg:col-span-1">
               <option value="">All items</option>
               {items.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
           </>
         ) : (
           <>
-            <Select aria-label="User" value={sp.get("user") ?? ""} onChange={(e) => set({ user: e.target.value })} className="rounded-full">
+            <Select aria-label="User" value={sp.get("user") ?? ""} onChange={(e) => set({ user: e.target.value })} className="rounded-2xl">
               <option value="">Everyone</option>
               {users.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </Select>
-            <Select aria-label="Area" value={sp.get("area") ?? ""} onChange={(e) => set({ area: e.target.value })} className="rounded-full">
+            <Select aria-label="Area" value={sp.get("area") ?? ""} onChange={(e) => set({ area: e.target.value })} className="rounded-2xl">
               <option value="">Everything</option>
               <option value="item">Items</option>
               <option value="stock_transaction">Corrections</option>

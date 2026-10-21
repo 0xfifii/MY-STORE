@@ -51,7 +51,7 @@ export function ListFilters({
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <div className="relative min-w-0 flex-1 sm:min-w-64">
-        <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+        <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-burgundy/70" aria-hidden />
         <input
           ref={box}
           type="search"
@@ -61,13 +61,13 @@ export function ListFilters({
           onKeyDown={(e) => { if (e.key === "Escape" && q) { e.preventDefault(); setQ(""); } }}
           placeholder={searchPlaceholder}
           aria-label={searchPlaceholder}
-          className="h-12 w-full rounded-full border border-white bg-white/75 pl-11 pr-10 text-[15px] shadow-[inset_0_1px_2px_rgb(82_8_16/0.06)] focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-10 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
         />
         {pending && <Spinner className="absolute right-3 top-1/2 size-4 -translate-y-1/2" />}
       </div>
       <div className="grid grid-cols-2 gap-2 sm:flex [&>*:last-child:nth-child(odd)]:col-span-2">
         {selects.map((s) => (
-          <Select key={s.name} aria-label={s.label} value={sp.get(s.name) ?? ""} onChange={(e) => push({ [s.name]: e.target.value })} className="rounded-full sm:w-44">
+          <Select key={s.name} aria-label={s.label} value={sp.get(s.name) ?? ""} onChange={(e) => push({ [s.name]: e.target.value })} className="rounded-2xl border-burgundy/15 bg-paper sm:w-44">
             {s.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </Select>
         ))}
@@ -90,8 +90,8 @@ export function Pagination({ page, pages, total, label }: { page: number; pages:
     <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm sm:px-5">
       <p className="text-muted">{total} {label} · page {page} of {pages}</p>
       <div className="flex gap-2">
-        <button disabled={page <= 1} onClick={() => go(page - 1)} className="h-9 rounded-full bg-white/80 px-4 font-semibold shadow-sm disabled:opacity-40">Previous</button>
-        <button disabled={page >= pages} onClick={() => go(page + 1)} className="h-9 rounded-full bg-white/80 px-4 font-semibold shadow-sm disabled:opacity-40">Next</button>
+        <button disabled={page <= 1} onClick={() => go(page - 1)} className="h-9 rounded-xl bg-paper px-4 font-semibold text-burgundy ring-1 ring-burgundy/15 transition hover:bg-burgundy hover:text-paper disabled:opacity-40 disabled:hover:bg-paper disabled:hover:text-burgundy">Previous</button>
+        <button disabled={page >= pages} onClick={() => go(page + 1)} className="h-9 rounded-xl bg-paper px-4 font-semibold text-burgundy ring-1 ring-burgundy/15 transition hover:bg-burgundy hover:text-paper disabled:opacity-40 disabled:hover:bg-paper disabled:hover:text-burgundy">Next</button>
       </div>
     </div>
   );

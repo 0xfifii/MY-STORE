@@ -63,7 +63,7 @@ export function ItemPicker({
   return (
     <div>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted" aria-hidden />
+        <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-burgundy/70" aria-hidden />
         <input
           autoFocus={autoFocus}
           value={q}
@@ -74,30 +74,30 @@ export function ItemPicker({
           role="combobox"
           aria-expanded="true"
           aria-controls="item-picker-list"
-          className="h-12 w-full rounded-full border border-white bg-white/70 bg-white pl-10 pr-10 text-base focus:border-burgundy focus:outline-none focus:ring-2 focus:ring-burgundy/15"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-10 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
         />
         {loading && <Spinner className="absolute right-3 top-1/2 size-5 -translate-y-1/2" />}
       </div>
       {error && <p className="mt-2 text-sm text-bad">{error}</p>}
-      <ul id="item-picker-list" role="listbox" className="mt-2 divide-y divide-white/80 overflow-hidden rounded-full border border-white bg-white/70 bg-white">
+      <ul id="item-picker-list" role="listbox" className="mt-2 max-h-[22rem] space-y-1 overflow-y-auto rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(82_8_16/0.6)] ring-1 ring-burgundy/15">
         {results.map((it, i) => (
           <li key={it.id} role="option" aria-selected={i === active}>
             <button
               type="button"
               onClick={() => onSelect(it)}
               onMouseEnter={() => setActive(i)}
-              className={clsx("flex w-full items-center gap-3 px-3 py-3 text-left", i === active ? "bg-rose" : "bg-white")}
+              className={clsx("flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors", i === active ? "bg-burgundy text-paper" : "hover:bg-burgundy/5")}
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-ink">{it.name}</p>
-                <p className="truncate text-xs text-muted">
+                <p className="truncate font-semibold tracking-[-0.01em]">{it.name}</p>
+                <p className={clsx("truncate text-[11px] font-medium uppercase tracking-[0.12em]", i === active ? "text-paper/75" : "text-burgundy/55")}>
                   {it.sku}
                   {it.category_name ? ` · ${it.category_name}` : ""}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="font-display text-base font-bold">
-                  {formatQty(it.quantity)} <span className="text-sm font-semibold text-muted">{it.unit_symbol}</span>
+                <p className="text-base font-semibold tabular-nums">
+                  {formatQty(it.quantity)} <span className={clsx("text-sm font-medium", i === active ? "text-paper/75" : "text-burgundy/55")}>{it.unit_symbol}</span>
                 </p>
                 {it.status !== "in_stock" && <StatusBadge status={it.status} />}
               </div>
