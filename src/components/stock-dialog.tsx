@@ -46,13 +46,13 @@ export function StockButtons({ itemId, name, size = "sm", archived }: { itemId: 
     <div className="flex gap-1.5">
       {canIn && (
         <button type="button" onClick={() => open("in", itemId, name)} aria-label={`Stock in ${name}`}
-          className={`${cls} inline-flex items-center rounded-full bg-white font-semibold text-ok shadow-sm ring-1 ring-white transition-all duration-200 hover:-translate-y-px hover:bg-mint-bg hover:shadow-md active:scale-95`}>
+          className={`${cls} inline-flex items-center rounded-full bg-paper font-semibold text-burgundy ring-1 ring-burgundy/30 transition-all duration-200 hover:-translate-y-px hover:bg-burgundy/5 hover:shadow-md active:scale-95`}>
           <StockInIcon className={ic} /> In
         </button>
       )}
       {canOut && (
         <button type="button" onClick={() => open("out", itemId, name)} aria-label={`Stock out ${name}`}
-          className={`${cls} btn-shine inline-flex items-center rounded-full bg-gradient-to-br from-[#b3141f] to-burgundy font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md active:scale-95`}>
+          className={`${cls} btn-shine inline-flex items-center rounded-full bg-burgundy font-semibold text-paper shadow-sm transition-all duration-200 hover:-translate-y-px hover:bg-burgundy-hover hover:shadow-md active:scale-95`}>
           <StockOutIcon className={ic} /> Out
         </button>
       )}

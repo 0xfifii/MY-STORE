@@ -66,7 +66,7 @@ export function DeleteItemButton({ itemId, name, quantity, unit, compact, afterH
     <>
       {compact ? (
         <button type="button" onClick={() => { setSure(false); setOpen(true); }} aria-label={`Delete ${name}`}
-          className="flex size-8 items-center justify-center rounded-full bg-white/80 text-muted ring-1 ring-white hover:bg-bad-bg hover:text-bad">
+          className="flex size-8 items-center justify-center rounded-full text-burgundy ring-1 ring-burgundy/25 transition hover:scale-110 hover:bg-burgundy hover:text-paper active:scale-95">
           <Trash2 className="size-3.5" />
         </button>
       ) : (

@@ -65,26 +65,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* Worth + today */}
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,2fr)]">
-        <div className="lift relative overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-br from-night via-[#3a1512] to-claret p-6 text-white">
-          <div className="glow-orb pointer-events-none absolute -right-16 -top-20 size-64 rounded-full opacity-70" aria-hidden />
-          <p className="relative text-sm text-white/60">Total inventory worth</p>
-          <p className="relative mt-2 text-[40px] font-normal leading-none tracking-tight sm:text-5xl" data-testid="inventory-worth">
+        <div className={`lift relative overflow-hidden rounded-[var(--radius-card)] p-6 text-paper ${TONE.burgundy}`}>
+          <div className="pointer-events-none absolute -right-14 -top-16 size-56 rounded-full bg-paper/10" aria-hidden />
+          <p className="relative text-[11px] font-semibold uppercase tracking-[0.16em] text-paper/70">Total inventory worth</p>
+          <p className="relative mt-3 text-[40px] font-semibold leading-none tracking-[-0.035em] tabular-nums sm:text-[50px]" data-testid="inventory-worth">
             {formatMoney(d.totals.worth, sym)}
           </p>
-          <p className="relative mt-3 text-sm text-white/60">{d.totals.items} {d.totals.items === 1 ? "item" : "items"} · weighted-average cost</p>
+          <p className="relative mt-3 text-sm text-paper/75">{d.totals.items} {d.totals.items === 1 ? "item" : "items"} · weighted-average cost</p>
           {d.byUnit.length > 0 && (
             <p className="relative mt-5 flex flex-wrap gap-1.5 text-xs">
               {d.byUnit.slice(0, 6).map((u) => (
-                <span key={u.symbol} className="rounded-full bg-white/10 px-2.5 py-1"><strong>{formatQty(u.qty)}</strong> {u.symbol}</span>
+                <span key={u.symbol} className="rounded-full bg-paper/12 px-2.5 py-1 ring-1 ring-paper/15 tabular-nums"><strong>{formatQty(u.qty)}</strong> {u.symbol}</span>
               ))}
             </p>
           )}
         </div>
-        <dl className="stagger grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Received today" value={formatMoney(d.today.in_value, sym)} sub={`${d.today.in_count} receipt${d.today.in_count === 1 ? "" : "s"}`} accent="sky" href="/transactions?type=stock_in" icon={<StockInIcon className="size-5" />} />
-          <Stat label="Issued today" value={formatMoney(d.today.out_value, sym)} sub={`${d.today.out_count} issue${d.today.out_count === 1 ? "" : "s"}`} accent="burgundy" href="/transactions?type=stock_out" icon={<StockOutIcon className="size-5" />} />
-          <Stat label="Low stock" value={String(d.totals.low)} sub="at or below minimum" accent="gold" href="/low-stock" icon={<AlertTriangle className="size-5" />} />
-          <Stat label="Out of stock" value={String(d.totals.out)} sub="need restocking" accent="coral" href="/low-stock?status=out" icon={<Boxes className="size-5" />} />
+        <dl className="stagger grid grid-cols-2 gap-3">
+          <Stat label="Received today" value={formatMoney(d.today.in_value, sym)} sub={`${d.today.in_count} receipt${d.today.in_count === 1 ? "" : "s"}`} tone="black" href="/transactions?type=stock_in" icon={<StockInIcon className="size-5" />} />
+          <Stat label="Issued today" value={formatMoney(d.today.out_value, sym)} sub={`${d.today.out_count} issue${d.today.out_count === 1 ? "" : "s"}`} tone="burgundy" href="/transactions?type=stock_out" icon={<StockOutIcon className="size-5" />} />
+          <Stat label="Low stock" value={String(d.totals.low)} sub="at or below minimum" tone="black" href="/low-stock" icon={<AlertTriangle className="size-5" />} />
+          <Stat label="Out of stock" value={String(d.totals.out)} sub="need restocking" tone="burgundy" href="/low-stock?status=out" icon={<Boxes className="size-5" />} />
         </dl>
       </section>
 
@@ -166,24 +166,22 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   );
 }
 
-const ACCENTS = {
-  sky: { icon: "bg-sky text-white", bar: "bg-sky", text: "text-sky" },
-  burgundy: { icon: "bg-burgundy text-white", bar: "bg-burgundy", text: "text-burgundy" },
-  gold: { icon: "bg-gold text-night", bar: "bg-gold", text: "text-warn" },
-  coral: { icon: "bg-coral text-white", bar: "bg-coral", text: "text-bad" },
+/** Burgundy-led with a black shadow, or black-led with a burgundy shadow. */
+const TONE = {
+  burgundy: "bg-[radial-gradient(120%_120%_at_0%_0%,#b3141f_0%,#9e1018_45%,#2b0a09_100%)] shadow-[0_22px_40px_-22px_rgb(20_6_6/0.9)]",
+  black: "bg-[radial-gradient(120%_120%_at_0%_0%,#2e1715_0%,#1d0f0e_50%,#7a0c13_100%)] shadow-[0_22px_40px_-22px_rgb(158_16_24/0.85)]",
 };
 
-function Stat({ label, value, sub, accent, href, icon }: { label: string; value: string; sub: string; accent: keyof typeof ACCENTS; href: string; icon: React.ReactNode }) {
-  const a = ACCENTS[accent];
+function Stat({ label, value, sub, tone, href, icon }: { label: string; value: string; sub: string; tone: keyof typeof TONE; href: string; icon: React.ReactNode }) {
   return (
-    <Link href={href} className="glass lift group relative block overflow-hidden rounded-[var(--radius-card)] p-4">
-      <span className={`absolute inset-x-0 top-0 h-1 ${a.bar} opacity-80`} aria-hidden />
-      <div className="flex items-center justify-between">
-        <dt className="text-xs text-muted">{label}</dt>
-        <span className={`flex size-9 items-center justify-center rounded-full shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110 ${a.icon}`}>{icon}</span>
+    <Link href={href} className={`lift group relative block overflow-hidden rounded-[var(--radius-card)] p-4 text-paper ${TONE[tone]}`}>
+      <div className="pointer-events-none absolute -right-8 -top-10 size-28 rounded-full bg-paper/10" aria-hidden />
+      <div className="relative flex items-start justify-between gap-2">
+        <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-paper/70">{label}</dt>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-paper text-burgundy shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110">{icon}</span>
       </div>
-      <dd className={`mt-3 text-2xl font-semibold tracking-tight ${Number(value.replace(/[^\d.]/g, "")) === 0 ? "text-ink" : a.text}`}>{value}</dd>
-      <dd className="text-xs text-muted">{sub}</dd>
+      <dd className="relative mt-3 break-words text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular-nums sm:text-[28px]">{value}</dd>
+      <dd className="relative text-xs text-paper/70">{sub}</dd>
     </Link>
   );
 }
