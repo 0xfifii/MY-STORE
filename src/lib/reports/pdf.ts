@@ -66,7 +66,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     card("Cost of stock in", m(r.summary.in_value)),
     card("Cost of stock out", m(r.summary.out_value)),
   ];
-  if (r.summary.adj_count) cards.push(card("Net corrections", m(r.summary.adj_value)));
+  if (r.summary.adj_count) cards.push(card("Corrections & price changes", m(r.summary.adj_value)));
   cards.push(card("Net change", `${net >= 0 ? "+" : "−"}${m(Math.abs(net))}`));
   cards.push(card("Low · out of stock", `${st.low} · ${st.out}`));
   content.push({
@@ -166,11 +166,11 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   }
 
   if (sec.corrections && r.corrections.length) {
-    content.push({ text: "Corrections (reversals)", style: "h2" });
+    content.push({ text: "Corrections and price changes", style: "h2" });
     const body: Cell[][] = [[h("Txn"), h("Date & time"), h("Item"), h("Reverses"), h("Stock effect", "right"), h("Value effect", "right"), h("Reason"), h("By")]];
     for (const t of r.corrections) {
       const sign = t.direction > 0 ? "+" : "−";
-      body.push([t.txn_no, formatDateTime(t.occurred_at, tz), `${t.item_name} (${t.item_sku})`, t.reverses_txn_no ?? "",
+      body.push([t.txn_no, formatDateTime(t.occurred_at, tz), `${t.item_name} (${t.item_sku})`, t.txn_type === "revaluation" ? "Price change" : t.reverses_txn_no ?? "",
         right(`${sign}${formatQty(t.quantity)} ${t.unit_symbol}`), right(`${sign}${m(t.total_value)}`), t.correction_reason ?? "", t.user_name ?? ""]);
     }
     content.push(tableBlock(body, [52, 76, "*", 52, 70, 70, 150, 60]));

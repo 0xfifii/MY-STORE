@@ -18,7 +18,7 @@ export default async function MailPage() {
   const user = await requirePageUser("mail.send");
   const s = await getSettings();
   const [users, ready, log] = await Promise.all([
-    query<{ name: string; email: string }>("SELECT name, email FROM users WHERE is_active ORDER BY name"),
+    query<{ name: string; email: string }>("SELECT name, email FROM users WHERE is_active AND deleted_at IS NULL ORDER BY name"),
     smtpConfigured(),
     query<{ id: string; sent_at: string; kind: string; recipients: string[]; subject: string; attachments: string[]; status: string; error: string | null; sender: string | null; can_resend: boolean }>(
       `SELECT e.id::text, e.sent_at, e.kind, e.recipients, e.subject, e.attachments, e.status, e.error, u.name AS sender, (e.payload IS NOT NULL AND e.kind <> 'scheduled') AS can_resend

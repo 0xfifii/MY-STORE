@@ -24,7 +24,8 @@ export type Action =
   | "page.low_stock"      // open the Low Stock page
   | "page.reports"        // open Reports (and download them)
   | "page.report_history" // open Report History
-  | "page.setup";         // open Categories, Suppliers, Workers and Units
+  | "page.setup"          // open Categories, Suppliers, Workers and Units
+  | "price.edit";         // change the price of stock on hand
 
 /** Permissions an owner can switch on or off per user (owners always have everything). */
 export type Toggle = {
@@ -47,6 +48,7 @@ export const TOGGLEABLE: Toggle[] = [
   // What they can do
   { group: "action", action: "stock.in", label: "Record Stock In", hint: "Receive stock into the store" },
   { group: "action", action: "stock.out", label: "Record Stock Out", hint: "Issue or remove stock from the store" },
+  { group: "action", action: "price.edit", label: "Change prices", hint: "Re-price stock on hand when prices change. Every change is recorded." },
   { group: "action", action: "item.write", label: "Add and edit items", hint: "Register new items and change item details" },
   { group: "action", action: "catalog.write", label: "Manage categories, suppliers and units", hint: "" },
   { group: "action", action: "workers.manage", label: "Manage the workers list", hint: "Add or edit names of workers who take items" },
@@ -63,7 +65,7 @@ export const ROLE_DEFAULTS: Record<Role, Action[]> = {
   owner: [
     "view", "stock.in", "stock.out", "item.write", "item.archive", "item.delete", "catalog.write", "workers.manage", "conversion.global",
     "txn.reverse", "report.generate", "audit.view", "settings.write", "users.manage", "mail.send", "stock.count", "count.approve",
-    "activity.view", ...PAGES,
+    "activity.view", "price.edit", ...PAGES,
   ],
   staff: ["view", "stock.in", "stock.out", "item.write", "catalog.write", "workers.manage", "report.generate", "mail.send", "stock.count", ...PAGES],
   viewer: ["view", ...PAGES],

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardCheck, FileText, KeyRound, Mail, Package, Settings, Tags, Undo2, Users } from "@/components/hand-icons";
+import { BadgePercent, ClipboardCheck, FileText, KeyRound, Mail, Package, Settings, Tags, Undo2, Users } from "@/components/hand-icons";
 import { StockInIcon, StockOutIcon } from "@/components/icons";
 import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
 import { Pagination } from "@/components/list-filters";
@@ -18,7 +18,7 @@ const UUID = /^[0-9a-f-]{36}$/i;
 const D = /^\d{4}-\d{2}-\d{2}$/;
 
 const ICON: Record<ActivityKind, React.ComponentType<{ className?: string }>> = {
-  stock_in: StockInIcon, stock_out: StockOutIcon, correction: Undo2, count: ClipboardCheck, item: Package, setup: Tags,
+  stock_in: StockInIcon, stock_out: StockOutIcon, correction: Undo2, price: BadgePercent, count: ClipboardCheck, item: Package, setup: Tags,
   email: Mail, report: FileText, user: Users, settings: Settings, signin: KeyRound,
 };
 
@@ -34,7 +34,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
 
   const [seen, people, feed] = await Promise.all([
     queryOne<{ at: string | null }>("SELECT activity_seen_at::text AS at FROM users WHERE id = $1", [me.id]),
-    everyone ? query<{ id: string; name: string; is_active: boolean }>("SELECT id, name, is_active FROM users ORDER BY is_active DESC, name") : Promise.resolve([]),
+    everyone ? query<{ id: string; name: string; is_active: boolean; removed: boolean }>("SELECT id, name, is_active, deleted_at IS NOT NULL AS removed FROM users ORDER BY deleted_at IS NOT NULL, is_active DESC, name") : Promise.resolve([]),
     activityFeed({
       userId: everyone && sp.user && UUID.test(sp.user) ? sp.user : null,
       onlyUserId: everyone ? null : me.id,
@@ -68,7 +68,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
           : "Everything you have done in the app, newest first."}
       />
       <div className="mb-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
-        {everyone && <UrlSelect name="user" label="Person" allLabel="Everyone" options={people.map((p) => ({ value: p.id, label: p.name + (p.is_active ? "" : " (deactivated)") }))} />}
+        {everyone && <UrlSelect name="user" label="Person" allLabel="Everyone" options={people.map((p) => ({ value: p.id, label: p.name + (p.removed ? " (removed)" : p.is_active ? "" : " (deactivated)") }))} />}
         <UrlSelect name="kind" label="Type of activity" allLabel="All activity" options={Object.entries(KIND_LABELS).map(([value, label]) => ({ value, label }))} />
         <UrlSelect name="day" label="Day" allLabel="Any day" options={dayOptions} />
       </div>

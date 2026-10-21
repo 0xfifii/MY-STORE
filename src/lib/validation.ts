@@ -185,3 +185,11 @@ export const emailListSchema = z
   .union([z.array(z.string()), z.string()])
   .transform((v) => (Array.isArray(v) ? v : v.split(/[,;\s]+/)).map((x) => x.trim().toLowerCase()).filter(Boolean))
   .pipe(z.array(z.string().email("One of the email addresses isn't valid")).min(1, "Add at least one email address").max(25, "Up to 25 recipients"));
+
+export const priceChangeSchema = z.object({
+  item_id: uuid,
+  unit_id: z.coerce.number().int().positive(),
+  unit_cost: z.coerce.number({ message: "Enter the new price" }).min(0, "The price cannot be negative").max(1e12).transform((n) => String(n)),
+  reason: optText(300),
+  request_id: uuid,
+});

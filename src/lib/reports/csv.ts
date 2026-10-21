@@ -32,7 +32,7 @@ export function reportToCsv(r: ReportData): Buffer {
   lines.push(["Opening stock value", money(r.summary.opening_value)]);
   lines.push(["Cost of stock in", money(r.summary.in_value)]);
   lines.push(["Cost of stock out", money(r.summary.out_value)]);
-  if (r.summary.adj_count) lines.push(["Net corrections (reversals)", money(r.summary.adj_value)]);
+  if (r.summary.adj_count) lines.push(["Net corrections and price changes", money(r.summary.adj_value)]);
   lines.push(["Net change in stock value", money(Number(r.summary.closing_value) - Number(r.summary.opening_value))]);
   lines.push(["Items in store", st.items]);
   lines.push(["Items in stock / low / out", `${st.in_stock} / ${st.low} / ${st.out}`]);
@@ -101,7 +101,7 @@ export function reportToCsv(r: ReportData): Buffer {
     lines.push(["CORRECTIONS (REVERSALS)"]);
     lines.push(["Txn ID", "Date & time", "Item", "Item code", "Reverses", "Effect on stock", "Unit", `Value (${cur})`, "Reason", "Recorded by"]);
     for (const t of r.corrections) {
-      lines.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, t.reverses_txn_no,
+      lines.push([t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, t.txn_type === "revaluation" ? "Price change" : t.reverses_txn_no,
         (t.direction > 0 ? "+" : "-") + plainQty(t.quantity), t.unit_symbol, (t.direction > 0 ? "" : "-") + money(t.total_value),
         t.correction_reason, t.user_name]);
     }

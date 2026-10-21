@@ -60,7 +60,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   return queryOne<SessionUser>(
     `SELECT u.id, u.name, u.email, u.role, u.permissions, u.allowed_category_ids
        FROM sessions s JOIN users u ON u.id = s.user_id
-      WHERE s.token_hash = $1 AND s.expires_at > now() AND u.is_active`,
+      WHERE s.token_hash = $1 AND s.expires_at > now() AND u.is_active AND u.deleted_at IS NULL`,
     [hashToken(token)],
   );
 }

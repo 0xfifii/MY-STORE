@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Boxes, Plus, Download, Pencil } from "@/components/hand-icons";
+import { ChangePriceButton } from "@/components/price-dialog";
 import { EmptyState, LinkButton, PageHeader } from "@/components/ui/primitives";
 import { ListFilters, Pagination } from "@/components/list-filters";
 import { StockButtons } from "@/components/stock-dialog";
@@ -131,6 +132,10 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                   <div className="mt-auto flex items-center justify-between gap-2 border-t border-burgundy/10 pt-4">
                     <StockButtons itemId={it.id} name={it.name} />
                     <div className="flex gap-1.5">
+                      <ChangePriceButton itemId={it.id} label={`Change the price of ${it.name}`}
+                        className="flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-burgundy ring-1 ring-burgundy/25 transition hover:scale-110 hover:bg-burgundy hover:text-paper active:scale-95">
+                        {sym}
+                      </ChangePriceButton>
                       {can(user, "item.write") && (
                         <Link href={`/items/${it.id}/edit`} aria-label={`Edit ${it.name}`}
                           className="flex size-8 items-center justify-center rounded-full text-burgundy ring-1 ring-burgundy/25 transition hover:scale-110 hover:bg-burgundy hover:text-paper active:scale-95">

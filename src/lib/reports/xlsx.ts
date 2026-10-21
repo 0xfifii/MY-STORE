@@ -39,7 +39,7 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
     ["Cost of stock in", Number(r.summary.in_value), moneyFmt],
     ["Cost of stock out", Number(r.summary.out_value), moneyFmt],
   ];
-  if (adjAll) sumRows.push(["Net corrections (reversals)", Number(r.summary.adj_value), moneyFmt]);
+  if (adjAll) sumRows.push(["Net corrections and price changes", Number(r.summary.adj_value), moneyFmt]);
   sumRows.push(
     ["Net change in stock value", Number(r.summary.closing_value) - Number(r.summary.opening_value), moneyFmt],
     ["Items in store", st.items], ["Items in stock", st.in_stock], ["Items low", st.low], ["Items out of stock", st.out],
@@ -159,7 +159,7 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
       ["Txn ID", 12], ["Date & time", 19], ["Item", 28], ["Item code", 13], ["Reverses", 12], ["Quantity effect", 15, qtyFmt],
       ["Unit", 8], ["Value effect", 16, moneyFmt], ["Reason", 36], ["Recorded by", 16],
     ], r.corrections.map((t) => [
-      t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, t.reverses_txn_no, t.direction * Number(t.quantity),
+      t.txn_no, formatDateTime(t.occurred_at, tz), t.item_name, t.item_sku, t.txn_type === "revaluation" ? "Price change" : t.reverses_txn_no, t.direction * Number(t.quantity),
       t.unit_symbol, t.direction * Number(t.total_value), t.correction_reason, t.user_name,
     ]));
   }

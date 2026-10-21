@@ -41,7 +41,7 @@ export type TxnRow = {
   item_id: string;
   item_name: string;
   item_sku: string;
-  txn_type: "stock_in" | "stock_out" | "reversal";
+  txn_type: "stock_in" | "stock_out" | "reversal" | "revaluation";
   direction: number;
   is_opening: boolean;
   entered_quantity: string;
@@ -205,7 +205,7 @@ export async function getItemConversions(itemId: string) {
 
 export type TxnFilter = {
   itemId?: string;
-  type?: "stock_in" | "stock_out" | "reversal" | null;
+  type?: "stock_in" | "stock_out" | "reversal" | "revaluation" | null;
   from?: string | null; // ISO timestamptz
   to?: string | null;
   q?: string | null;
@@ -456,6 +456,21 @@ export async function assertCategoryAllowed(itemId: string, allowed: number[] | 
   if (row && (row.category_id === null || !allowed.includes(row.category_id))) {
     throw new AppError("CATEGORY_NOT_ALLOWED", "You are not allowed to move stock for items in this category. Ask the store owner.", 403);
   }
+}
+
+/** Re-prices the stock on hand (see revalue_item in migration 010). */
+export async function changePrice(input: { item_id: string; unit_id: number; unit_cost: string; reason?: string | null; request_id: string }, userId: string) {
+  return withTransaction(async (client) => {
+    const before = await client.query<{ value: string; qty: string }>("SELECT stock_value::text AS value, quantity::text AS qty FROM items WHERE id = $1", [input.item_id]);
+    const { rows } = await client.query(
+      "SELECT id::text, txn_no, direction, total_value::text, value_after::text, unit_cost::text FROM revalue_item($1,$2,$3,$4,$5,$6)",
+      [input.item_id, input.unit_id, input.unit_cost, input.reason ?? null, userId, input.request_id],
+    );
+    await audit(userId, "item.price", "item", input.item_id, {
+      txn: rows[0].txn_no, unit_id: input.unit_id, new_price: input.unit_cost, value_before: before.rows[0]?.value, value_after: rows[0].value_after,
+    }, client);
+    return rows[0] as { id: string; txn_no: string; direction: number; total_value: string; value_after: string; unit_cost: string };
+  });
 }
 
 export async function reverseTransaction(txnId: string, reason: string, requestId: string, userId: string) {

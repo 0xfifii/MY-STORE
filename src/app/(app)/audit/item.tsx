@@ -142,7 +142,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
             <thead><tr className="text-left text-muted"><Th>Date</Th><Th>Type</Th><Th right>Quantity</Th><Th right>Cost / {u}</Th><Th right>Value</Th><Th>Supplier / taken by</Th><Th right>Balance after</Th><Th /></tr></thead>
             <tbody className="divide-y divide-white/80">
               {d.movements.map((x) => {
-                const label = x.source === "count" ? "Count adjustment" : x.txn_type === "stock_in" ? (x.is_opening ? "Opening stock" : "Stock in") : x.txn_type === "stock_out" ? "Stock out" : "Correction";
+                const label = x.source === "count" ? "Count adjustment" : x.txn_type === "stock_in" ? (x.is_opening ? "Opening stock" : "Stock in") : x.txn_type === "stock_out" ? "Stock out" : x.txn_type === "revaluation" ? "Price change" : "Correction";
                 return (
                   <tr key={x.id} className={x.reversed ? "text-muted line-through decoration-1" : ""}>
                     <Td><span className="whitespace-nowrap">{formatDateTime(x.at, tz)}</span><span className="block text-xs text-muted no-underline">{x.txn_no}</span></Td>
@@ -153,7 +153,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
                     <Td right>{m(x.value)}</Td>
                     <Td>{x.txn_type === "stock_in" ? x.supplier ?? "-" : x.who ?? "-"}{x.notes && <span className="block text-xs text-muted">{x.notes}</span>}</Td>
                     <Td right>{formatQty(x.balance_after)} {u}</Td>
-                    <Td>{x.txn_type !== "reversal" && <ReceiptLink txnId={x.id} txnNo={x.txn_no} />}</Td>
+                    <Td>{x.txn_type !== "reversal" && x.txn_type !== "revaluation" && <ReceiptLink txnId={x.id} txnNo={x.txn_no} />}</Td>
                   </tr>
                 );
               })}

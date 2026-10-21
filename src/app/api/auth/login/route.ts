@@ -44,7 +44,7 @@ const jsonLogin = handle(async (req) => {
     throw new AppError("THROTTLED", "Too many failed attempts. Wait 15 minutes and try again.", 429);
   }
   const user = await queryOne<{ id: string; password_hash: string; is_active: boolean }>(
-    "SELECT id, password_hash, is_active FROM users WHERE lower(email) = $1",
+    "SELECT id, password_hash, is_active FROM users WHERE lower(email) = $1 AND deleted_at IS NULL",
     [email],
   );
   const valid = user ? await verifyPassword(password, user.password_hash) : false;

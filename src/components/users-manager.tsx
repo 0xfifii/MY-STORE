@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Mail, Plus, ShieldCheck, UserCheck, UserX } from "@/components/hand-icons";
+import { KeyRound, Mail, Plus, ShieldCheck, Trash2, UserCheck, UserX } from "@/components/hand-icons";
 import { Button, Field, Input, Select } from "./ui/primitives";
 import { Modal } from "./ui/dialog";
 import { useToast } from "./ui/toast";
@@ -27,6 +27,7 @@ export function UsersManager({ users, meId, categories, mailReady = true }: { us
   const [modal, setModal] = useState<null | { kind: "new" } | { kind: "password"; user: U }>(null);
   const [permUser, setPermUser] = useState<U | null>(null);
   const [welcomeUser, setWelcomeUser] = useState<U | null>(null);
+  const [removeUser, setRemoveUser] = useState<U | null>(null);
   const [f, setF] = useState({ name: "", email: "", role: "staff" as Role, password: "" });
   const [welcome, setWelcome] = useState({ send_welcome: true, include_password: true });
   const [busy, setBusy] = useState(false);
@@ -144,10 +145,15 @@ export function UsersManager({ users, meId, categories, mailReady = true }: { us
                   </Button>
                 )}
                 {u.id !== meId && (
-                  <Button size="sm" variant={u.is_active ? "outline-danger" : "secondary"} className="sm:ml-auto"
-                    onClick={() => patch(u, { is_active: !u.is_active }, u.is_active ? "User deactivated" : "User reactivated")}>
-                    {u.is_active ? <UserX className="size-4" /> : <UserCheck className="size-4" />} {u.is_active ? "Deactivate" : "Reactivate"}
-                  </Button>
+                  <div className="flex flex-wrap gap-2 sm:ml-auto">
+                    <Button size="sm" variant={u.is_active ? "outline-danger" : "secondary"}
+                      onClick={() => patch(u, { is_active: !u.is_active }, u.is_active ? "User deactivated" : "User reactivated")}>
+                      {u.is_active ? <UserX className="size-4" /> : <UserCheck className="size-4" />} {u.is_active ? "Deactivate" : "Reactivate"}
+                    </Button>
+                    <Button size="sm" variant={u.is_active ? "secondary" : "danger"} onClick={() => setRemoveUser(u)}>
+                      <Trash2 className="size-4" /> Remove from list
+                    </Button>
+                  </div>
                 )}
               </div>
             </li>
@@ -192,6 +198,7 @@ export function UsersManager({ users, meId, categories, mailReady = true }: { us
         </form>
       </Modal>
       {welcomeUser && <WelcomeModal user={welcomeUser} mailReady={mailReady} onClose={() => setWelcomeUser(null)} />}
+      {removeUser && <RemoveModal user={removeUser} onClose={() => setRemoveUser(null)} />}
       {permUser && <PermissionsModal user={permUser} categories={categories} onClose={() => setPermUser(null)} />}
     </div>
   );
@@ -319,6 +326,36 @@ function WelcomeModal({ user, mailReady, onClose }: { user: U; mailReady: boolea
         {err && <p role="alert" className="rounded-2xl bg-bad-bg px-3 py-2 text-sm text-bad">{err}</p>}
         <button type="submit" className="hidden" />
       </form>
+    </Modal>
+  );
+}
+
+/** Remove a person from the Users list (their name stays on the records they made). */
+function RemoveModal({ user, onClose }: { user: U; onClose: () => void }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const remove = async () => {
+    setBusy(true); setErr(null);
+    try {
+      await api(`/api/users/${user.id}`, { method: "DELETE" });
+      toast.success("Removed", `${user.name} is no longer on the list and can't sign in.`);
+      onClose();
+      router.refresh();
+    } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <Modal open onClose={onClose} busy={busy} title={`Remove ${user.name}?`}
+      footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="danger" onClick={remove} loading={busy}><Trash2 className="size-4" /> Remove from list</Button></>}>
+      <div className="space-y-3 text-sm">
+        <p>{user.name} ({user.email}) will be taken off the Users list{user.is_active ? ", signed out straight away" : ""} and won&apos;t be able to sign in again.</p>
+        <p className="rounded-2xl bg-burgundy/[0.05] px-4 py-3 text-ink/80 ring-1 ring-burgundy/10">
+          Everything they recorded stays in the stock history, reports and activity with their name on it, so your records stay complete.
+          If they come back, add them again as a new user with the same email.
+        </p>
+        {err && <p role="alert" className="text-bad">{err}</p>}
+      </div>
     </Modal>
   );
 }

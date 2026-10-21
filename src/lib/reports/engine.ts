@@ -194,7 +194,7 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
         coalesce(sum(t.quantity)    FILTER (WHERE t.txn_type='stock_out' AND t.occurred_at >= b.s AND t.occurred_at < b.e), 0) AS out_qty,
         coalesce(sum(t.total_value) FILTER (WHERE t.txn_type='stock_out' AND t.occurred_at >= b.s AND t.occurred_at < b.e), 0) AS out_value,
         coalesce(sum(t.direction * t.quantity)    FILTER (WHERE t.txn_type='reversal' AND t.occurred_at >= b.s AND t.occurred_at < b.e), 0) AS adj_qty,
-        coalesce(sum(t.direction * t.total_value) FILTER (WHERE t.txn_type='reversal' AND t.occurred_at >= b.s AND t.occurred_at < b.e), 0) AS adj_value
+        coalesce(sum(t.direction * t.total_value) FILTER (WHERE t.txn_type IN ('reversal','revaluation') AND t.occurred_at >= b.s AND t.occurred_at < b.e), 0) AS adj_value
       FROM stock_transactions t CROSS JOIN bounds b
       WHERE t.occurred_at < b.e
       GROUP BY t.item_id
@@ -341,7 +341,7 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
 
   const stockIn = txns.filter((t) => t.txn_type === "stock_in");
   const stockOut = txns.filter((t) => t.txn_type === "stock_out");
-  const corrections = txns.filter((t) => t.txn_type === "reversal");
+  const corrections = txns.filter((t) => t.txn_type === "reversal" || t.txn_type === "revaluation");
 
   let scopeLabel: string | null = null;
   if (params.itemId) {
@@ -403,7 +403,7 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
     topOut: rank("out"),
     days,
     byWorker,
-    movements: txns.filter((t) => t.txn_type !== "reversal" && (params.kind !== "stock_in" || t.txn_type === "stock_in") && (params.kind !== "stock_out" || t.txn_type === "stock_out")),
+    movements: txns.filter((t) => t.txn_type !== "reversal" && t.txn_type !== "revaluation" && (params.kind !== "stock_in" || t.txn_type === "stock_in") && (params.kind !== "stock_out" || t.txn_type === "stock_out")),
     byCategory,
     stockStatus: {
       items: balances.filter((b) => !b.archived).length,

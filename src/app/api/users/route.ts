@@ -8,7 +8,7 @@ import { appUrl, sendWelcomeEmail } from "@/lib/notify";
 export const GET = handle(async () => {
   await requireApiUser("users.manage");
   const users = await query(
-    "SELECT id, name, email, role, is_active, created_at, last_login_at FROM users ORDER BY created_at",
+    "SELECT id, name, email, role, is_active, created_at, last_login_at FROM users WHERE deleted_at IS NULL ORDER BY created_at",
   );
   return ok({ users });
 });

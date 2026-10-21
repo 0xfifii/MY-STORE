@@ -15,7 +15,7 @@ export default async function UsersPage() {
   const me = await requirePageUser("users.manage");
   const s = await getSettings();
   const users = await query<{ id: string; name: string; email: string; role: Role; is_active: boolean; last_login_at: string | null; permissions: string[] | null; allowed_category_ids: number[] | null }>(
-    "SELECT id, name, email, role, is_active, last_login_at, permissions, allowed_category_ids FROM users ORDER BY is_active DESC, created_at",
+    "SELECT id, name, email, role, is_active, last_login_at, permissions, allowed_category_ids FROM users WHERE deleted_at IS NULL ORDER BY is_active DESC, created_at",
   );
   const [categories, mailReady, welcome] = await Promise.all([
     listCategories(),

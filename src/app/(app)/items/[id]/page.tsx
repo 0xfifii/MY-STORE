@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChangePriceButton } from "@/components/price-dialog";
 import { notFound } from "next/navigation";
 import { Pencil } from "@/components/hand-icons";
 import { EmptyState, LinkButton, PageHeader, Panel, StatusBadge, TxnTypeBadge } from "@/components/ui/primitives";
@@ -27,7 +28,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
   const sym = s.currency_symbol;
   const today = todayIn(s.timezone);
   const period = normaliseParams({ from: sp.from ?? today.slice(0, 8) + "01", to: sp.to ?? today, item: id, kind: "balance" }, s.timezone);
-  const type = (["stock_in", "stock_out", "reversal"].includes(sp.type ?? "") ? sp.type : null) as "stock_in" | null;
+  const type = (["stock_in", "stock_out", "reversal", "revaluation"].includes(sp.type ?? "") ? sp.type : null) as "stock_in" | null;
   const page = Math.max(1, Number(sp.page ?? 1) || 1);
 
   const [report, txns, conversions, units, allUnits] = await Promise.all([
@@ -79,6 +80,12 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
           <p className="text-sm text-muted">Inventory value</p>
           <p className="mt-1 font-display text-3xl font-bold tracking-tight">{formatMoney(item.stock_value, sym)}</p>
           <p className="mt-1 text-sm text-muted">{formatUnitCost(item.avg_cost, sym)} per {item.unit_symbol} (weighted average)</p>
+          {Number(item.quantity) > 0 && !item.archived_at && (
+            <ChangePriceButton itemId={item.id} label="Change price"
+              className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-xl bg-burgundy px-3.5 text-sm font-semibold text-paper transition hover:bg-claret active:scale-95">
+              {sym} Change price
+            </ChangePriceButton>
+          )}
         </div>
         <div className="px-5 py-5">
           <p className="text-sm text-muted">Minimum stock level</p>
@@ -155,7 +162,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
                     </td>
                     <td className="px-4 py-2.5"><TxnTypeBadge type={t.txn_type} direction={t.direction} /></td>
                     <td className="whitespace-nowrap px-4 py-2.5 text-right font-semibold">
-                      {t.direction > 0 ? "+" : "−"}{formatQty(t.entered_quantity)} {t.entered_unit_symbol}
+                      {t.txn_type === "revaluation" ? <span className="text-muted">price only</span> : <>{t.direction > 0 ? "+" : "−"}{formatQty(t.entered_quantity)} {t.entered_unit_symbol}</>}
                       {t.entered_unit_symbol !== t.unit_symbol && <span className="block text-xs font-normal text-muted">= {formatQty(t.quantity)} {t.unit_symbol}</span>}
                     </td>
                     <td className="whitespace-nowrap px-4 py-2.5 text-right">{formatUnitCost(t.entered_unit_cost, sym)}</td>
@@ -165,13 +172,14 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
                       {t.txn_type === "stock_out" && <span className="block">{reasonLabel(t.reason)}{t.recipient ? ` · to ${t.recipient}` : ""}</span>}
                       {t.txn_type === "stock_in" && <span className="block">{t.is_opening ? "Opening stock" : t.supplier_label ?? ""}</span>}
                       {t.txn_type === "reversal" && <span className="block">Reverses {t.reverses_txn_no}: {t.correction_reason}</span>}
+                      {t.txn_type === "revaluation" && <span className="block">New price {formatUnitCost(t.entered_unit_cost, sym)} per {t.entered_unit_symbol} · {t.correction_reason}</span>}
                       {t.reference && <span className="block text-muted">Ref {t.reference}</span>}
                       {t.notes && <span className="block text-muted">{t.notes}</span>}
                       {t.reversed_by_txn_no && <span className="block font-semibold text-warn">Reversed by {t.reversed_by_txn_no}</span>}
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      {t.txn_type !== "reversal" && <ReceiptLink txnId={t.id} txnNo={t.txn_no} />}
-                        {canReverse && t.txn_type !== "reversal" && !t.reversed_by_txn_no && (
+                      {t.txn_type !== "reversal" && t.txn_type !== "revaluation" && <ReceiptLink txnId={t.id} txnNo={t.txn_no} />}
+                        {canReverse && t.txn_type !== "reversal" && t.txn_type !== "revaluation" && !t.reversed_by_txn_no && (
                         <ReverseButton txnId={t.id} txnNo={t.txn_no}
                           summary={`${t.txn_type === "stock_in" ? "Stock in" : "Stock out"} of ${formatQty(t.entered_quantity)} ${t.entered_unit_symbol} ${item.name} (${formatMoney(t.total_value, sym)}) on ${formatDateTime(t.occurred_at, s.timezone)}.`} />
                       )}

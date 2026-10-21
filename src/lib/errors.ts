@@ -28,6 +28,8 @@ const FRIENDLY: Record<string, { status: number; message?: string }> = {
   ALREADY_REVERSED: { status: 409 },
   REASON_REQUIRED: { status: 400 },
   LEDGER_IMMUTABLE: { status: 409 },
+  NO_STOCK: { status: 409 },
+  NO_CHANGE: { status: 409 },
 };
 
 /** Turns DB, validation and app errors into a consistent JSON response. */

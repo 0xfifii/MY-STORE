@@ -968,3 +968,77 @@ describe("20. Activity notifications and page permissions", () => {
     expect((await staff.get("/transactions")).status).toBe(200);
   });
 });
+
+describe("21. Changing prices and removing users", () => {
+  it("re-prices the stock on hand, keeps reports balancing, and is recorded", async () => {
+    expect((await stockIn(owner, coke, "48", "btl", "250")).status).toBe(201);
+    const before = await item(coke);
+    expect(Number(before.quantity)).toBeGreaterThan(0);
+    // staff can't change prices by default
+    expect((await staff.post(`/api/items/${coke}/price`, { unit_id: units.btl, unit_cost: "300", request_id: randomUUID() })).status).toBe(403);
+    // per crate (24 btl) = 7200 means 300 per bottle
+    const r = await owner.post(`/api/items/${coke}/price`, { unit_id: units.crates, unit_cost: "7200", reason: "Supplier increased prices", request_id: randomUUID() });
+    expect(r.status).toBe(201);
+    const after = await item(coke);
+    expect(after.quantity).toBe(before.quantity);
+    expect(Number(after.stock_value)).toBeCloseTo(Number(before.quantity) * 300, 2);
+    expect(Number(after.avg_cost)).toBeCloseTo(300, 4);
+    expect((await owner.post(`/api/items/${coke}/price`, { unit_id: units.btl, unit_cost: "300", request_id: randomUUID() })).data.code).toBe("NO_CHANGE");
+
+    // stock out now uses the new price
+    const out = await stockOut(owner, coke, "2", "btl");
+    expect(out.status, JSON.stringify(out.data)).toBe(201);
+    const { rows: [ov] } = await db.query("SELECT total_value::text v FROM stock_transactions WHERE id = $1", [out.data.txn.id]);
+    expect(Number(ov.v)).toBeCloseTo(600, 2);
+
+    // the price change can't be "reversed" (set the price again instead)
+    const { rows: [pc] } = await db.query("SELECT id FROM stock_transactions WHERE item_id=$1 AND txn_type='revaluation' ORDER BY id DESC LIMIT 1", [coke]);
+    expect((await owner.post(`/api/transactions/${pc.id}/reverse`, { reason: "Trying to undo the price", request_id: randomUUID() })).status).toBe(409);
+
+    // reports still balance and closing equals live worth
+    const csv = ((await owner.get(`/api/reports/export?format=csv&preset=today`)).data as Buffer).toString();
+    const lines = csv.split("\r\n");
+    const num = (label: string) => Number(lines.find((l) => l.startsWith(label))!.split(",")[1]);
+    expect(lines.some((l) => l.startsWith("Net corrections and price changes"))).toBe(true);
+    expect(num("Opening stock value") + num("Cost of stock in") - num("Cost of stock out") + num("Net corrections and price changes")).toBeCloseTo(num("Total stock value (closing)"), 2);
+    const { rows: [w] } = await db.query("SELECT sum(stock_value)::numeric(20,2)::text v FROM items");
+    expect(lines.find((l) => l.startsWith("Total stock value (closing)"))!.split(",")[1]).toBe(w.v);
+    expect(csv).toContain("Price change");
+
+    // shows in history, transactions filter and activity
+    expect(((await owner.get(`/items/${coke}`)).data as Buffer).toString()).toContain("Price change");
+    expect(((await owner.get(`/transactions?type=revaluation`)).data as Buffer).toString()).toContain("Supplier increased prices");
+    const act = ((await owner.get("/activity?kind=price")).data as Buffer).toString().replace(/<!-- -->/g, "");
+    expect(act).toContain("changed the price of Coke 50cl to 7200 per crates");
+
+    // nothing in stock: nothing to re-price
+    const flour = (await db.query("SELECT id FROM items WHERE quantity = 0 AND archived_at IS NULL LIMIT 1")).rows[0]?.id;
+    if (flour) {
+      const base = (await owner.get(`/api/items/${flour}`)).data.item.unit_id;
+      expect((await owner.post(`/api/items/${flour}/price`, { unit_id: base, unit_cost: "10", request_id: randomUUID() })).data.code).toBe("NO_STOCK");
+    }
+  });
+
+  it("removing a user takes them off the list but keeps their name on the records", async () => {
+    expect((await owner.post("/api/users", { name: "Temp Worker", email: "gone.worker@mystore.test", role: "staff", password: "temp-pass-123" })).status).toBe(201);
+    const temp = new Session();
+    expect((await temp.post("/api/auth/login", { email: "gone.worker@mystore.test", password: "temp-pass-123" })).status).toBe(200);
+    const tout = await stockOut(temp, coke, "1", "btl");
+    expect(tout.status, JSON.stringify(tout.data)).toBe(201);
+    const id = (await db.query("SELECT id FROM users WHERE email='gone.worker@mystore.test'")).rows[0].id;
+    const ownerId = (await db.query("SELECT id FROM users WHERE role='owner' ORDER BY created_at LIMIT 1")).rows[0].id;
+    expect((await owner.req("DELETE", `/api/users/${ownerId}`)).status).toBe(409); // not yourself
+    expect((await staff.req("DELETE", `/api/users/${id}`)).status).toBe(403);
+    expect((await owner.req("DELETE", `/api/users/${id}`)).status).toBe(200);
+
+    expect((await temp.get("/api/items")).status).toBe(401); // signed out
+    expect((await new Session().post("/api/auth/login", { email: "gone.worker@mystore.test", password: "temp-pass-123" })).status).toBe(401);
+    const list = ((await owner.get("/users")).data as Buffer).toString();
+    expect(list).not.toContain("gone.worker@mystore.test");
+    const tx = ((await owner.get(`/items/${coke}`)).data as Buffer).toString();
+    expect(tx).toContain("Temp Worker");
+    // the email can be used again for a new account
+    const again = await owner.post("/api/users", { name: "Temp Again", email: "gone.worker@mystore.test", role: "viewer", password: "temp-pass-456" });
+    expect(again.status, JSON.stringify(again.data)).toBe(201);
+  });
+});

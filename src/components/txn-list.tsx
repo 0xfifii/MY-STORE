@@ -15,6 +15,7 @@ export function TxnList({ rows, symbol, timeZone, showItem = true }: { rows: Txn
             ? [reasonLabel(t.reason), t.worker_name ? `by ${t.worker_name}` : null, t.recipient].filter(Boolean).join(" · ")
             : t.txn_type === "stock_in"
               ? t.is_opening ? "Opening stock" : t.supplier_label ?? ""
+              : t.txn_type === "revaluation" ? `New price ${formatMoney(t.entered_unit_cost, symbol)} per ${t.entered_unit_symbol}`
               : `Reverses ${t.reverses_txn_no}`;
         return (
           <li key={t.id} className="flex items-start gap-3 px-5 py-3 sm:px-6">
@@ -35,11 +36,10 @@ export function TxnList({ rows, symbol, timeZone, showItem = true }: { rows: Txn
             </div>
             <div className="shrink-0 text-right">
               <p className={`font-semibold ${t.direction > 0 ? "text-ok" : "text-burgundy"}`}>
-                {sign}
-                {formatQty(t.entered_quantity)} {t.entered_unit_symbol}
+                {t.txn_type === "revaluation" ? "Price" : <>{sign}{formatQty(t.entered_quantity)} {t.entered_unit_symbol}</>}
               </p>
               <p className="text-xs text-muted">{formatMoney(t.total_value, symbol)}</p>
-              {t.txn_type !== "reversal" && <div className="-mr-2 mt-0.5"><ReceiptLink txnId={t.id} txnNo={t.txn_no} /></div>}
+              {t.txn_type !== "reversal" && t.txn_type !== "revaluation" && <div className="-mr-2 mt-0.5"><ReceiptLink txnId={t.id} txnNo={t.txn_no} /></div>}
             </div>
           </li>
         );

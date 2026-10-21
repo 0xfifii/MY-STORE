@@ -118,6 +118,7 @@ export function StatusBadge({ status }: { status: StockStatus }) {
 export function TxnTypeBadge({ type, direction }: { type: string; direction: number }) {
   if (type === "stock_in") return <span className="rounded-full bg-ok-bg px-2.5 py-0.5 text-xs font-semibold text-ok">Stock in</span>;
   if (type === "stock_out") return <span className="rounded-full bg-rose px-2.5 py-0.5 text-xs font-semibold text-burgundy">Stock out</span>;
+  if (type === "revaluation") return <span className="whitespace-nowrap rounded-full bg-burgundy/10 px-2.5 py-0.5 text-xs font-semibold text-burgundy">Price change {direction > 0 ? "↑" : "↓"}</span>;
   return (
     <span className="rounded-full bg-warn-bg px-2.5 py-0.5 text-xs font-semibold text-warn">
       Correction {direction > 0 ? "(+)" : "(−)"}

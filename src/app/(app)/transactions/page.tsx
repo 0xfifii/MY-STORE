@@ -35,7 +35,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   }
   const data = await listTransactions({
     itemId: /^[0-9a-f-]{36}$/i.test(sp.item ?? "") ? sp.item : undefined,
-    q: sp.q, type: (["stock_in", "stock_out", "reversal"].includes(sp.type ?? "") ? sp.type : null) as "stock_in" | null,
+    q: sp.q, type: (["stock_in", "stock_out", "reversal", "revaluation"].includes(sp.type ?? "") ? sp.type : null) as "stock_in" | null,
     from, to, limit: pageSize, offset: (page - 1) * pageSize,
   });
   const sym = s.currency_symbol;
@@ -49,7 +49,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
           <ListFilters
             searchPlaceholder="Search item, code, TXN no. or reference"
             selects={[{ name: "type", label: "Type", options: [
-              { value: "", label: "All types" }, { value: "stock_in", label: "Stock in" }, { value: "stock_out", label: "Stock out" }, { value: "reversal", label: "Corrections" },
+              { value: "", label: "All types" }, { value: "stock_in", label: "Stock in" }, { value: "stock_out", label: "Stock out" }, { value: "reversal", label: "Corrections" }, { value: "revaluation", label: "Price changes" },
             ] }]}
           />
         </div>
@@ -82,20 +82,21 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                       <td className="whitespace-nowrap px-4 py-2.5">{formatDateTime(t.occurred_at, s.timezone)}<span className="block text-xs text-muted">{t.txn_no}</span></td>
                       <td className="px-4 py-2.5"><Link href={`/items/${t.item_id}`} className="font-semibold hover:text-burgundy hover:underline">{t.item_name}</Link><span className="block text-xs text-muted">{t.item_sku}</span></td>
                       <td className="px-4 py-2.5"><TxnTypeBadge type={t.txn_type} direction={t.direction} /></td>
-                      <td className="whitespace-nowrap px-4 py-2.5 text-right font-semibold">{t.direction > 0 ? "+" : "−"}{formatQty(t.entered_quantity)} {t.entered_unit_symbol}</td>
+                      <td className="whitespace-nowrap px-4 py-2.5 text-right font-semibold">{t.txn_type === "revaluation" ? <span className="text-muted">price only</span> : <>{t.direction > 0 ? "+" : "−"}{formatQty(t.entered_quantity)} {t.entered_unit_symbol}</>}</td>
                       <td className="whitespace-nowrap px-4 py-2.5 text-right">{formatUnitCost(t.entered_unit_cost, sym)}</td>
                       <td className="whitespace-nowrap px-4 py-2.5 text-right">{formatMoney(t.total_value, sym)}</td>
                       <td className="max-w-56 px-4 py-2.5 text-xs">
                         {t.txn_type === "stock_out" && <>{reasonLabel(t.reason)}{t.recipient ? ` · to ${t.recipient}` : ""}</>}
                         {t.txn_type === "stock_in" && (t.is_opening ? "Opening stock" : t.supplier_label ?? "")}
                         {t.txn_type === "reversal" && <>Reverses {t.reverses_txn_no}: {t.correction_reason}</>}
+                        {t.txn_type === "revaluation" && <>New price {formatUnitCost(t.entered_unit_cost, sym)} per {t.entered_unit_symbol} · {t.direction > 0 ? "worth up" : "worth down"} · {t.correction_reason}</>}
                         {t.reference && <span className="block text-muted">Ref {t.reference}</span>}
                         {t.reversed_by_txn_no && <span className="block font-semibold text-warn">Reversed by {t.reversed_by_txn_no}</span>}
                       </td>
                       <td className="px-4 py-2.5 text-xs">{t.user_name ?? "-"}</td>
                       <td className="px-4 py-2.5 text-right">
-                        {t.txn_type !== "reversal" && <ReceiptLink txnId={t.id} txnNo={t.txn_no} />}
-                        {canReverse && t.txn_type !== "reversal" && !t.reversed_by_txn_no && (
+                        {t.txn_type !== "reversal" && t.txn_type !== "revaluation" && <ReceiptLink txnId={t.id} txnNo={t.txn_no} />}
+                        {canReverse && t.txn_type !== "reversal" && t.txn_type !== "revaluation" && !t.reversed_by_txn_no && (
                           <ReverseButton txnId={t.id} txnNo={t.txn_no}
                             summary={`${t.txn_type === "stock_in" ? "Stock in" : "Stock out"} of ${formatQty(t.entered_quantity)} ${t.entered_unit_symbol} ${t.item_name} (${formatMoney(t.total_value, sym)}).`} />
                         )}

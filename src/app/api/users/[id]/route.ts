@@ -12,7 +12,7 @@ export const PATCH = handle<Ctx>(async (req, { params }) => {
   const { id } = await params;
   const u = userUpdateSchema.parse(await readJson(req));
   await withTransaction(async (c) => {
-    const cur = await c.query("SELECT id, role, is_active FROM users WHERE id = $1 FOR UPDATE", [id]);
+    const cur = await c.query("SELECT id, role, is_active FROM users WHERE id = $1 AND deleted_at IS NULL FOR UPDATE", [id]);
     if (!cur.rowCount) throw new AppError("NOT_FOUND", "User not found.", 404);
     const demoting = (u.role && u.role !== "owner") || u.is_active === false;
     if (demoting && cur.rows[0].role === "owner") {
@@ -27,6 +27,28 @@ export const PATCH = handle<Ctx>(async (req, { params }) => {
     // Deactivation or password reset signs the user out everywhere.
     if (u.is_active === false || u.password) await c.query("DELETE FROM sessions WHERE user_id = $1 AND $1 <> $2", [id, me.id]);
     await audit(me.id, "user.update", "user", id, { ...u, password: u.password ? "(changed)" : undefined }, c);
+  });
+  return ok();
+});
+
+/**
+ * Removes a person from the Users list. They are signed out and can't sign in again. Their name stays on
+ * everything they recorded, because the stock history must always show who did what.
+ */
+export const DELETE = handle<Ctx>(async (_req, { params }) => {
+  const me = await requireApiUser("users.manage");
+  const { id } = await params;
+  if (id === me.id) throw new AppError("SELF", "You can't remove your own account.", 409);
+  await withTransaction(async (c) => {
+    const cur = await c.query<{ role: string; name: string; email: string }>("SELECT role, name, email FROM users WHERE id = $1 AND deleted_at IS NULL FOR UPDATE", [id]);
+    if (!cur.rowCount) throw new AppError("NOT_FOUND", "User not found.", 404);
+    if (cur.rows[0].role === "owner") {
+      const owners = await c.query("SELECT count(*)::int AS n FROM users WHERE role = 'owner' AND is_active AND deleted_at IS NULL AND id <> $1", [id]);
+      if (owners.rows[0].n === 0) throw new AppError("LAST_OWNER", "There must always be at least one active owner.", 409);
+    }
+    await c.query("UPDATE users SET deleted_at = now(), is_active = false, updated_at = now() WHERE id = $1", [id]);
+    await c.query("DELETE FROM sessions WHERE user_id = $1", [id]);
+    await audit(me.id, "user.delete", "user", id, { name: cur.rows[0].name, email: cur.rows[0].email }, c);
   });
   return ok();
 });

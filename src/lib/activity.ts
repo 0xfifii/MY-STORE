@@ -1,7 +1,7 @@
 import "server-only";
 import { query, queryOne } from "./db";
 
-export type ActivityKind = "stock_in" | "stock_out" | "correction" | "count" | "item" | "setup" | "email" | "report" | "user" | "settings" | "signin";
+export type ActivityKind = "stock_in" | "stock_out" | "correction" | "price" | "count" | "item" | "setup" | "email" | "report" | "user" | "settings" | "signin";
 
 export type Activity = {
   key: string;
@@ -18,6 +18,7 @@ export const KIND_LABELS: Record<ActivityKind, string> = {
   stock_in: "Stock in",
   stock_out: "Stock out",
   correction: "Correction",
+  price: "Price change",
   count: "Stock count",
   item: "Items",
   setup: "Setup lists",
@@ -38,12 +39,14 @@ const REASONS = `CASE t.reason WHEN 'store_usage' THEN 'Store usage' WHEN 'kitch
  */
 const FEED = `
   SELECT 'txn-' || t.id AS key, t.created_at AS at, t.created_by AS user_id,
-         CASE WHEN t.txn_type = 'reversal' THEN 'correction' WHEN t.txn_type = 'stock_in' THEN 'stock_in' ELSE 'stock_out' END AS kind,
+         CASE WHEN t.txn_type = 'reversal' THEN 'correction' WHEN t.txn_type = 'revaluation' THEN 'price' WHEN t.txn_type = 'stock_in' THEN 'stock_in' ELSE 'stock_out' END AS kind,
          CASE WHEN t.txn_type = 'stock_in' THEN 'Received ' || trim_scale(t.entered_quantity)::text || ' ' || eu.symbol || ' of ' || i.name
               WHEN t.txn_type = 'stock_out' THEN 'Took out ' || trim_scale(t.entered_quantity)::text || ' ' || eu.symbol || ' of ' || i.name
+              WHEN t.txn_type = 'revaluation' THEN 'Changed the price of ' || i.name || ' to ' || trim_scale(round(t.entered_unit_cost, 2))::text || ' per ' || eu.symbol
               ELSE 'Reversed ' || coalesce(t.reference, 'a transaction') || ' (' || i.name || ')' END AS title,
          CASE WHEN t.txn_type = 'stock_in' THEN concat_ws(' · ', CASE WHEN t.is_opening THEN 'Opening stock' END, coalesce(sp.name, t.supplier_name), t.txn_no)
               WHEN t.txn_type = 'stock_out' THEN concat_ws(' · ', ${REASONS}, w.name, t.recipient, t.txn_no)
+              WHEN t.txn_type = 'revaluation' THEN concat_ws(' · ', CASE WHEN t.direction > 0 THEN 'Stock worth went up' ELSE 'Stock worth went down' END, t.correction_reason)
               ELSE t.correction_reason END AS detail,
          '/items/' || i.id AS href, t.total_value AS value
     FROM stock_transactions t JOIN items i ON i.id = t.item_id JOIN units eu ON eu.id = t.entered_unit_id
@@ -66,7 +69,7 @@ const FEED = `
            WHEN 'supplier.create' THEN 'Added supplier ' WHEN 'supplier.update' THEN 'Edited supplier ' WHEN 'supplier.archive' THEN 'Archived supplier ' WHEN 'supplier.restore' THEN 'Restored supplier '
            WHEN 'worker.create' THEN 'Added worker ' WHEN 'worker.update' THEN 'Edited worker ' WHEN 'worker.archive' THEN 'Archived worker ' WHEN 'worker.restore' THEN 'Restored worker '
            WHEN 'unit.create' THEN 'Added unit ' WHEN 'unit_conversion.set' THEN 'Set a unit conversion ' WHEN 'unit_conversion.remove' THEN 'Removed a unit conversion '
-           WHEN 'user.create' THEN 'Added user ' WHEN 'user.update' THEN 'Updated user ' WHEN 'user.permissions' THEN 'Changed permissions for '
+           WHEN 'user.create' THEN 'Added user ' WHEN 'user.delete' THEN 'Removed user ' WHEN 'user.update' THEN 'Updated user ' WHEN 'user.permissions' THEN 'Changed permissions for '
            WHEN 'settings.update' THEN 'Changed store settings' WHEN 'settings.email' THEN 'Changed the email account' WHEN 'setup.owner_created' THEN 'Set up the store'
            ELSE initcap(replace(replace(a.action, '.', ' '), '_', ' ')) || ' '
          END || coalesce(CASE
@@ -85,7 +88,7 @@ const FEED = `
               WHEN a.entity_type = 'supplier' THEN '/suppliers' WHEN a.entity_type = 'worker' THEN '/workers' WHEN a.entity_type IN ('unit','unit_conversion') THEN '/units' END,
          NULL::numeric
     FROM audit_logs a
-   WHERE a.entity_type <> 'stock_transaction' AND a.action <> 'transaction.reverse'
+   WHERE a.entity_type <> 'stock_transaction' AND a.action NOT IN ('transaction.reverse', 'item.price')
   UNION ALL
   SELECT 'mail-' || e.id, e.sent_at, e.sent_by, 'email',
          CASE WHEN e.status = 'sent' THEN 'Sent an email: ' ELSE 'Tried to send an email (not delivered): ' END || e.subject,
@@ -97,7 +100,9 @@ const FEED = `
     FROM generated_reports r WHERE r.generated_by IS NOT NULL AND r.trigger = 'manual' AND r.status = 'success'
   UNION ALL
   SELECT 'in-' || l.id, l.attempted_at, u.id, 'signin', 'Signed in', NULL, NULL, NULL
-    FROM login_attempts l JOIN users u ON lower(u.email) = lower(l.email) WHERE l.success`;
+    FROM login_attempts l JOIN users u ON lower(u.email) = lower(l.email)
+                                     AND l.attempted_at >= u.created_at AND (u.deleted_at IS NULL OR l.attempted_at <= u.deleted_at)
+   WHERE l.success`;
 
 export type ActivityFilter = { userId?: string | null; onlyUserId?: string | null; kind?: string | null; day?: string | null; tz: string; limit: number; offset: number };
 
