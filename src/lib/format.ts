@@ -64,6 +64,9 @@ export function addDays(isoDate: string, days: number): string {
 export const STOCK_OUT_REASONS = [
   { value: "store_usage", label: "Store usage" },
   { value: "kitchen_usage", label: "Kitchen usage" },
+  { value: "bakery_usage", label: "Bakery usage" },
+  { value: "bar_usage", label: "Bar usage" },
+  { value: "cleaning_usage", label: "Cleaning usage" },
   { value: "sale", label: "Sale" },
   { value: "transfer", label: "Transfer" },
   { value: "damage", label: "Damage" },

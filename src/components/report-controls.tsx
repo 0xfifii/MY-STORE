@@ -90,7 +90,7 @@ export function ReportControls({
           <label className="text-sm">
             <span className="mb-1 block font-medium">Week containing</span>
             <input type="date" value={sp.get("week") ?? resolved.from} onChange={(e) => update({ week: e.target.value })}
-              className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
+              className="h-11 w-full rounded-xl border border-burgundy/15 bg-paper px-3" />
             <span className="mt-1 block text-xs text-muted">Monday to Sunday</span>
           </label>
         )}
@@ -98,18 +98,18 @@ export function ReportControls({
           <label className="text-sm">
             <span className="mb-1 block font-medium">Month</span>
             <input type="month" value={sp.get("month") ?? resolved.from.slice(0, 7)} onChange={(e) => update({ month: e.target.value })}
-              className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
+              className="h-11 w-full rounded-xl border border-burgundy/15 bg-paper px-3" />
           </label>
         )}
         {preset === "custom" && (
           <>
             <label className="text-sm">
               <span className="mb-1 block font-medium">From</span>
-              <input type="date" value={sp.get("from") ?? resolved.from} onChange={(e) => update({ from: e.target.value })} className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
+              <input type="date" value={sp.get("from") ?? resolved.from} onChange={(e) => update({ from: e.target.value })} className="h-11 w-full rounded-xl border border-burgundy/15 bg-paper px-3" />
             </label>
             <label className="text-sm">
               <span className="mb-1 block font-medium">To</span>
-              <input type="date" value={sp.get("to") ?? resolved.to} onChange={(e) => update({ to: e.target.value })} className="h-11 w-full rounded-full border border-white bg-white/70 px-3" />
+              <input type="date" value={sp.get("to") ?? resolved.to} onChange={(e) => update({ to: e.target.value })} className="h-11 w-full rounded-xl border border-burgundy/15 bg-paper px-3" />
             </label>
           </>
         )}

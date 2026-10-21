@@ -32,7 +32,7 @@ export function UsageFilters({ tab, workers, items, categories, users }: { tab: 
       <div className="flex flex-wrap gap-1.5">
         {RANGES.map((r) => (
           <button key={r.v} type="button" onClick={() => set({ range: r.v === "30" ? null : r.v })}
-            className={clsx("h-9 rounded-full px-4 text-sm font-semibold", range === r.v ? "bg-night text-white" : "bg-white/70 text-ink ring-1 ring-white hover:bg-white")}>
+            className={clsx("h-9 rounded-xl px-4 text-sm font-semibold", range === r.v ? "bg-burgundy text-paper" : "bg-paper text-burgundy ring-1 ring-burgundy/15 hover:bg-burgundy/5")}>
             {r.l}
           </button>
         ))}

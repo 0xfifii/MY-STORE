@@ -14,9 +14,9 @@ export function DateRange() {
   };
   return (
     <div className="flex items-center gap-2 text-sm">
-      <input type="date" aria-label="From date" value={sp.get("from") ?? ""} onChange={(e) => set("from", e.target.value)} className="h-11 min-w-0 flex-1 rounded-full border border-white bg-white/70 bg-white px-2" />
+      <input type="date" aria-label="From date" value={sp.get("from") ?? ""} onChange={(e) => set("from", e.target.value)} className="h-11 min-w-0 flex-1 rounded-xl border border-burgundy/15 bg-paper px-2" />
       <span className="text-muted">to</span>
-      <input type="date" aria-label="To date" value={sp.get("to") ?? ""} onChange={(e) => set("to", e.target.value)} className="h-11 min-w-0 flex-1 rounded-full border border-white bg-white/70 bg-white px-2" />
+      <input type="date" aria-label="To date" value={sp.get("to") ?? ""} onChange={(e) => set("to", e.target.value)} className="h-11 min-w-0 flex-1 rounded-xl border border-burgundy/15 bg-paper px-2" />
     </div>
   );
 }

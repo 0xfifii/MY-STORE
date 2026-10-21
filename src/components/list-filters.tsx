@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Search } from "@/components/hand-icons";
 import { Select, Spinner } from "./ui/primitives";
+import { ClearSearchButton, RecentSearchList, useRecentSearches } from "./recent-searches";
 
 type Opt = { value: string; label: string };
 
@@ -21,11 +22,17 @@ export function ListFilters({
   const [pending, start] = useTransition();
   const first = useRef(true);
   const box = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
+  const autoFocusing = useRef(false);
+  const recent = useRecentSearches(pathname);
 
   // Ready to type: focus the search on computers (not phones, where it would pop the keyboard),
   // and "/" jumps back to it from anywhere on the page.
   useEffect(() => {
-    if (window.matchMedia("(pointer: fine)").matches && !document.querySelector("[role=dialog]")) box.current?.focus({ preventScroll: true });
+    if (window.matchMedia("(pointer: fine)").matches && !document.querySelector("[role=dialog]")) {
+      autoFocusing.current = true; // don't pop the recent list over the page on load
+      box.current?.focus({ preventScroll: true });
+    }
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(t.tagName) && !t.isContentEditable) { e.preventDefault(); box.current?.focus(); box.current?.select(); }
@@ -44,7 +51,8 @@ export function ListFilters({
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     const t = setTimeout(() => push({ q }), 250);
-    return () => clearTimeout(t);
+    const r = setTimeout(() => recent.add(q), 1500); // remember a search once the person stops typing
+    return () => { clearTimeout(t); clearTimeout(r); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
@@ -58,12 +66,29 @@ export function ListFilters({
           enterKeyHint="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Escape" && q) { e.preventDefault(); setQ(""); } }}
+          onFocus={() => { if (autoFocusing.current) autoFocusing.current = false; else setFocused(true); }}
+          onClick={() => setFocused(true)}
+          onBlur={() => { setFocused(false); recent.add(q); }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && q) { e.preventDefault(); setQ(""); }
+            if (e.key === "Enter") recent.add(q);
+          }}
           placeholder={searchPlaceholder}
           aria-label={searchPlaceholder}
-          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-10 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
+          autoComplete="off"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10 [&::-webkit-search-cancel-button]:hidden"
         />
-        {pending && <Spinner className="absolute right-3 top-1/2 size-4 -translate-y-1/2" />}
+        {pending && <Spinner className={`absolute top-1/2 size-4 -translate-y-1/2 ${q ? "right-[5.5rem]" : "right-3"}`} />}
+        {q && <ClearSearchButton onClear={() => { setQ(""); setFocused(true); box.current?.focus(); }} />}
+        {focused && !q && (
+          <RecentSearchList
+            list={recent.list}
+            onPick={(t) => { setQ(t); recent.add(t); }}
+            onRemove={recent.remove}
+            onClearAll={recent.clear}
+            className="absolute inset-x-0 top-full z-30 mt-2"
+          />
+        )}
       </div>
       <div className="grid grid-cols-2 gap-2 sm:flex [&>*:last-child:nth-child(odd)]:col-span-2">
         {selects.map((s) => (

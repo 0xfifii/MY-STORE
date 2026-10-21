@@ -85,7 +85,7 @@ export const stockOutSchema = z.object({
   item_id: uuid,
   quantity: positiveQty,
   unit_id: z.coerce.number().int().positive(),
-  reason: z.enum(["store_usage", "kitchen_usage", "sale", "transfer", "damage", "expiry", "wastage", "other"], {
+  reason: z.enum(["store_usage", "kitchen_usage", "bakery_usage", "bar_usage", "cleaning_usage", "sale", "transfer", "damage", "expiry", "wastage", "other"], {
     message: "Choose a reason",
   }),
   recipient: optText(200),

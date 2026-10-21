@@ -28,9 +28,9 @@ export function PeriodBar({ kind, label, prev, next, from, to }: { kind: string;
       </div>
       {kind === "custom" ? (
         <div className="flex items-center gap-2 text-sm">
-          <input type="date" aria-label="From" value={from} onChange={(e) => e.target.value && go({ from: e.target.value })} className="h-10 min-w-0 flex-1 rounded-full bg-white/80 px-3 ring-1 ring-white" />
+          <input type="date" aria-label="From" value={from} onChange={(e) => e.target.value && go({ from: e.target.value })} className="h-10 min-w-0 flex-1 rounded-xl bg-paper px-3 ring-1 ring-burgundy/15" />
           <span className="text-muted">to</span>
-          <input type="date" aria-label="To" value={to} onChange={(e) => e.target.value && go({ to: e.target.value })} className="h-10 min-w-0 flex-1 rounded-full bg-white/80 px-3 ring-1 ring-white" />
+          <input type="date" aria-label="To" value={to} onChange={(e) => e.target.value && go({ to: e.target.value })} className="h-10 min-w-0 flex-1 rounded-xl bg-paper px-3 ring-1 ring-burgundy/15" />
         </div>
       ) : (
         <div className="flex items-center justify-between gap-2">

@@ -381,8 +381,8 @@ export function StockMoveForm({
                     key={r.value} type="button" role="radio" aria-checked={reason === r.value}
                     onClick={() => setReason(r.value)}
                     className={clsx(
-                      "h-11 rounded-full border text-sm font-semibold",
-                      reason === r.value ? "border-night bg-night text-white" : "border-white bg-white/75 hover:bg-white hover:text-burgundy",
+                      "h-11 rounded-xl border text-sm font-semibold transition-colors",
+                      reason === r.value ? "border-burgundy bg-burgundy text-paper shadow-[0_8px_18px_-12px_rgb(82_8_16/0.8)]" : "border-burgundy/15 bg-paper text-ink hover:border-burgundy/40 hover:text-burgundy",
                     )}
                   >
                     {r.label}

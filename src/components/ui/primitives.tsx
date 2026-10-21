@@ -108,7 +108,7 @@ export function StatusBadge({ status }: { status: StockStatus }) {
     out: { cls: "bg-bad-bg text-bad", label: "Out of stock" },
   }[status];
   return (
-    <span className={clsx("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap", map.cls)}>
+    <span className={clsx("inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold whitespace-nowrap", map.cls)}>
       <span className="size-1.5 rounded-full bg-current" aria-hidden />
       {map.label}
     </span>

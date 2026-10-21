@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { api } from "@/lib/client";
 import { formatQty, type StockStatus } from "@/lib/format";
 import { StatusBadge, Spinner, buttonClass } from "./ui/primitives";
+import { ClearSearchButton, RecentSearchList, useRecentSearches } from "./recent-searches";
 
 export type PickerItem = {
   id: string;
@@ -33,6 +34,9 @@ export function ItemPicker({
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const reqId = useRef(0);
+  const box = useRef<HTMLInputElement>(null);
+  const recent = useRecentSearches("item-picker");
+  const pick = (it: PickerItem) => { recent.add(q.trim() || it.name); onSelect(it); };
 
   useEffect(() => {
     const id = ++reqId.current;
@@ -57,7 +61,8 @@ export function ItemPicker({
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
     if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
-    if (e.key === "Enter" && !loading && results[active]) { e.preventDefault(); onSelect(results[active]); }
+    if (e.key === "Enter" && !loading && results[active]) { e.preventDefault(); pick(results[active]); }
+    if (e.key === "Escape" && q) { e.preventDefault(); setQ(""); }
   };
 
   return (
@@ -65,7 +70,9 @@ export function ItemPicker({
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-burgundy/70" aria-hidden />
         <input
+          ref={box}
           autoFocus={autoFocus}
+          autoComplete="off"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={onKey}
@@ -74,17 +81,21 @@ export function ItemPicker({
           role="combobox"
           aria-expanded="true"
           aria-controls="item-picker-list"
-          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-10 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
         />
-        {loading && <Spinner className="absolute right-3 top-1/2 size-5 -translate-y-1/2" />}
+        {loading && <Spinner className={`absolute top-1/2 size-5 -translate-y-1/2 ${q ? "right-[5.5rem]" : "right-3"}`} />}
+        {q && <ClearSearchButton onClear={() => { setQ(""); box.current?.focus(); }} />}
       </div>
       {error && <p className="mt-2 text-sm text-bad">{error}</p>}
+      {!q && (
+        <RecentSearchList list={recent.list} onPick={(t) => { setQ(t); box.current?.focus(); }} onRemove={recent.remove} onClearAll={recent.clear} className="mt-2" />
+      )}
       <ul id="item-picker-list" role="listbox" className="mt-2 max-h-[22rem] space-y-1 overflow-y-auto rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(82_8_16/0.6)] ring-1 ring-burgundy/15">
         {results.map((it, i) => (
           <li key={it.id} role="option" aria-selected={i === active}>
             <button
               type="button"
-              onClick={() => onSelect(it)}
+              onClick={() => pick(it)}
               onMouseEnter={() => setActive(i)}
               className={clsx("flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors", i === active ? "bg-burgundy text-paper" : "hover:bg-burgundy/5")}
             >
