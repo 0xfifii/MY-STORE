@@ -13,3 +13,6 @@ export const POST = handle<Ctx>(async (req, { params }) => {
   const body = z.object({ to: emailListSchema.optional() }).parse(await readJson(req));
   return ok(await resendEmail((await params).id, user, { to: body.to, url: appUrl(req) }));
 });
+
+/** Sending email can take a while (mail server handshake, attachments). */
+export const maxDuration = 60;

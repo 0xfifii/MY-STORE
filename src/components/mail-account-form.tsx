@@ -9,10 +9,11 @@ import { useToast } from "./ui/toast";
 import { api } from "@/lib/client";
 import type { MailAccount } from "@/lib/settings";
 
-type Provider = "gmail" | "brevo" | "other";
+type Provider = "brevo_api" | "gmail" | "brevo" | "other";
 type Step = { step: string; ok: boolean; detail: string };
 
 const PRESETS: Record<Exclude<Provider, "other">, { host: string; port: string }> = {
+  brevo_api: { host: "api.brevo.com", port: "443" },
   gmail: { host: "smtp.gmail.com", port: "465" },
   brevo: { host: "smtp-relay.brevo.com", port: "587" },
 };
@@ -21,11 +22,11 @@ const PRESETS: Record<Exclude<Provider, "other">, { host: string; port: string }
 export function MailAccountForm({ initial, active, ownerEmail }: {
   initial: MailAccount; active: { source: "server" | "settings"; from: string } | null; ownerEmail: string;
 }) {
-  const guess: Provider = !initial.smtp_host || initial.smtp_host.includes("gmail") ? "gmail" : initial.smtp_host.includes("brevo") ? "brevo" : "other";
+  const guess: Provider = !initial.smtp_host ? "brevo_api" : initial.smtp_host === "api.brevo.com" ? "brevo_api" : initial.smtp_host.includes("gmail") ? "gmail" : initial.smtp_host.includes("brevo") ? "brevo" : "other";
   const [provider, setProvider] = useState<Provider>(guess);
   const [a, setA] = useState({
-    smtp_host: initial.smtp_host ?? PRESETS.gmail.host,
-    smtp_port: String(initial.smtp_port ?? 465),
+    smtp_host: initial.smtp_host ?? PRESETS.brevo_api.host,
+    smtp_port: String(initial.smtp_port ?? 443),
     smtp_user: initial.smtp_user ?? "",
     smtp_pass: "",
     smtp_from: initial.smtp_from ?? "",
@@ -59,10 +60,10 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
   const save = async () => {
     setBusy(true); setErr(null); setSteps(null);
     try {
-      const fromDefault = provider === "brevo" ? "" : a.smtp_user ? `The Velvet Store <${a.smtp_user.trim()}>` : "";
+      const fromDefault = provider === "brevo" || provider === "brevo_api" ? "" : a.smtp_user ? `The Velvet Store <${a.smtp_user.trim()}>` : "";
       const d = await api<{ account: MailAccount }>("/api/settings/email", {
         method: "PUT",
-        json: { ...a, smtp_user: a.smtp_user.trim(), smtp_host: a.smtp_host.trim(), smtp_port: Number(a.smtp_port), smtp_from: a.smtp_from.trim() || fromDefault },
+        json: { ...a, smtp_user: provider === "brevo_api" ? "" : a.smtp_user.trim(), smtp_host: a.smtp_host.trim(), smtp_port: Number(a.smtp_port), smtp_from: a.smtp_from.trim() || fromDefault },
       });
       setHasPass(d.account.has_password);
       setA((x) => ({ ...x, smtp_pass: "", smtp_from: d.account.smtp_from ?? "" }));
@@ -79,14 +80,14 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
     } catch (e) { setErr((e as Error).message); } finally { setTesting(false); }
   };
 
-  const brevoNeedsFrom = provider === "brevo" && !a.smtp_from.trim();
+  const brevoNeedsFrom = (provider === "brevo" || provider === "brevo_api") && !a.smtp_from.trim();
 
   return (
     <Panel title={<span className="flex items-center gap-2"><Mail className="size-5" /> Email account</span>}>
       {active ? (
         <p className="mb-4 flex items-start gap-2 rounded-2xl bg-ok-bg px-3 py-2 text-sm text-ok">
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-          <span>Emails are sent from <strong>{active.from}</strong>{fromServer ? " (set on the server, which overrides the form below)." : "."}</span>
+          <span>Emails are sent from <strong>{active.from}</strong>{fromServer ? " (set on the server). Saving an account below will replace it." : "."}</span>
         </p>
       ) : (
         <p className="mb-4 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">Not set up yet. Until it is, the app can&apos;t send receipts, reports, messages or welcome emails.</p>
@@ -94,7 +95,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
 
       <p className="mb-2 text-sm font-medium">Which email service?</p>
       <div className="mb-4 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Email service">
-        {([["gmail", "Gmail"], ["brevo", "Brevo (free, easiest)"], ["other", "Other"]] as [Provider, string][]).map(([k, l]) => (
+        {([["brevo_api", "Brevo API key (most reliable)"], ["gmail", "Gmail"], ["brevo", "Brevo SMTP"], ["other", "Other"]] as [Provider, string][]).map(([k, l]) => (
           <button key={k} type="button" role="radio" aria-checked={provider === k} onClick={() => pick(k)}
             className={clsx("rounded-full px-4 py-2 text-sm font-semibold ring-1 transition active:scale-95", provider === k ? "bg-burgundy text-white ring-burgundy" : "bg-white/80 ring-kraft hover:bg-white")}>
             {l}
@@ -103,6 +104,13 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
       </div>
 
       <div className="mb-5 rounded-2xl bg-white/70 px-4 py-3 text-sm ring-1 ring-kraft">
+        {provider === "brevo_api" && (
+          <ol className="list-decimal space-y-1 pl-5 text-muted">
+            <li>Create a free account at <strong className="text-ink">brevo.com</strong> (300 emails a day) and finish its account activation.</li>
+            <li>In Brevo open <strong className="text-ink">Senders, Domains &amp; Dedicated IPs</strong>, add the email you want to send from, and click the confirmation link Brevo emails you.</li>
+            <li>Open <strong className="text-ink">SMTP &amp; API</strong>, then <strong className="text-ink">API Keys</strong>, create a key and paste it below. Put that confirmed email in <strong className="text-ink">Send as</strong>.</li>
+          </ol>
+        )}
         {provider === "gmail" && (
           <ol className="list-decimal space-y-1 pl-5 text-muted">
             <li>Turn on <strong className="text-ink">2-Step Verification</strong> for the Gmail account (myaccount.google.com, Security).</li>
@@ -121,18 +129,20 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
       </div>
 
       <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); save(); }} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_8rem]">
+        {provider !== "brevo_api" && <>
         <Field label="SMTP server" htmlFor="sm-host" required><Input id="sm-host" name="velvet-smtp-host" autoComplete="off" value={a.smtp_host} onChange={(e) => setA({ ...a, smtp_host: e.target.value })} placeholder="smtp.gmail.com" /></Field>
         <Field label="Port" htmlFor="sm-port" required><Input id="sm-port" name="velvet-smtp-port" autoComplete="off" inputMode="numeric" value={a.smtp_port} onChange={(e) => setA({ ...a, smtp_port: e.target.value.replace(/\D/g, "") })} /></Field>
         <Field label={provider === "brevo" ? "Brevo SMTP login" : "Email address (login)"} htmlFor="sm-user" required>
           <Input id="sm-user" name="velvet-smtp-login" autoComplete="off" data-1p-ignore data-lpignore="true" value={a.smtp_user} onChange={(e) => setA({ ...a, smtp_user: e.target.value })} placeholder={provider === "brevo" ? "8a1b2c001@smtp-brevo.com" : "yourstore@gmail.com"} />
         </Field>
         <div className="hidden sm:block" />
-        <Field label={provider === "gmail" ? "App password (16 letters)" : provider === "brevo" ? "SMTP key" : "Password"} htmlFor="sm-pass" required hint={hasPass ? "A password is saved. Leave empty to keep it." : undefined}>
+        </>}
+        <Field label={provider === "brevo_api" ? "Brevo API key" : provider === "gmail" ? "App password (16 letters)" : provider === "brevo" ? "SMTP key" : "Password"} htmlFor="sm-pass" required hint={hasPass ? "A password is saved. Leave empty to keep it." : undefined}>
           <Input id="sm-pass" name="velvet-smtp-secret" type="password" autoComplete="new-password" data-1p-ignore data-lpignore="true" value={a.smtp_pass} onChange={(e) => setA({ ...a, smtp_pass: e.target.value })} placeholder={hasPass ? "••••••••••••" : ""} />
         </Field>
         <div className="hidden sm:block" />
-        <Field label="Send as (name and address)" htmlFor="sm-from" required={provider === "brevo"}
-          hint={provider === "brevo" ? "Must be the email you verified in Brevo, e.g. The Velvet Store <you@gmail.com>" : "Optional. Leave empty to send from the login address."}>
+        <Field label="Send as (name and address)" htmlFor="sm-from" required={provider === "brevo" || provider === "brevo_api"}
+          hint={provider === "brevo" || provider === "brevo_api" ? "Must be the email you verified in Brevo, e.g. The Velvet Store <you@gmail.com>" : "Optional. Leave empty to send from the login address."}>
           <Input id="sm-from" name="velvet-smtp-from" autoComplete="off" value={a.smtp_from} onChange={(e) => setA({ ...a, smtp_from: e.target.value })} placeholder="The Velvet Store <yourstore@gmail.com>" />
         </Field>
         <button type="submit" className="hidden" />

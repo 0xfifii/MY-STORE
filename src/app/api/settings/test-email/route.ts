@@ -22,3 +22,6 @@ export const POST = handle(async (req) => {
     throw new AppError("SMTP_FAILED", (e as Error).message, 502);
   }
 });
+
+/** Sending email can take a while (mail server handshake, attachments). */
+export const maxDuration = 60;

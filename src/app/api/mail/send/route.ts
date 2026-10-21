@@ -51,3 +51,6 @@ export const POST = handle(async (req) => {
   }
   return ok({ sent: b.to, attachments: attachments.map((a) => a.filename), month: b.attach.kind === "audit" ? monthLabel(b.attach.month) : undefined });
 });
+
+/** Sending email can take a while (mail server handshake, attachments). */
+export const maxDuration = 60;

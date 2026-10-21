@@ -705,9 +705,9 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     expect(JSON.stringify(settings.data)).not.toMatch(/smtp_pass|abcdefgh/);
     expect((await db.query("SELECT smtp_pass FROM settings")).rows[0].smtp_pass).toBe("abcdefghijklmnop");
     expect((await staff.get("/api/settings/email")).status).toBe(403);
-    // Server SMTP_* variables (the test sink) take priority over the saved account.
+    // The account saved in Store Settings takes priority over server SMTP_* variables.
     const got = await owner.get("/api/settings/email");
-    expect(got.data.active.source).toBe(MAIL_DIR ? "server" : got.data.active.source);
+    expect(got.data.active.source).toBe("settings");
     expect((await owner.req("DELETE", "/api/settings/email")).status).toBe(200);
   });
 
@@ -864,5 +864,47 @@ describe("18. Resending emails and welcome emails", () => {
       expect(row.attachments[0]).toMatch(/^velvet-store-receipt-TXN-/);
     }
     expect((await owner.post("/api/mail/resend/999999", {})).status).toBe(404);
+  });
+});
+
+describe("19. Brevo API email (most reliable on Vercel)", () => {
+  const BREVO_DIR = process.env.TEST_BREVO_DIR ?? "";
+  const sent = () => (BREVO_DIR && existsSync(BREVO_DIR) ? readdirSync(BREVO_DIR).map((f) => JSON.parse(readFileSync(join(BREVO_DIR, f), "utf8"))) : []);
+  const save = (key: string, from = "The Velvet Store <store@velvet.test>") =>
+    owner.req("PUT", "/api/settings/email", { smtp_host: "api.brevo.com", smtp_port: 443, smtp_user: "", smtp_pass: key, smtp_from: from, welcome_email_enabled: true });
+
+  it("a wrong API key is reported clearly by the connection check", async () => {
+    if (!BREVO_DIR) return;
+    expect((await save("wrong-key")).status).toBe(200);
+    const c = await owner.post("/api/settings/email/check", {});
+    expect(c.data.ok).toBe(false);
+    expect(JSON.stringify(c.data.steps)).toContain("Brevo rejected the API key");
+  });
+
+  it("an unverified sender is caught before sending", async () => {
+    if (!BREVO_DIR) return;
+    await save("xkeysib-test-good", "Shop <nope@elsewhere.test>");
+    const c = await owner.post("/api/settings/email/check", {});
+    expect(c.data.ok).toBe(false);
+    expect(JSON.stringify(c.data.steps)).toContain("isn't a verified sender");
+  });
+
+  it("with a good key, test emails, receipts with attachments and welcome emails are delivered", async () => {
+    if (!BREVO_DIR) return;
+    await save("xkeysib-test-good");
+    const c = await owner.post("/api/settings/email/check", {});
+    expect(c.data.ok, JSON.stringify(c.data)).toBe(true);
+    expect((await owner.post("/api/settings/test-email", { to: "me@velvet.test" })).status).toBe(200);
+    const txn = (await db.query("SELECT id FROM stock_transactions WHERE txn_type='stock_out' ORDER BY id DESC LIMIT 1")).rows[0].id;
+    expect((await owner.post(`/api/transactions/${txn}/receipt/email`, { to: "chef@velvet.test" })).status).toBe(200);
+    const u = await owner.post("/api/users", { name: "Brevo Person", email: "brevo.person@velvet.test", role: "staff", password: "brevo-pass-1", include_password: true });
+    expect(u.data.welcome.status).toBe("sent");
+    const mails = sent();
+    expect(mails.some((m) => m.to[0].email === "me@velvet.test" && m.sender.email === "store@velvet.test" && m.sender.name === "The Velvet Store")).toBe(true);
+    const receipt = mails.find((m) => m.to[0].email === "chef@velvet.test");
+    expect(receipt.attachment[0].name).toMatch(/^velvet-store-receipt-TXN-\d+\.pdf$/);
+    expect(Buffer.from(receipt.attachment[0].content, "base64").subarray(0, 4).toString()).toBe("%PDF");
+    expect(mails.some((m) => m.to[0].email === "brevo.person@velvet.test" && m.htmlContent.includes("/login"))).toBe(true);
+    expect((await owner.req("DELETE", "/api/settings/email")).status).toBe(200);
   });
 });

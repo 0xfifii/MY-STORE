@@ -33,3 +33,6 @@ export const POST = handle<Ctx>(async (req, { params }) => {
   }
   return ok({ sent: body.to });
 });
+
+/** Sending email can take a while (mail server handshake, attachments). */
+export const maxDuration = 60;

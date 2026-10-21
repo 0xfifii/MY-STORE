@@ -33,3 +33,6 @@ async function run(req: NextRequest) {
 
 export const GET = run;
 export const POST = run;
+
+/** Sending email can take a while (mail server handshake, attachments). */
+export const maxDuration = 60;

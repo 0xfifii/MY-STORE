@@ -29,3 +29,6 @@ export const POST = handle<Ctx>(async (req, { params }) => {
   if (r.status !== "sent") throw new AppError(r.status === "not_configured" ? "SMTP_MISSING" : "EMAIL_FAILED", r.detail ?? "The email could not be sent.", r.status === "not_configured" ? 409 : 502);
   return ok({ sent: u.email });
 });
+
+/** Sending email can take a while (mail server handshake, attachments). */
+export const maxDuration = 60;
