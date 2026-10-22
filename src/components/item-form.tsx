@@ -25,11 +25,15 @@ export type ItemFormValues = {
   min_stock_level: string;
   default_supplier_id: string;
   notes: string;
+  /** Price per base unit. */
+  price?: string;
 };
 
 export function ItemForm({
-  mode, initial, categories: initCats, units: initUnits, suppliers, unitLocked, thenStockIn,
+  mode, initial, categories: initCats, units: initUnits, suppliers, unitLocked, thenStockIn, stock,
 }: {
+  /** Edit mode: what is in stock now, so a price change can show its effect. */
+  stock?: { quantity: string; stock_value: string };
   mode: "create" | "edit";
   initial: ItemFormValues;
   categories: Opt[];
@@ -45,7 +49,9 @@ export function ItemForm({
   const [categories, setCategories] = useState(initCats);
   const [units, setUnits] = useState(initUnits);
   const [openingQty, setOpeningQty] = useState("");
-  const [openingCost, setOpeningCost] = useState("");
+  const [openingCost, setOpeningCost] = useState(initial.price ?? "");
+  const [priceReason, setPriceReason] = useState("");
+  const canPrice = app.can("price.edit");
   const [conversions, setConversions] = useState<{ unit_id: string; factor: string }[]>([]);
   const [similar, setSimilar] = useState<{ id: string; name: string; sku: string; archived: boolean }[]>([]);
   const [skuTaken, setSkuTaken] = useState(false);
@@ -87,7 +93,7 @@ export function ItemForm({
     if (v.min_stock_level && !/^\d+(\.\d{1,6})?$/.test(v.min_stock_level)) e.min_stock_level = "Enter a number.";
     if (openingQty && !/^\d+(\.\d{1,6})?$/.test(openingQty)) e.openingQty = "Enter a number.";
     if (openingQty && Number(openingQty) > 0 && !v.allow_fraction && Number(openingQty) % 1 !== 0) e.openingQty = "This item is counted in whole units only.";
-    if (openingCost && !/^\d+(\.\d{1,6})?$/.test(openingCost)) e.openingCost = "Enter an amount.";
+    if (openingCost && !/^\d+(\.\d{1,6})?$/.test(openingCost)) e.openingCost = "Enter an amount, for example 250 or 250.50.";
     conversions.forEach((c, i) => {
       if (!c.unit_id) e[`conv${i}`] = "Choose a unit.";
       else if (!/^\d+(\.\d{1,6})?$/.test(c.factor) || Number(c.factor) <= 0) e[`conv${i}`] = "Enter how many base units it holds.";
@@ -118,7 +124,11 @@ export function ItemForm({
         toast.success("Item added", `${v.name} is now in your inventory.`);
         router.push(thenStockIn ? `/stock-in?item=${res.id}` : `/items/${res.id}`);
       } else {
-        await api(`/api/items/${v.id}`, { method: "PATCH", json: { ...payload, sku: v.sku } });
+        const priceChanged = openingCost !== "" && Number(openingCost) !== Number(initial.price ?? "");
+        await api(`/api/items/${v.id}`, {
+          method: "PATCH",
+          json: { ...payload, sku: v.sku, ...(priceChanged ? { price: openingCost, price_reason: priceReason || null } : {}) },
+        });
         toast.success("Changes saved");
         router.push(`/items/${v.id}`);
       }
@@ -251,15 +261,23 @@ export function ItemForm({
         )}
       </section>
 
+      {mode === "edit" && (
+        <PriceSection
+          unit={baseUnit?.symbol ?? "unit"} sym={app.currencySymbol} canPrice={canPrice}
+          price={openingCost} setPrice={setOpeningCost} initialPrice={initial.price ?? ""}
+          reason={priceReason} setReason={setPriceReason} stock={stock} error={errors.openingCost}
+        />
+      )}
+
       {mode === "create" && (
         <section className="glass rounded-[var(--radius-card)] p-4 sm:p-6">
-          <h2 className="font-semibold">Opening stock</h2>
-          <p className="mt-0.5 text-sm text-muted">What you have on hand right now. It&apos;s recorded as the first Stock In, so the history starts correctly.</p>
+          <h2 className="font-semibold">Price and opening stock</h2>
+          <p className="mt-0.5 text-sm text-muted">The price is filled in for you on every Stock In. Any quantity you have on hand now is recorded as the first Stock In, so the history starts correctly.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field label={`Quantity on hand${baseUnit ? ` (${baseUnit.symbol})` : ""}`} htmlFor="oq" error={errors.openingQty}>
               <Input id="oq" inputMode="decimal" value={openingQty} placeholder="0" onChange={(e) => setOpeningQty(e.target.value.replace(/[^\d.]/g, ""))} />
             </Field>
-            <Field label={`Cost per ${baseUnit?.symbol ?? "unit"} (${app.currencySymbol})`} htmlFor="oc" error={errors.openingCost}
+            <Field label={`Price per ${baseUnit?.symbol ?? "unit"} (${app.currencySymbol})`} htmlFor="oc" error={errors.openingCost}
               hint={openingValue > 0 ? `Opening value ${formatMoney(openingValue, app.currencySymbol)}` : undefined}>
               <Input id="oc" inputMode="decimal" value={openingCost} placeholder="0.00" onChange={(e) => setOpeningCost(e.target.value.replace(/[^\d.]/g, ""))} />
             </Field>
@@ -325,5 +343,46 @@ function QuickCreate({ kind, onClose, onCreated }: { kind: null | "category" | "
         {err && <p className="text-sm text-bad">{err}</p>}
       </div>
     </Modal>
+  );
+}
+
+/** Edit form: the item's price. With stock on hand, a new price re-prices it (recorded as a price change). */
+function PriceSection({ unit, sym, canPrice, price, setPrice, initialPrice, reason, setReason, stock, error }: {
+  unit: string; sym: string; canPrice: boolean; price: string; setPrice: (v: string) => void; initialPrice: string;
+  reason: string; setReason: (v: string) => void; stock?: { quantity: string; stock_value: string }; error?: string;
+}) {
+  const qty = Number(stock?.quantity ?? 0);
+  const changed = price !== "" && Number(price) !== Number(initialPrice);
+  const newWorth = changed ? Math.round(qty * Number(price) * 100) / 100 : null;
+  const oldWorth = Number(stock?.stock_value ?? 0);
+  return (
+    <section className="glass rounded-[var(--radius-card)] p-4 sm:p-6" data-testid="price-section">
+      <h2 className="font-semibold">Price</h2>
+      <p className="mt-0.5 text-sm text-muted">
+        {qty > 0
+          ? `Changing it re-prices the ${formatQty(stock!.quantity)} ${unit} in stock and is saved in the item's history.`
+          : "Nothing is in stock, so this is the price filled in on the next Stock In."}
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <Field label={`Price per ${unit} (${sym})`} htmlFor="price" error={error}
+          hint={!canPrice ? "You don't have permission to change prices." : initialPrice ? `Now ${formatMoney(Number(initialPrice), sym)} per ${unit}` : "No price yet"}>
+          <Input id="price" inputMode="decimal" value={price} placeholder="0.00" disabled={!canPrice}
+            onChange={(e) => setPrice(e.target.value.replace(/[^\d.]/g, ""))} />
+        </Field>
+        {changed && qty > 0 && (
+          <Field label="Why did it change?" htmlFor="price-why" hint="For example: supplier increased prices">
+            <Input id="price-why" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} />
+          </Field>
+        )}
+      </div>
+      {changed && qty > 0 && newWorth !== null && (
+        <p className="mt-3 rounded-2xl bg-burgundy/[0.05] px-4 py-3 text-sm ring-1 ring-burgundy/10">
+          Stock worth: <span className="text-muted line-through">{formatMoney(oldWorth, sym)}</span> → <strong>{formatMoney(newWorth, sym)}</strong>
+          <span className={`ml-2 font-semibold ${newWorth > oldWorth ? "text-burgundy" : "text-ok"}`}>
+            {newWorth > oldWorth ? "+" : "−"}{formatMoney(Math.abs(newWorth - oldWorth), sym)}
+          </span>
+        </p>
+      )}
+    </section>
   );
 }

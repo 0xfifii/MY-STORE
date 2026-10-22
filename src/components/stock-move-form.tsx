@@ -19,7 +19,7 @@ import { cmp, isValidQty, mulFactor, sub, add } from "@/lib/decimal";
 import { STOCK_OUT_REASONS, formatMoney, formatQty, formatUnitCost, reasonLabel, type StockStatus } from "@/lib/format";
 
 type Mode = "in" | "out";
-type FullItem = PickerItem & { avg_cost: string; min_stock_level: string; default_supplier_id: number | null; unit_id: number; archived_at: string | null; allow_fraction: boolean };
+type FullItem = PickerItem & { avg_cost: string; price: string | null; min_stock_level: string; default_supplier_id: number | null; unit_id: number; archived_at: string | null; allow_fraction: boolean };
 type UnitOpt = { unit_id: number; symbol: string; name: string; factor: string; is_base: boolean; allow_decimal: boolean };
 type Supplier = { id: number; name: string };
 
@@ -81,7 +81,7 @@ export function StockMoveForm({
       setUnits(data.units);
       setUnitId(data.item.unit_id);
       if (mode === "in") {
-        setCost(Number(data.item.avg_cost) > 0 ? trimCost(data.item.avg_cost) : "");
+        setCost(Number(data.item.price ?? data.item.avg_cost) > 0 ? trimCost(data.item.price ?? data.item.avg_cost) : "");
         setSupplierId(data.item.default_supplier_id ? String(data.item.default_supplier_id) : "");
       }
     } catch (e) {
@@ -114,7 +114,7 @@ export function StockMoveForm({
   const changeUnit = (id: number) => {
     setUnitId(id);
     const u = units.find((x) => x.unit_id === id);
-    if (mode === "in" && item && Number(item.avg_cost) > 0 && u) setCost(trimCost(String(Number(item.avg_cost) * Number(u.factor))));
+    if (mode === "in" && item && Number(item.price ?? item.avg_cost) > 0 && u) setCost(trimCost(String(Number(item.price ?? item.avg_cost) * Number(u.factor))));
   };
 
   const qtyValid = isValidQty(qty);

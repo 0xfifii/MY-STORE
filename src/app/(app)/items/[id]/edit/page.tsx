@@ -30,7 +30,9 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
           description: item.description ?? "", unit_id: String(item.unit_id), allow_fraction: item.allow_fraction,
           min_stock_level: plainQty(item.min_stock_level), default_supplier_id: item.default_supplier_id ? String(item.default_supplier_id) : "",
           notes: item.notes ?? "",
+          price: Number(item.quantity) > 0 ? String(Math.round(Number(item.avg_cost) * 100) / 100) : item.price ? String(Math.round(Number(item.price) * 100) / 100) : "",
         }}
+        stock={{ quantity: item.quantity, stock_value: item.stock_value }}
         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
         units={units.map((u) => ({ id: u.id, name: u.name, symbol: u.symbol, allow_decimal: u.allow_decimal }))}
         suppliers={suppliers.map((s) => ({ id: s.id, name: s.name }))}

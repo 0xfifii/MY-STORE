@@ -3,6 +3,7 @@ import { requireApiUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { deleteItem, getItem, getItemUnits, updateItem } from "@/lib/inventory";
 import { itemUpdateSchema } from "@/lib/validation";
+import { can } from "@/lib/permissions";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -18,7 +19,7 @@ export const PATCH = handle<Ctx>(async (req, { params }) => {
   const user = await requireApiUser("item.write");
   const { id } = await params;
   const input = itemUpdateSchema.parse(await readJson(req));
-  await updateItem(id, input, user.id);
+  await updateItem(id, { ...input, can_change_price: can(user, "price.edit") }, user.id);
   return ok();
 });
 

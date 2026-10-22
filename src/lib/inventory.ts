@@ -21,6 +21,8 @@ export type ItemRow = {
   unit_name: string;
   allow_fraction: boolean;
   quantity: string;
+  /** Current price per base unit (latest purchase or set on the item form). */
+  price: string | null;
   stock_value: string;
   avg_cost: string;
   min_stock_level: string;
@@ -76,7 +78,8 @@ const ITEM_SELECT = `
   SELECT i.id, i.sku, i.name, i.category_id, c.name AS category_name, i.description,
          i.unit_id, u.symbol AS unit_symbol, u.name AS unit_name, i.allow_fraction,
          i.quantity::text, i.stock_value::text,
-         CASE WHEN i.quantity > 0 THEN round(i.stock_value / i.quantity, 6) ELSE 0 END::text AS avg_cost,
+         CASE WHEN i.quantity > 0 THEN round(i.stock_value / i.quantity, 6) ELSE coalesce(i.price, 0) END::text AS avg_cost,
+         i.price::text AS price,
          i.min_stock_level::text, i.default_supplier_id, s.name AS supplier_name, i.notes,
          i.archived_at, i.created_at, i.updated_at,
          CASE WHEN i.quantity <= 0 THEN 'out'
@@ -320,12 +323,15 @@ export async function createItem(input: z.infer<typeof itemCreateSchema>, userId
          null, null, userId],
       );
     }
+    if (input.opening_unit_cost && Number(input.opening_unit_cost) > 0) {
+      await client.query("UPDATE items SET price = $2 WHERE id = $1", [id, input.opening_unit_cost]);
+    }
     await audit(userId, "item.create", "item", id, { sku, name: input.name, request_id: input.request_id ?? null }, client);
     return { id, duplicate: false };
   });
 }
 
-export async function updateItem(id: string, input: z.infer<typeof itemUpdateSchema>, userId: string) {
+export async function updateItem(id: string, input: z.infer<typeof itemUpdateSchema> & { can_change_price?: boolean }, userId: string) {
   return withTransaction(async (client) => {
     const before = await client.query("SELECT * FROM items WHERE id = $1 FOR UPDATE", [id]);
     if (!before.rowCount) throw new AppError("ITEM_NOT_FOUND", "Item not found.", 404);
@@ -356,6 +362,28 @@ export async function updateItem(id: string, input: z.infer<typeof itemUpdateSch
       }
     }
     if (Object.keys(changes).length) await audit(userId, "item.update", "item", id, { changes }, client);
+
+    // Price per base unit from the form.
+    if (input.price !== undefined && input.price !== null && input.price !== "") {
+      const price = Number(input.price);
+      const cur = await client.query<{ quantity: string; stock_value: string; price: string | null; unit_id: number }>(
+        "SELECT quantity::text, stock_value::text, price::text, unit_id FROM items WHERE id = $1", [id]);
+      const it = cur.rows[0];
+      const onHand = Number(it.quantity) > 0;
+      const changed = onHand ? Math.round(Number(it.quantity) * price * 100) !== Math.round(Number(it.stock_value) * 100) : Number(it.price ?? -1) !== price;
+      if (changed) {
+        if (!input.can_change_price) throw new AppError("FORBIDDEN", "You don't have permission to change prices.", 403);
+        if (onHand) {
+          const r = await client.query("SELECT txn_no FROM revalue_item($1,$2,$3,$4,$5,$6)",
+            [id, it.unit_id, input.price, input.price_reason ?? "Price changed on the item form", userId, null]);
+          await client.query("UPDATE items SET price = $2 WHERE id = $1", [id, input.price]);
+          await audit(userId, "item.price", "item", id, { txn: r.rows[0].txn_no, new_price: input.price }, client);
+        } else {
+          await client.query("UPDATE items SET price = $2 WHERE id = $1", [id, input.price]);
+          await audit(userId, "item.price", "item", id, { new_price: input.price, from: it.price, no_stock: true }, client);
+        }
+      }
+    }
   });
 }
 
@@ -428,6 +456,8 @@ export async function recordStockIn(input: z.infer<typeof stockInSchema>, userId
       [input.item_id, input.quantity, input.unit_id, input.unit_cost, input.supplier_id, input.supplier_name,
        input.reference, input.notes, input.occurred_at, userId, input.request_id],
     );
+    // The latest purchase price becomes the item's price.
+    await client.query("UPDATE items i SET price = t.unit_cost FROM stock_transactions t WHERE t.id = $1::bigint AND i.id = t.item_id", [rows[0].id]);
     return rows[0] as { id: string; txn_no: string };
   });
 }
@@ -466,6 +496,7 @@ export async function changePrice(input: { item_id: string; unit_id: number; uni
       "SELECT id::text, txn_no, direction, total_value::text, value_after::text, unit_cost::text FROM revalue_item($1,$2,$3,$4,$5,$6)",
       [input.item_id, input.unit_id, input.unit_cost, input.reason ?? null, userId, input.request_id],
     );
+    await client.query("UPDATE items SET price = $2 WHERE id = $1", [input.item_id, rows[0].unit_cost]);
     await audit(userId, "item.price", "item", input.item_id, {
       txn: rows[0].txn_no, unit_id: input.unit_id, new_price: input.unit_cost, value_before: before.rows[0]?.value, value_after: rows[0].value_after,
     }, client);

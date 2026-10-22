@@ -1042,3 +1042,44 @@ describe("21. Changing prices and removing users", () => {
     expect(again.status, JSON.stringify(again.data)).toBe(201);
   });
 });
+
+describe("22. Price on the item form", () => {
+  async function editBody(id: string) {
+    const it = await item(id);
+    return { name: it.name, sku: it.sku, category_id: it.category_id, description: it.description, allow_fraction: it.allow_fraction,
+      min_stock_level: it.min_stock_level, default_supplier_id: it.default_supplier_id, notes: it.notes };
+  }
+  it("a new item's price is kept even without opening stock, and Stock In uses it", async () => {
+    const r = await owner.post("/api/items", { name: "Paper cups", unit_id: units.btl, opening_quantity: "0", opening_unit_cost: "45", request_id: randomUUID() });
+    expect(r.status).toBe(201);
+    const it = await item(r.data.id);
+    expect(Number(it.price)).toBe(45);
+    expect(Number(it.avg_cost)).toBe(45); // shown on the card even with nothing in stock
+    // editing the price of an item with no stock just saves it
+    expect((await owner.patch(`/api/items/${r.data.id}`, { ...(await editBody(r.data.id)), price: "50" })).status).toBe(200);
+    expect(Number((await item(r.data.id)).price)).toBe(50);
+    expect((await stockIn(owner, r.data.id, "10", "btl", "55")).status).toBe(201);
+    expect(Number((await item(r.data.id)).price)).toBe(55); // latest purchase price becomes the price
+  });
+
+  it("changing the price on the edit form re-prices stock on hand; staff need permission", async () => {
+    expect((await stockIn(owner, rice, "4", "bags", "45000")).status).toBe(201);
+    const before = await item(rice);
+    expect(Number(before.quantity)).toBeGreaterThan(0);
+    const body = await editBody(rice);
+    // unchanged price: no price change recorded
+    const n0 = (await db.query("SELECT count(*)::int n FROM stock_transactions WHERE item_id=$1 AND txn_type='revaluation'", [rice])).rows[0].n;
+    expect((await owner.patch(`/api/items/${rice}`, { ...body, price: before.avg_cost })).status).toBe(200);
+    expect((await db.query("SELECT count(*)::int n FROM stock_transactions WHERE item_id=$1 AND txn_type='revaluation'", [rice])).rows[0].n).toBe(n0);
+    // staff (item.write but no price.edit) can save the form but not a new price
+    expect((await staff.patch(`/api/items/${rice}`, { ...body })).status).toBe(200);
+    expect((await staff.patch(`/api/items/${rice}`, { ...body, price: "1" })).status).toBe(403);
+    expect((await owner.patch(`/api/items/${rice}`, { ...body, price: "1000", price_reason: "New market price" })).status).toBe(200);
+    const after = await item(rice);
+    expect(after.quantity).toBe(before.quantity);
+    expect(Number(after.stock_value)).toBeCloseTo(Number(before.quantity) * 1000, 2);
+    expect(Number(after.price)).toBe(1000);
+    const { rows: [pc] } = await db.query("SELECT correction_reason FROM stock_transactions WHERE item_id=$1 AND txn_type='revaluation' ORDER BY id DESC LIMIT 1", [rice]);
+    expect(pc.correction_reason).toBe("New market price");
+  });
+});

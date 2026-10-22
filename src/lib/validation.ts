@@ -61,6 +61,9 @@ export const itemUpdateSchema = z.object({
   min_stock_level: qtyString,
   default_supplier_id: optInt,
   notes: optText(2000),
+  /** Price per base unit. When stock is on hand, a different price re-prices it (needs price.edit). */
+  price: moneyString.optional().nullable(),
+  price_reason: optText(300),
 });
 
 export const stockInSchema = z.object({
