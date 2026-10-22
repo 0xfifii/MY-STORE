@@ -336,11 +336,24 @@ export async function updateItem(id: string, input: z.infer<typeof itemUpdateSch
     const before = await client.query("SELECT * FROM items WHERE id = $1 FOR UPDATE", [id]);
     if (!before.rowCount) throw new AppError("ITEM_NOT_FOUND", "Item not found.", 404);
     const old = before.rows[0];
+    let unitChanged: { from: string; to: string; factor: string } | null = null;
     if (input.unit_id && input.unit_id !== old.unit_id) {
+      const newUnit = input.unit_id;
+      const oldUnit = old.unit_id as number;
       const hasTxn = await client.query("SELECT 1 FROM stock_transactions WHERE item_id = $1 LIMIT 1", [id]);
+      const u = await client.query<{ id: number; symbol: string }>("SELECT id, symbol FROM units WHERE id = ANY($1::int[])", [[oldUnit, newUnit]]);
+      const sym = (uid: number) => u.rows.find((r) => r.id === uid)?.symbol ?? "?";
       if (hasTxn.rowCount) {
-        throw new AppError("UNIT_LOCKED", "The unit can't be changed after stock has been recorded. Add a unit conversion instead.", 409);
+        if (!input.unit_factor) {
+          throw new AppError("UNIT_FACTOR_REQUIRED", `Say how many ${sym(newUnit)} make one ${sym(oldUnit)} (1 if it's the same thing with a new name).`, 400);
+        }
+        await client.query("SELECT 1 FROM change_item_unit($1,$2,$3)", [id, newUnit, input.unit_factor]);
+        const after = await client.query("SELECT * FROM items WHERE id = $1", [id]);
+        Object.assign(old, after.rows[0]);
+        // the form's minimum level was typed in the old unit; keep the rescaled one
+        input = { ...input, min_stock_level: after.rows[0].min_stock_level, allow_fraction: after.rows[0].allow_fraction || input.allow_fraction };
       }
+      unitChanged = { from: sym(oldUnit), to: sym(newUnit), factor: input.unit_factor ?? "1" };
     }
     if (!input.allow_fraction && Number(old.quantity) !== Math.trunc(Number(old.quantity))) {
       throw new AppError("FRACTION_IN_STOCK", "This item currently holds a fractional quantity, so whole-numbers-only can't be turned on.", 409);
@@ -362,6 +375,7 @@ export async function updateItem(id: string, input: z.infer<typeof itemUpdateSch
       }
     }
     if (Object.keys(changes).length) await audit(userId, "item.update", "item", id, { changes }, client);
+    if (unitChanged) await audit(userId, "item.unit", "item", id, unitChanged, client);
 
     // Price per base unit from the form.
     if (input.price !== undefined && input.price !== null && input.price !== "") {

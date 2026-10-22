@@ -76,11 +76,19 @@ export function Field({
 export const inputClass =
   "h-12 w-full rounded-2xl border border-white bg-white/75 px-4 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(82_8_16/0.06)] placeholder:text-muted/70 focus:border-burgundy/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10 disabled:bg-canvas disabled:text-muted";
 
+/** Base input classes, minus the full width and default height when the caller sets its own (so `w-24` actually wins). */
+function fieldClass(extra: string, className?: string) {
+  let base = inputClass;
+  if (className && /(^|\s)w-/.test(className)) base = base.replace(/(^|\s)w-full(?=\s|$)/, " ");
+  if (className && /(^|\s)h-\d/.test(className)) base = base.replace(/(^|\s)h-12(?=\s|$)/, " ");
+  return clsx(base, extra, className);
+}
+
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className, ...rest },
   ref,
 ) {
-  return <input ref={ref} className={clsx(inputClass, className)} {...rest} />;
+  return <input ref={ref} className={fieldClass("", className)} {...rest} />;
 });
 
 export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(function Select(
@@ -88,7 +96,7 @@ export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<H
   ref,
 ) {
   return (
-    <select ref={ref} className={clsx(inputClass, "appearance-none pr-4", className)} {...rest}>
+    <select ref={ref} className={fieldClass("appearance-none pr-4", className)} {...rest}>
       {children}
     </select>
   );

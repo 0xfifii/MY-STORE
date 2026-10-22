@@ -1083,3 +1083,55 @@ describe("22. Price on the item form", () => {
     expect(pc.correction_reason).toBe("New market price");
   });
 });
+
+describe("23. Changing an item's measuring unit", () => {
+  async function body(id: string) {
+    const it = await item(id);
+    return { name: it.name, sku: it.sku, category_id: it.category_id, description: it.description, allow_fraction: it.allow_fraction,
+      min_stock_level: it.min_stock_level, default_supplier_id: it.default_supplier_id, notes: it.notes };
+  }
+  it("converts the item and its whole history (1 bag = 50 kg) without changing money", async () => {
+    expect((await stockIn(owner, rice, "2", "bags", "45000")).status).toBe(201);
+    const before = await item(rice);
+    const ledgerBefore = (await db.query("SELECT count(*)::int n, sum(total_value)::text v, sum(direction*quantity)::text q FROM stock_transactions WHERE item_id=$1", [rice])).rows[0];
+    const b = await body(rice);
+    // a factor is required once there is history
+    expect((await owner.patch(`/api/items/${rice}`, { ...b, unit_id: units.kg })).data.code).toBe("UNIT_FACTOR_REQUIRED");
+    const r = await owner.patch(`/api/items/${rice}`, { ...b, unit_id: units.kg, unit_factor: "50" });
+    expect(r.status, JSON.stringify(r.data)).toBe(200);
+    const after = await item(rice);
+    expect(after.unit_id).toBe(units.kg);
+    expect(Number(after.quantity)).toBeCloseTo(Number(before.quantity) * 50, 6);
+    expect(after.stock_value).toBe(before.stock_value);
+    expect(Number(after.min_stock_level)).toBeCloseTo(Number(before.min_stock_level) * 50, 6);
+    expect(Number(after.avg_cost)).toBeCloseTo(Number(before.avg_cost) / 50, 4);
+    const ledgerAfter = (await db.query("SELECT count(*)::int n, sum(total_value)::text v, sum(direction*quantity)::text q FROM stock_transactions WHERE item_id=$1", [rice])).rows[0];
+    expect(ledgerAfter.n).toBe(ledgerBefore.n);
+    expect(ledgerAfter.v).toBe(ledgerBefore.v);
+    expect(Number(ledgerAfter.q)).toBeCloseTo(Number(ledgerBefore.q) * 50, 4);
+    expect(Number(ledgerAfter.q)).toBeCloseTo(Number(after.quantity), 4); // ledger still adds up to the balance
+    // you can still record in bags (now a conversion) and in kg
+    expect((await stockIn(owner, rice, "1", "bags", "45000")).status).toBe(201);
+    expect(Number((await item(rice)).quantity)).toBeCloseTo(Number(after.quantity) + 50, 6);
+    expect((await stockOut(owner, rice, "10", "kg")).status).toBe(201);
+    // reports still balance
+    const csv = ((await owner.get(`/api/reports/export?format=csv&preset=today`)).data as Buffer).toString();
+    const lines = csv.split("\r\n");
+    const num = (label: string) => Number((lines.find((l) => l.startsWith(label)) ?? ",0").split(",")[1]);
+    expect(num("Opening stock value") + num("Cost of stock in") - num("Cost of stock out") + num("Net corrections and price changes")).toBeCloseTo(num("Total stock value (closing)"), 2);
+    // the ledger is still read-only outside this conversion
+    await expect(db.query("UPDATE stock_transactions SET quantity = quantity WHERE item_id = $1", [rice])).rejects.toThrow(/LEDGER_IMMUTABLE/);
+    const act = ((await owner.get("/activity")).data as Buffer).toString().replace(/<!-- -->/g, "");
+    expect(act).toContain("changed the measuring unit of Rice");
+  });
+
+  it("a custom unit can be renamed, and items using it follow", async () => {
+    const u = (await owner.post("/api/units", { name: "Trays", symbol: "trays", allow_decimal: false })).data.unit;
+    const r = await owner.post("/api/items", { name: "Eggs", unit_id: u.id, opening_quantity: "3", opening_unit_cost: "4500", request_id: randomUUID() });
+    expect(r.status).toBe(201);
+    expect((await owner.req("PATCH", `/api/units/${u.id}`, { name: "Crates of eggs", symbol: "egg crates", allow_decimal: false })).status).toBe(200);
+    expect((await item(r.data.id)).unit_symbol).toBe("egg crates");
+    expect((await owner.req("PATCH", `/api/units/${units.kg}`, { name: "Kilo", symbol: "kilo", allow_decimal: true })).status).toBe(409); // standard
+    expect((await staff.req("PATCH", `/api/units/${u.id}`, { name: "X", symbol: "x", allow_decimal: true })).status).toBe(200); // staff have catalog.write
+  });
+});

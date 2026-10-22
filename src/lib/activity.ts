@@ -61,7 +61,7 @@ const FEED = `
               WHEN a.entity_type IN ('settings') OR a.action LIKE 'setup.%' THEN 'settings'
               ELSE 'setup' END,
          CASE a.action
-           WHEN 'item.create' THEN 'Added item ' WHEN 'item.update' THEN 'Edited item ' WHEN 'item.archive' THEN 'Archived item '
+           WHEN 'item.unit' THEN 'Changed the measuring unit of ' WHEN 'item.create' THEN 'Added item ' WHEN 'item.update' THEN 'Edited item ' WHEN 'item.archive' THEN 'Archived item '
            WHEN 'item.restore' THEN 'Restored item ' WHEN 'item.delete' THEN 'Deleted item ' WHEN 'item.conversion.set' THEN 'Set a unit conversion for '
            WHEN 'item.conversion.remove' THEN 'Removed a unit conversion from '
            WHEN 'count.record' THEN 'Recorded a stock count ' WHEN 'count.approve' THEN 'Approved stock count ' WHEN 'count.reject' THEN 'Rejected stock count '

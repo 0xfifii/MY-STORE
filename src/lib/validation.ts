@@ -64,6 +64,8 @@ export const itemUpdateSchema = z.object({
   /** Price per base unit. When stock is on hand, a different price re-prices it (needs price.edit). */
   price: moneyString.optional().nullable(),
   price_reason: optText(300),
+  /** When changing the unit of an item with history: how many new units make one old unit. */
+  unit_factor: z.string().trim().regex(/^\d+(\.\d{1,6})?$/, "Enter a number").refine((v) => Number(v) > 0, "Must be more than 0").optional().nullable(),
 });
 
 export const stockInSchema = z.object({

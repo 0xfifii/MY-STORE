@@ -51,6 +51,7 @@ export function ItemForm({
   const [openingQty, setOpeningQty] = useState("");
   const [openingCost, setOpeningCost] = useState(initial.price ?? "");
   const [priceReason, setPriceReason] = useState("");
+  const [unitFactor, setUnitFactor] = useState("1");
   const canPrice = app.can("price.edit");
   const [conversions, setConversions] = useState<{ unit_id: string; factor: string }[]>([]);
   const [similar, setSimilar] = useState<{ id: string; name: string; sku: string; archived: boolean }[]>([]);
@@ -94,6 +95,9 @@ export function ItemForm({
     if (openingQty && !/^\d+(\.\d{1,6})?$/.test(openingQty)) e.openingQty = "Enter a number.";
     if (openingQty && Number(openingQty) > 0 && !v.allow_fraction && Number(openingQty) % 1 !== 0) e.openingQty = "This item is counted in whole units only.";
     if (openingCost && !/^\d+(\.\d{1,6})?$/.test(openingCost)) e.openingCost = "Enter an amount, for example 250 or 250.50.";
+    if (mode === "edit" && unitLocked && v.unit_id !== initial.unit_id && !(/^\d+(\.\d{1,6})?$/.test(unitFactor) && Number(unitFactor) > 0)) {
+      e.unitFactor = "Enter how many of the new unit make one of the old unit.";
+    }
     conversions.forEach((c, i) => {
       if (!c.unit_id) e[`conv${i}`] = "Choose a unit.";
       else if (!/^\d+(\.\d{1,6})?$/.test(c.factor) || Number(c.factor) <= 0) e[`conv${i}`] = "Enter how many base units it holds.";
@@ -127,7 +131,10 @@ export function ItemForm({
         const priceChanged = openingCost !== "" && Number(openingCost) !== Number(initial.price ?? "");
         await api(`/api/items/${v.id}`, {
           method: "PATCH",
-          json: { ...payload, sku: v.sku, ...(priceChanged ? { price: openingCost, price_reason: priceReason || null } : {}) },
+          json: {
+            ...payload, sku: v.sku, ...(priceChanged ? { price: openingCost, price_reason: priceReason || null } : {}),
+            ...(unitLocked && v.unit_id !== initial.unit_id ? { unit_factor: unitFactor } : {}),
+          },
         });
         toast.success("Changes saved");
         router.push(`/items/${v.id}`);
@@ -191,19 +198,26 @@ export function ItemForm({
         <h2 className="font-semibold">Measurement and stock control</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Measurement unit" htmlFor="unit" required error={errors.unit_id}
-            hint={unitLocked ? "Locked because stock has already been recorded. Add a conversion on the item page instead." : "Balances are kept in this unit."}>
+            hint={unitLocked ? "Stock has been recorded in this unit. If you change it, we convert the history for you." : "Balances are kept in this unit."}>
             <div className="flex gap-2">
-              <Select id="unit" value={v.unit_id} disabled={unitLocked} onChange={(e) => set("unit_id", e.target.value)}>
+              <Select id="unit" value={v.unit_id} onChange={(e) => { set("unit_id", e.target.value); setUnitFactor("1"); }}>
                 <option value="">Choose unit…</option>
                 {units.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.symbol})</option>)}
               </Select>
-              {app.can("catalog.write") && !unitLocked && (
+              {app.can("catalog.write") && (
                 <Button type="button" variant="secondary" className="h-11 shrink-0 px-3" onClick={() => setQuick("unit")} aria-label="New custom unit">
                   <Plus className="size-4" />
                 </Button>
               )}
             </div>
           </Field>
+          {mode === "edit" && unitLocked && v.unit_id !== initial.unit_id && (
+            <UnitChangeBox
+              from={units.find((u) => String(u.id) === initial.unit_id)} to={baseUnit}
+              factor={unitFactor} setFactor={setUnitFactor} error={errors.unitFactor} stock={stock}
+              minLevel={initial.min_stock_level}
+            />
+          )}
           <Field label={`Minimum stock level${baseUnit ? ` (${baseUnit.symbol})` : ""}`} htmlFor="min" required error={errors.min_stock_level}
             hint="You'll get a low-stock warning at or below this amount.">
             <Input id="min" inputMode="decimal" value={v.min_stock_level} onChange={(e) => set("min_stock_level", e.target.value.replace(/[^\d.]/g, ""))} />
@@ -384,5 +398,38 @@ function PriceSection({ unit, sym, canPrice, price, setPrice, initialPrice, reas
         </p>
       )}
     </section>
+  );
+}
+
+/** Shown when the unit of an item with history is changed: how the old unit converts into the new one. */
+function UnitChangeBox({ from, to, factor, setFactor, error, stock, minLevel }: {
+  from?: UnitOpt; to?: UnitOpt; factor: string; setFactor: (v: string) => void; error?: string;
+  stock?: { quantity: string; stock_value: string }; minLevel: string;
+}) {
+  if (!from || !to) return null;
+  const f = Number(factor);
+  const ok = f > 0;
+  const qty = Number(stock?.quantity ?? 0);
+  return (
+    <div className="rounded-2xl bg-burgundy/[0.05] p-4 ring-1 ring-burgundy/15 sm:col-span-2" data-testid="unit-change">
+      <p className="text-sm font-semibold">Changing from {from.name} ({from.symbol}) to {to.name} ({to.symbol})</p>
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <span>1 {from.symbol} =</span>
+        <Input aria-label={`How many ${to.symbol} make one ${from.symbol}`} inputMode="decimal" value={factor} className="w-28"
+          onChange={(e) => setFactor(e.target.value.replace(/[^\d.]/g, ""))} />
+        <span>{to.symbol}</span>
+      </div>
+      {error ? <p className="mt-1.5 text-sm text-bad">{error}</p> : (
+        <p className="mt-1.5 text-xs text-muted">Put 1 if it&apos;s the same thing with a new name. For a real conversion, for example 1 bag = 50 kg, put 50.</p>
+      )}
+      {ok && (
+        <ul className="mt-3 space-y-1 text-sm">
+          <li>Stock now: <strong>{formatQty(String(qty))} {from.symbol}</strong> → <strong>{formatQty(String(Math.round(qty * f * 1e6) / 1e6))} {to.symbol}</strong></li>
+          <li className="text-muted">Minimum level: {formatQty(minLevel || "0")} {from.symbol} → {formatQty(String(Math.round(Number(minLevel || 0) * f * 1e6) / 1e6))} {to.symbol}</li>
+          <li className="text-muted">Stock worth stays the same. Past stock movements are converted too, and what people typed stays on record.</li>
+          {f !== 1 && <li className="text-muted">You can still record in {from.symbol}: it&apos;s added as a unit conversion.</li>}
+        </ul>
+      )}
+    </div>
   );
 }

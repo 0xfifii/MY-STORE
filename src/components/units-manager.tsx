@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "@/components/hand-icons";
+import { Check, Pencil, Plus, Trash2, X } from "@/components/hand-icons";
 import { Button, Field, Input, Panel, Select } from "./ui/primitives";
 import { useToast } from "./ui/toast";
 import { api } from "@/lib/client";
@@ -47,14 +47,7 @@ export function UnitsManager({ units, rules, canAdd, canRules }: { units: Unit[]
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
       <Panel title="Measurement units" bodyClass="">
         <ul className="divide-y divide-white/80">
-          {units.map((u) => (
-            <li key={u.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm sm:px-5">
-              <span><strong>{u.name}</strong> <span className="text-muted">({u.symbol})</span></span>
-              <span className="text-xs text-muted">
-                {u.is_system ? "Standard" : "Custom"}{!u.allow_decimal ? " · whole numbers" : ""} · {u.item_count} item{u.item_count === 1 ? "" : "s"}
-              </span>
-            </li>
-          ))}
+          {units.map((u) => <UnitRow key={u.id} u={u} canEdit={canAdd} />)}
         </ul>
         {canAdd && (
           <form onSubmit={addUnit} className="grid gap-3 border-t border-white/80 p-4 sm:grid-cols-[1fr_8rem_auto] sm:items-end sm:p-5">
@@ -102,5 +95,56 @@ export function UnitsManager({ units, rules, canAdd, canRules }: { units: Unit[]
         )}
       </Panel>
     </div>
+  );
+}
+
+function UnitRow({ u, canEdit }: { u: Unit; canEdit: boolean }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(u.name);
+  const [symbol, setSymbol] = useState(u.symbol);
+  const [whole, setWhole] = useState(!u.allow_decimal);
+  const [busy, setBusy] = useState(false);
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await api(`/api/units/${u.id}`, { method: "PATCH", json: { name, symbol: symbol || name, allow_decimal: !whole } });
+      toast.success("Unit updated", u.item_count ? `The ${u.item_count} item${u.item_count === 1 ? "" : "s"} using it now show ${symbol || name}.` : undefined);
+      setEditing(false);
+      router.refresh();
+    } catch (err) { toast.error("Couldn't update unit", (err as Error).message); } finally { setBusy(false); }
+  };
+  if (editing) {
+    return (
+      <li className="px-4 py-3 sm:px-5">
+        <form onSubmit={save} className="grid gap-2 sm:grid-cols-[1fr_7rem_auto] sm:items-center">
+          <Input aria-label="Unit name" value={name} onChange={(e) => setName(e.target.value)} autoFocus className="h-10" />
+          <Input aria-label="Symbol" value={symbol} onChange={(e) => setSymbol(e.target.value)} className="h-10" />
+          <div className="flex gap-1.5">
+            <Button type="submit" size="sm" loading={busy} disabled={!name.trim()} aria-label="Save unit"><Check className="size-4" /> Save</Button>
+            <Button type="button" size="sm" variant="secondary" onClick={() => { setEditing(false); setName(u.name); setSymbol(u.symbol); setWhole(!u.allow_decimal); }} aria-label="Cancel"><X className="size-4" /></Button>
+          </div>
+          <label className="flex items-center gap-2 text-sm sm:col-span-3">
+            <input type="checkbox" className="accent-burgundy" checked={whole} onChange={(e) => setWhole(e.target.checked)} /> Whole numbers only
+          </label>
+        </form>
+      </li>
+    );
+  }
+  return (
+    <li className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm sm:px-5">
+      <span><strong>{u.name}</strong> <span className="text-muted">({u.symbol})</span></span>
+      <span className="flex items-center gap-2 text-xs text-muted">
+        {u.is_system ? "Standard" : "Custom"}{!u.allow_decimal ? " · whole numbers" : ""} · {u.item_count} item{u.item_count === 1 ? "" : "s"}
+        {canEdit && !u.is_system && (
+          <button type="button" onClick={() => setEditing(true)} aria-label={`Edit ${u.name}`}
+            className="flex size-8 items-center justify-center rounded-lg text-burgundy ring-1 ring-burgundy/20 transition hover:bg-burgundy hover:text-paper">
+            <Pencil className="size-3.5" />
+          </button>
+        )}
+      </span>
+    </li>
   );
 }
