@@ -39,6 +39,7 @@ export function StockMoveForm({
   embedded?: boolean;
 }) {
   const app = useApp();
+  const canBackdate = app.can("stock.backdate");
   const toast = useToast();
   const router = useRouter();
   const sym = app.currencySymbol;
@@ -137,7 +138,8 @@ export function StockMoveForm({
   if (!costValid) problems.push("Enter the cost per unit (use 0 if free).");
   if (mode === "out" && !reason) problems.push("Choose a reason.");
   if (mode === "out" && reason === "other" && !notes.trim()) problems.push("Add a note explaining the reason.");
-  if (mode === "in" && occurredAt && new Date(occurredAt).getTime() > Date.now() + 5 * 60000) problems.push("The receipt date can't be in the future.");
+  if (dateTouched && occurredAt && new Date(occurredAt).getTime() > Date.now() + 5 * 60000) problems.push("The date can't be in the future.");
+  if (dateTouched && occurredAt && !canBackdate && occurredAt.slice(0, 10) < nowLocalInput().slice(0, 10)) problems.push("Only an owner can record stock for an earlier day.");
   if (itemFractionBlocked) problems.push(`${item!.name} is counted in whole ${base} only.`);
 
   const review = (e: React.FormEvent) => {
@@ -165,6 +167,7 @@ export function StockMoveForm({
           : {
               item_id: item.id, quantity: qty, unit_id: unit.unit_id, reason, recipient, reference, notes, request_id: requestId,
               worker_id: workerId || null,
+              occurred_at: dateTouched && occurredAt ? new Date(occurredAt).toISOString() : null,
             };
       const res = await api<{ txn: { id: string; txn_no: string }; item: FullItem }>(`/api/stock/${mode}`, { method: "POST", json: body });
       setItem(res.item);
@@ -302,6 +305,11 @@ export function StockMoveForm({
               {mode === "out" && workerId ? ` taken by ${workers.find((w) => String(w.id) === workerId)?.name ?? ""}` : ""}
               {mode === "out" && recipient ? ` to ${recipient}` : ""}?
             </p>
+            {dateTouched && occurredAt && occurredAt.slice(0, 10) < nowLocalInput().slice(0, 10) && (
+              <p className="mt-3 rounded-xl bg-burgundy px-3 py-2 text-sm font-semibold text-paper" data-testid="backdate-note">
+                Recording for {new Date(occurredAt).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}. It will show in that day&apos;s report.
+              </p>
+            )}
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               {mode === "in" ? (
                 <>
@@ -310,7 +318,10 @@ export function StockMoveForm({
                   <dt className="text-muted">Received</dt><dd className="text-right">{dateTouched && occurredAt ? new Date(occurredAt).toLocaleString() : "Now"}</dd>
                 </>
               ) : (
-                <dt className="col-span-2 text-xs text-muted">Valued at weighted-average cost: {formatUnitCost(item.avg_cost, sym)} / {base}.</dt>
+                <>
+                  {dateTouched && occurredAt && <><dt className="text-muted">Taken out</dt><dd className="text-right">{new Date(occurredAt).toLocaleString()}</dd></>}
+                  <dt className="col-span-2 text-xs text-muted">Valued at weighted-average cost: {formatUnitCost(item.avg_cost, sym)} / {base}.</dt>
+                </>
               )}
               <dt className="font-semibold">Total value</dt>
               <dd className="text-right font-semibold">{lineValue !== null ? formatMoney(lineValue, sym) : "-"}</dd>
@@ -357,9 +368,8 @@ export function StockMoveForm({
                 error={touched && !costValid ? "Enter a valid amount." : null}>
                 <Input id="cost" inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value.replace(/[^\d.,]/g, ""))} placeholder="0.00" />
               </Field>
-              <Field label="Date & time received" htmlFor="when" required>
-                <Input id="when" type="datetime-local" value={occurredAt} max={occurredAt ? nowLocalInput() : undefined} onChange={(e) => { setOccurredAt(e.target.value); setDateTouched(true); }} />
-              </Field>
+              <WhenPicker label="Date & time received" value={occurredAt} touched={dateTouched} canBackdate={canBackdate}
+                onChange={(v, t) => { setOccurredAt(v); setDateTouched(t); }} />
               <Field label="Supplier" htmlFor="supplier">
                 <Select id="supplier" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
                   <option value="">Other / not listed</option>
@@ -402,6 +412,10 @@ export function StockMoveForm({
                   <Field label="Destination" htmlFor="recipient" hint="e.g. Kitchen, Branch 2, customer name">
                     <Input id="recipient" value={recipient} onChange={(e) => setRecipient(e.target.value)} />
                   </Field>
+                  {canBackdate && (
+                    <WhenPicker label="When was it taken out?" value={occurredAt} touched={dateTouched} canBackdate
+                      onChange={(v, t) => { setOccurredAt(v); setDateTouched(t); }} />
+                  )}
                 </div>
               </div>
             </div>
@@ -436,4 +450,34 @@ export function StockMoveForm({
 function trimCost(v: string) {
   const n = Number(v);
   return n.toFixed(4).replace(/\.?0+$/, "");
+}
+
+/**
+ * When the stock moved. Everyone can pick a time earlier today; owners (or people given "Record for an
+ * earlier date") also get Yesterday and any earlier day, so a missed day can be filled in and balance.
+ */
+function WhenPicker({ label, value, touched, canBackdate, onChange }: {
+  label: string; value: string; touched: boolean; canBackdate: boolean; onChange: (v: string, touched: boolean) => void;
+}) {
+  const now = nowLocalInput();
+  const today = now.slice(0, 10);
+  const yesterdayAt = (() => {
+    const d = new Date(); d.setDate(d.getDate() - 1); d.setSeconds(0, 0);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  })();
+  const isYesterday = touched && value.slice(0, 10) === yesterdayAt.slice(0, 10);
+  const chip = (on: boolean) => `h-9 rounded-xl px-3 text-sm font-semibold ring-1 transition ${on ? "bg-burgundy text-paper ring-burgundy" : "bg-paper text-burgundy ring-burgundy/20 hover:bg-burgundy/5"}`;
+  return (
+    <Field label={label} htmlFor="when" required
+      hint={canBackdate ? "Missed a day? Pick Yesterday or the date it happened. It goes into that day's report." : "Today only. Ask an owner to record an earlier day."}>
+      {canBackdate && (
+        <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="When">
+          <button type="button" className={chip(!touched)} onClick={() => onChange(now, false)}>Now</button>
+          <button type="button" className={chip(isYesterday)} onClick={() => onChange(yesterdayAt, true)}>Yesterday</button>
+        </div>
+      )}
+      <Input id="when" type="datetime-local" value={value} max={now} min={canBackdate ? undefined : `${today}T00:00`}
+        onChange={(e) => onChange(e.target.value, true)} />
+    </Field>
+  );
 }

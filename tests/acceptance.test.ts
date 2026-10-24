@@ -1135,3 +1135,52 @@ describe("23. Changing an item's measuring unit", () => {
     expect((await staff.req("PATCH", `/api/units/${u.id}`, { name: "X", symbol: "x", allow_decimal: true })).status).toBe(200); // staff have catalog.write
   });
 });
+
+describe("24. Recording a missed day (owners only)", () => {
+  let today: string, yesterday: string;
+  beforeAll(async () => {
+    const { rows } = await db.query("SELECT (now() AT TIME ZONE 'Africa/Lagos')::date::text t, ((now() AT TIME ZONE 'Africa/Lagos')::date - 1)::text y");
+    today = rows[0].t; yesterday = rows[0].y;
+  });
+  const atYesterday = () => `${yesterday}T15:00:00+01:00`;
+  it("owners can record stock in and out for yesterday; it lands in yesterday's report and everything balances", async () => {
+    const oil = (await db.query("SELECT id FROM items WHERE name='Vegetable oil'")).rows[0].id;
+    const before = await item(oil);
+    const yBefore = ((await owner.get(`/api/reports/export?format=csv&from=${yesterday}&to=${yesterday}`)).data as Buffer).toString();
+    const get = (csv: string, label: string) => Number(csv.split("\r\n").find((l) => l.startsWith(label))!.split(",")[1]);
+
+    const i = await stockIn(owner, oil, "5", "L", "1800", { occurred_at: atYesterday() });
+    expect(i.status, JSON.stringify(i.data)).toBe(201);
+    const o = await stockOut(owner, oil, "2", "L", { occurred_at: atYesterday(), reason: "bar_usage" });
+    expect(o.status, JSON.stringify(o.data)).toBe(201);
+    expect(Number((await item(oil)).quantity)).toBeCloseTo(Number(before.quantity) + 3, 6);
+    const { rows: [t] } = await db.query("SELECT to_char(occurred_at AT TIME ZONE 'Africa/Lagos','YYYY-MM-DD') d FROM stock_transactions WHERE id=$1", [o.data.txn.id]);
+    expect(t.d).toBe(yesterday);
+
+    const y = ((await owner.get(`/api/reports/export?format=csv&from=${yesterday}&to=${yesterday}`)).data as Buffer).toString();
+    expect(get(y, "Cost of stock in")).toBeCloseTo(get(yBefore, "Cost of stock in") + 9000, 2);
+    expect(get(y, "Cost of stock out")).toBeGreaterThan(get(yBefore, "Cost of stock out"));
+    const td = ((await owner.get(`/api/reports/export?format=csv&from=${today}&to=${today}`)).data as Buffer).toString();
+    expect(get(td, "Opening stock value")).toBeCloseTo(get(y, "Total stock value (closing)"), 2);
+  });
+
+  it("staff can't record for an earlier day, but can for earlier today", async () => {
+    const oil = (await db.query("SELECT id FROM items WHERE name='Vegetable oil'")).rows[0].id;
+    const r1 = await stockIn(staff, oil, "1", "L", "1800", { occurred_at: atYesterday() });
+    expect(r1.status).toBe(403);
+    expect(r1.data.code).toBe("BACKDATE_NOT_ALLOWED");
+    expect((await stockOut(staff, oil, "1", "L", { occurred_at: atYesterday() })).status).toBe(403);
+    const earlierToday = new Date(Date.now() - 60_000).toISOString();
+    expect((await stockOut(staff, oil, "1", "L", { occurred_at: earlierToday })).status).toBe(201);
+  });
+
+  it("a backdated stock out can't take more than was in stock on that date", async () => {
+    const r = await owner.post("/api/items", { name: "Napkins", unit_id: units.btl, opening_quantity: "10", opening_unit_cost: "100", request_id: randomUUID() });
+    expect(r.status).toBe(201);
+    // the item only got stock today, so yesterday it had none
+    const o = await stockOut(owner, r.data.id, "1", "btl", { occurred_at: atYesterday() });
+    expect(o.status).toBe(409);
+    expect(o.data.code).toBe("INSUFFICIENT_STOCK");
+    expect((await stockOut(owner, r.data.id, "1", "btl", { occurred_at: new Date(Date.now() + 3_600_000).toISOString() })).status).toBe(400); // future
+  });
+});

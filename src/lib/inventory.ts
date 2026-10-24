@@ -4,6 +4,7 @@ import type { z } from "zod";
 import { query, queryOne, withTransaction } from "./db";
 import { audit } from "./audit";
 import { AppError } from "./errors";
+import { can, type Role } from "./permissions";
 import type { itemCreateSchema, itemUpdateSchema, stockInSchema, stockOutSchema } from "./validation";
 
 // ---------------------------------------------------------------------------
@@ -459,6 +460,19 @@ export async function deleteItemConversion(itemId: string, conversionId: number,
   await audit(userId, "item.conversion.remove", "item", itemId, row);
 }
 
+/**
+ * Recording for an earlier day (in the store's time zone) needs the "stock.backdate" permission (owners).
+ * Earlier today is fine for anyone, e.g. a delivery that came in this morning.
+ */
+export async function assertDateAllowed(user: { role: Role; permissions: string[] | null }, occurredAt: string | null, timeZone: string) {
+  if (!occurredAt) return;
+  const day = new Date(occurredAt).toLocaleDateString("en-CA", { timeZone });
+  const today = new Date().toLocaleDateString("en-CA", { timeZone });
+  if (day < today && !can(user, "stock.backdate")) {
+    throw new AppError("BACKDATE_NOT_ALLOWED", "Only an owner can record stock for an earlier day. Ask them to record it, or use today's date.", 403);
+  }
+}
+
 export async function recordStockIn(input: z.infer<typeof stockInSchema>, userId: string) {
   return withTransaction(async (client) => {
     if (input.supplier_id) {
@@ -485,9 +499,9 @@ export async function recordStockOut(input: z.infer<typeof stockOutSchema>, user
       await client.query("SELECT set_config('mystore.worker_id', $1, true)", [String(input.worker_id)]);
     }
     const { rows } = await client.query(
-      "SELECT id::text, txn_no FROM stock_out($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+      "SELECT id::text, txn_no FROM stock_out($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
       [input.item_id, input.quantity, input.unit_id, input.reason, input.recipient, input.reference, input.notes,
-       userId, input.request_id],
+       userId, input.request_id, input.occurred_at ?? null],
     );
     return rows[0] as { id: string; txn_no: string };
   });

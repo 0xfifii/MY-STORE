@@ -95,6 +95,12 @@ export const stockOutSchema = z.object({
   }),
   recipient: optText(200),
   worker_id: optInt,
+  occurred_at: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || !Number.isNaN(Date.parse(v)), { message: "Invalid date" }),
   reference: optText(120),
   notes: optText(1000),
   request_id: uuid,
