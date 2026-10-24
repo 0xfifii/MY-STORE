@@ -60,7 +60,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <div className="mb-4 flex items-center gap-3 rounded-[var(--radius-card)] bg-paper/70 px-4 py-2 ring-1 ring-kraft sm:w-fit sm:pr-6">
         <Mascot mood={d.totals.out > 0 ? "worried" : d.totals.low > 0 ? "thinking" : "happy"} className="h-16 w-14 shrink-0" />
-        <p className="text-sm"><strong className="text-burgundy">Velvy says:</strong> {tip}</p>
+        <p className="text-sm"><strong className="text-burgundy">Tip:</strong> {tip}</p>
       </div>
 
       {/* Worth + today */}
@@ -168,20 +168,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
 /** Burgundy-led with a black shadow, or black-led with a burgundy shadow. */
 const TONE = {
-  burgundy: "bg-[radial-gradient(120%_120%_at_0%_0%,#b3141f_0%,#9e1018_45%,#2b0a09_100%)] shadow-[0_22px_40px_-22px_rgb(20_6_6/0.9)]",
-  black: "bg-[radial-gradient(120%_120%_at_0%_0%,#2e1715_0%,#1d0f0e_50%,#7a0c13_100%)] shadow-[0_22px_40px_-22px_rgb(158_16_24/0.85)]",
+  /** solid black card, white text */
+  burgundy: "bg-[radial-gradient(120%_120%_at_0%_0%,#2a2a2a_0%,#111111_45%,#000000_100%)] text-white shadow-[0_22px_40px_-22px_rgb(0_0_0/0.9)]",
+  /** white card, black text */
+  black: "bg-white text-[#111111] ring-1 ring-black/5 shadow-[0_18px_36px_-26px_rgb(0_0_0/0.6)]",
 };
 
 function Stat({ label, value, sub, tone, href, icon }: { label: string; value: string; sub: string; tone: keyof typeof TONE; href: string; icon: React.ReactNode }) {
+  const dark = tone === "burgundy";
   return (
-    <Link href={href} className={`lift group relative block overflow-hidden rounded-[var(--radius-card)] p-4 text-paper ${TONE[tone]}`}>
-      <div className="pointer-events-none absolute -right-8 -top-10 size-28 rounded-full bg-paper/10" aria-hidden />
+    <Link href={href} className={`lift group relative block overflow-hidden rounded-[var(--radius-card)] p-4 ${TONE[tone]}`}>
+      <div className={`pointer-events-none absolute -right-8 -top-10 size-28 rounded-full ${dark ? "bg-white/10" : "bg-black/[0.04]"}`} aria-hidden />
       <div className="relative flex items-start justify-between gap-2">
-        <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-paper/70">{label}</dt>
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-paper text-burgundy shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110">{icon}</span>
+        <dt className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-white/60" : "text-[#111111]/50"}`}>{label}</dt>
+        <span className={`flex size-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110 ${dark ? "bg-white text-[#111111]" : "bg-[#111111] text-white"}`}>{icon}</span>
       </div>
       <dd className="relative mt-3 break-words text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular-nums sm:text-[28px]">{value}</dd>
-      <dd className="relative text-xs text-paper/70">{sub}</dd>
+      <dd className={`relative text-xs ${dark ? "text-white/60" : "text-[#111111]/50"}`}>{sub}</dd>
     </Link>
   );
 }

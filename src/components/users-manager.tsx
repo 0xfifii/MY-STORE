@@ -73,7 +73,7 @@ export function UsersManager({ users, meId, categories, mailReady = true }: { us
           const cats = u.allowed_category_ids?.length ? u.allowed_category_ids.map((id) => categories.find((c) => c.id === id)?.name).filter(Boolean) : null;
           const initials = u.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
           return (
-            <li key={u.id} className={`overflow-hidden rounded-[var(--radius-card)] bg-paper shadow-[0_12px_30px_-22px_rgb(82_8_16/0.6)] ring-1 ring-burgundy/12 ${u.is_active ? "" : "opacity-60"}`}>
+            <li key={u.id} className={`overflow-hidden rounded-[var(--radius-card)] bg-paper shadow-[0_12px_30px_-22px_rgb(0_0_0/0.6)] ring-1 ring-burgundy/12 ${u.is_active ? "" : "opacity-60"}`}>
               {/* Who */}
               <div className="flex flex-col gap-3 px-4 pb-3 pt-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
                 <div className="flex min-w-0 items-start gap-3">

@@ -37,7 +37,7 @@ export async function OverviewTab({ period, sym, tz, mode, by, unit, link, canMa
         <StatCard label="Price increases" value={plural(sm.priceUp, "item")} sub="latest vs previous purchase" href={link({ tab: "prices", dir: "up" })} tone="plain" icon={<TrendingUp className="size-4 text-bad" />} />
         <StatCard label="Price decreases" value={plural(sm.priceDown, "item")} sub="latest vs previous purchase" href={link({ tab: "prices", dir: "down" })} tone="green" icon={<TrendingDown className="size-4 text-ok" />} />
         <StatCard label="Count shortages" value={m(sm.counts.shortage)} sub={`${sm.counts.shortages} approved · ${sm.counts.pending} pending`} href="/stock-count" tone="plain" icon={<ClipboardCheck className="size-4 text-bad" />} />
-        <StatCard label="Count excesses" value={m(sm.counts.excess)} sub={`${sm.counts.excesses} approved counts`} href="/stock-count" tone="plain" icon={<ClipboardCheck className="size-4 text-[#2a78d6]" />} />
+        <StatCard label="Count excesses" value={m(sm.counts.excess)} sub={`${sm.counts.excesses} approved counts`} href="/stock-count" tone="plain" icon={<ClipboardCheck className="size-4 text-[#6b6b6b]" />} />
       </div>
 
       <Panel

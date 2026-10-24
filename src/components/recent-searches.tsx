@@ -62,7 +62,7 @@ export function RecentSearchList({ list, onPick, onRemove, onClearAll, className
   if (!list.length) return null;
   return (
     <div
-      className={`rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(82_8_16/0.6)] ring-1 ring-burgundy/15 ${className}`}
+      className={`rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(0_0_0/0.6)] ring-1 ring-burgundy/15 ${className}`}
       onMouseDown={(e) => e.preventDefault()}
       data-testid="recent-searches"
     >

@@ -24,6 +24,9 @@ export type ItemRow = {
   quantity: string;
   /** Current price per base unit (latest purchase or set on the item form). */
   price: string | null;
+  /** Item photo for the product card (served from /api/items/:id/photo?v=photo_v). */
+  has_photo: boolean;
+  photo_v: string;
   stock_value: string;
   avg_cost: string;
   min_stock_level: string;
@@ -83,6 +86,7 @@ const ITEM_SELECT = `
          i.price::text AS price,
          i.min_stock_level::text, i.default_supplier_id, s.name AS supplier_name, i.notes,
          i.archived_at, i.created_at, i.updated_at,
+         (i.photo IS NOT NULL) AS has_photo, coalesce(extract(epoch FROM i.photo_updated_at)::bigint, 0)::text AS photo_v,
          CASE WHEN i.quantity <= 0 THEN 'out'
               WHEN i.quantity <= i.min_stock_level THEN 'low'
               ELSE 'in_stock' END AS status

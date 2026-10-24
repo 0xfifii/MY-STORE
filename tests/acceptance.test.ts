@@ -1,5 +1,5 @@
 /**
- * End-to-end acceptance tests for The Velvet Store.
+ * End-to-end acceptance tests for ÌṢÚRA.
  * Runs against a live server + real PostgreSQL database (see README "Running the tests").
  *
  *   TEST_BASE_URL=http://localhost:3100 TEST_DATABASE_URL=postgres://... npm test
@@ -473,7 +473,7 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
     const f = join(dir, "r.pdf");
     writeFileSync(f, r.data);
     const text = execFileSync("pdftotext", ["-layout", f, "-"]).toString();
-    expect(text).toContain("The Velvet Store");
+    expect(text).toContain("ÌṢÚRA");
     expect(text).toContain("Inventory Report");
     expect(text).toMatch(/Page 1 of \d+/);
     expect(text).toContain("Stock sheet");
@@ -514,7 +514,7 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
     const call = () => fetch(`${BASE}/api/cron/daily-report`, { headers: { authorization: `Bearer ${CRON}` } }).then((r) => r.json());
     expect((await call()).status).toBe("disabled");
     const s = await owner.patch("/api/settings", {
-      store_name: "The Velvet Store", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos",
+      store_name: "ÌṢÚRA", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos",
       auto_report_enabled: true, auto_report_time: "00:00", auto_report_covers: "same_day",
       auto_report_formats: ["pdf", "xlsx", "csv"], email_enabled: true, email_recipients: ["owner@mystore.test"],
       auto_weekly_enabled: true, auto_monthly_enabled: true,
@@ -881,7 +881,7 @@ describe("18. Resending emails and welcome emails", () => {
 describe("19. Brevo API email (most reliable on Vercel)", () => {
   const BREVO_DIR = process.env.TEST_BREVO_DIR ?? "";
   const sent = () => (BREVO_DIR && existsSync(BREVO_DIR) ? readdirSync(BREVO_DIR).map((f) => JSON.parse(readFileSync(join(BREVO_DIR, f), "utf8"))) : []);
-  const save = (key: string, from = "The Velvet Store <store@velvet.test>") =>
+  const save = (key: string, from = "ÌṢÚRA <store@velvet.test>") =>
     owner.req("PUT", "/api/settings/email", { smtp_host: "api.brevo.com", smtp_port: 443, smtp_user: "", smtp_pass: key, smtp_from: from, welcome_email_enabled: true });
 
   it("a wrong API key is reported clearly by the connection check", async () => {
@@ -911,7 +911,7 @@ describe("19. Brevo API email (most reliable on Vercel)", () => {
     const u = await owner.post("/api/users", { name: "Brevo Person", email: "brevo.person@velvet.test", role: "staff", password: "brevo-pass-1", include_password: true });
     expect(u.data.welcome.status).toBe("sent");
     const mails = sent();
-    expect(mails.some((m) => m.to[0].email === "me@velvet.test" && m.sender.email === "store@velvet.test" && m.sender.name === "The Velvet Store")).toBe(true);
+    expect(mails.some((m) => m.to[0].email === "me@velvet.test" && m.sender.email === "store@velvet.test" && m.sender.name === "ÌṢÚRA")).toBe(true);
     const receipt = mails.find((m) => m.to[0].email === "chef@velvet.test");
     expect(receipt.attachment[0].name).toMatch(/^velvet-store-receipt-TXN-\d+\.pdf$/);
     expect(Buffer.from(receipt.attachment[0].content, "base64").subarray(0, 4).toString()).toBe("%PDF");

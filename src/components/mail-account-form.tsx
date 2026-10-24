@@ -60,7 +60,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
   const save = async () => {
     setBusy(true); setErr(null); setSteps(null);
     try {
-      const fromDefault = provider === "brevo" || provider === "brevo_api" ? "" : a.smtp_user ? `The Velvet Store <${a.smtp_user.trim()}>` : "";
+      const fromDefault = provider === "brevo" || provider === "brevo_api" ? "" : a.smtp_user ? `ÌṢÚRA <${a.smtp_user.trim()}>` : "";
       const d = await api<{ account: MailAccount }>("/api/settings/email", {
         method: "PUT",
         json: { ...a, smtp_user: provider === "brevo_api" ? "" : a.smtp_user.trim(), smtp_host: a.smtp_host.trim(), smtp_port: Number(a.smtp_port), smtp_from: a.smtp_from.trim() || fromDefault },
@@ -114,7 +114,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
         {provider === "gmail" && (
           <ol className="list-decimal space-y-1 pl-5 text-muted">
             <li>Turn on <strong className="text-ink">2-Step Verification</strong> for the Gmail account (myaccount.google.com, Security).</li>
-            <li>Open <strong className="text-ink">myaccount.google.com/apppasswords</strong>, create one named &quot;Velvet Store&quot; and copy the 16 letters.</li>
+            <li>Open <strong className="text-ink">myaccount.google.com/apppasswords</strong>, create one named &quot;ISURA&quot; and copy the 16 letters.</li>
             <li>Type that Gmail address below and paste the 16 letters as the password. <strong className="text-ink">Your normal Gmail password will be rejected.</strong></li>
           </ol>
         )}
@@ -142,8 +142,8 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
         </Field>
         <div className="hidden sm:block" />
         <Field label="Send as (name and address)" htmlFor="sm-from" required={provider === "brevo" || provider === "brevo_api"}
-          hint={provider === "brevo" || provider === "brevo_api" ? "Must be the email you verified in Brevo, e.g. The Velvet Store <you@gmail.com>" : "Optional. Leave empty to send from the login address."}>
-          <Input id="sm-from" name="velvet-smtp-from" autoComplete="off" value={a.smtp_from} onChange={(e) => setA({ ...a, smtp_from: e.target.value })} placeholder="The Velvet Store <yourstore@gmail.com>" />
+          hint={provider === "brevo" || provider === "brevo_api" ? "Must be the email you verified in Brevo, e.g. ÌṢÚRA <you@gmail.com>" : "Optional. Leave empty to send from the login address."}>
+          <Input id="sm-from" name="isura-smtp-from" autoComplete="off" value={a.smtp_from} onChange={(e) => setA({ ...a, smtp_from: e.target.value })} placeholder="The Velvet Store <yourstore@gmail.com>" />
         </Field>
         <button type="submit" className="hidden" />
       </form>

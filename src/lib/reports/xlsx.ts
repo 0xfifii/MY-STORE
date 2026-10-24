@@ -4,7 +4,7 @@ import { sectionsFor } from "./engine";
 import { formatDateTime, formatQty, reasonLabel } from "../format";
 import { statusText } from "./csv";
 
-const BURGUNDY = "ff8f0e16";
+const BURGUNDY = "ff111111";
 const LIGHT = "fff7ebe0";
 
 /** Formatted workbook: General Report, Stock Sheet, Stock In & Out, Corrections, Low Stock, By Worker, Most Stocked. */
@@ -107,7 +107,7 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
           ...(adj ? [Number(x.adj)] : []), Number(x.closing), ...(withWorth ? [Number(x.worth), x.status] : [])]);
         [5, 6, 8, ...(adj ? [10] : []), adj ? 11 : 10].forEach((c) => (row.getCell(c).numFmt = qtyFmt));
         [7, 9, ...(withWorth ? [adj ? 12 : 11] : [])].forEach((c) => (row.getCell(c).numFmt = moneyFmt));
-        row.getCell(6).font = { color: { argb: "FF166534" } };
+        row.getCell(6).font = { color: { argb: "FF1a1a1a" } };
         row.getCell(8).font = { color: { argb: BURGUNDY } };
         row.getCell(adj ? 11 : 10).font = { bold: true };
         row.eachCell((c) => (c.border = { bottom: { style: "hair", color: { argb: "FFDDDDDD" } } }));

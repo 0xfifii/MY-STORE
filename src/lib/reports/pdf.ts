@@ -8,7 +8,7 @@ import { statusText } from "./csv";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const PdfPrinter = require("pdfmake");
 
-const BURGUNDY = "#8f0e16";
+const BURGUNDY = "#111111";
 const fontDir = join(process.cwd(), "assets", "fonts");
 export const PDF_FONTS = {
   DMSans: {
@@ -71,7 +71,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   cards.push(card("Low · out of stock", `${st.low} · ${st.out}`));
   content.push({
     table: { widths: cards.map(() => "*"), body: [cards] },
-    layout: { hLineColor: "#ead8c8", vLineColor: "#ead8c8", fillColor: () => "#fbf4ec" },
+    layout: { hLineColor: "#e5e5e5", vLineColor: "#e5e5e5", fillColor: () => "#f7f7f7" },
   });
   content.push({
     text: [
@@ -96,10 +96,10 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     rows.forEach((b, i) => {
       tin += Number(b.in_value); tout += Number(b.out_value); tw += Number(b.worth ?? 0);
       body.push([String(i + 1), `${b.name}  (${b.sku})`, b.unit, right(formatQty(b.opening)),
-        right(Number(b.in) ? `+${formatQty(b.in)}` : "0", { color: "#166534" }), right(Number(b.in_value) ? m(b.in_value) : "-"),
+        right(Number(b.in) ? `+${formatQty(b.in)}` : "0", { color: "#1a1a1a" }), right(Number(b.in_value) ? m(b.in_value) : "-"),
         right(Number(b.out) ? `−${formatQty(b.out)}` : "0", { color: BURGUNDY }), right(Number(b.out_value) ? m(b.out_value) : "-"),
         ...(adj ? [right(formatQty(b.adj))] : []), right(formatQty(b.closing), { bold: true }),
-        ...(withWorth ? [right(m(b.worth ?? 0)), { text: statusText(b.status ?? "in_stock"), color: b.status === "out" ? "#B91C1C" : b.status === "low" ? "#B45309" : "#166534", bold: b.status !== "in_stock" }] : [])]);
+        ...(withWorth ? [right(m(b.worth ?? 0)), { text: statusText(b.status ?? "in_stock"), color: b.status === "out" ? "#B91C1C" : b.status === "low" ? "#555555" : "#1a1a1a", bold: b.status !== "in_stock" }] : [])]);
     });
     const cols = body[0].length;
     if (!rows.length) body.push(...empty(cols, "No items."));
@@ -152,7 +152,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
       h("Supplier / taken by"), h("Reference / notes")]];
     for (const t of r.movements) {
       const isIn = t.txn_type === "stock_in";
-      body.push([t.txn_no, formatDateTime(t.occurred_at, tz), { text: isIn ? "In" : "Out", bold: true, color: isIn ? "#166534" : BURGUNDY }, `${t.item_name} (${t.item_sku})`,
+      body.push([t.txn_no, formatDateTime(t.occurred_at, tz), { text: isIn ? "In" : "Out", bold: true, color: isIn ? "#1a1a1a" : BURGUNDY }, `${t.item_name} (${t.item_sku})`,
         right(`${isIn ? "+" : "−"}${formatQty(t.entered_quantity)} ${t.entered_unit_symbol}`), right(c(t.entered_unit_cost)),
         ...(sec.stockIn ? [right(isIn ? m(t.total_value) : "")] : []), ...(sec.stockOut ? [right(!isIn ? m(t.total_value) : "")] : []),
         isIn ? (t.is_opening ? "Opening stock" : t.supplier_label ?? "") : [[t.worker_name, t.recipient].filter(Boolean).join(" · to "), reasonLabel(t.reason)].filter(Boolean).join(", "),
@@ -183,7 +183,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
       const body: Cell[][] = [[h("Item"), h("Code"), h("Closing balance", "right"), h("Minimum level", "right"), h("Status")]];
       for (const b of r.lowStock) {
         body.push([b.name, b.sku, right(`${formatQty(b.closing_qty)} ${b.unit}`), right(`${formatQty(b.min_stock_level)} ${b.unit}`),
-          { text: statusText(b.status), bold: true, color: b.status === "out" ? "#B91C1C" : "#B45309" }]);
+          { text: statusText(b.status), bold: true, color: b.status === "out" ? "#B91C1C" : "#555555" }]);
       }
       content.push(tableBlock(body, ["*", 70, 90, 90, 80]));
     }
@@ -260,8 +260,8 @@ export function tableBlock(body: Cell[][], widths: (number | string)[]) {
     layout: {
       hLineWidth: (i: number) => (i === 0 ? 0 : 0.5),
       vLineWidth: () => 0,
-      hLineColor: () => "#e8d6c6",
-      fillColor: (row: number) => (row > 0 && row % 2 === 0 ? "#fbf4ec" : null),
+      hLineColor: () => "#e5e5e5",
+      fillColor: (row: number) => (row > 0 && row % 2 === 0 ? "#f7f7f7" : null),
       paddingTop: () => 4,
       paddingBottom: () => 4,
     },

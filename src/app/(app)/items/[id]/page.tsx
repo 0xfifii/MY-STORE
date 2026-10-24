@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ItemPhotoEditor } from "@/components/item-photo";
 import { ChangePriceButton } from "@/components/price-dialog";
 import { notFound } from "next/navigation";
 import { Pencil } from "@/components/hand-icons";
@@ -68,7 +69,9 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
         }
       />
 
-      <section className="grid glass overflow-hidden rounded-[var(--radius-card)] sm:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,320px)_minmax(0,1fr)] md:items-stretch">
+        <ItemPhotoEditor itemId={item.id} name={item.name} hasPhoto={item.has_photo} v={item.photo_v} editable={can(user, "item.write")} />
+      <section className="grid glass overflow-hidden rounded-[var(--radius-card)] sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3">
         <div className="border-b border-white/80 px-5 py-5 sm:border-b-0 sm:border-r">
           <p className="text-sm text-muted">Current balance</p>
           <p className="mt-1 font-display text-4xl font-bold tracking-tight" data-testid="item-balance">
@@ -93,6 +96,7 @@ export default async function ItemPage({ params, searchParams }: { params: Promi
           <p className="mt-1 text-sm text-muted">{item.allow_fraction ? "Part quantities allowed" : "Whole quantities only"}</p>
         </div>
       </section>
+      </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Panel

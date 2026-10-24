@@ -124,7 +124,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         <div className="flex w-max gap-1 rounded-full bg-white/60 p-1 ring-1 ring-white">
           {TABS.map(([k, l]) => (
             <Link key={k} href={tabHref(k)} scroll={false} aria-current={tab === k ? "page" : undefined}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#b3141f] to-[#6b0a12] text-white shadow-md" : "text-muted hover:bg-white hover:text-ink"}`}>
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#111111] to-[#000000] text-white shadow-md" : "text-muted hover:bg-white hover:text-ink"}`}>
               {l}
             </Link>
           ))}
@@ -195,7 +195,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
   return (
     <div className="space-y-4">
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Money spent on stock" value={m(spend.spent)} sub={`${spend.receipts} purchase${spend.receipts === 1 ? "" : "s"}`} tone="text-[#2a78d6]" />
+        <Kpi label="Money spent on stock" value={m(spend.spent)} sub={`${spend.receipts} purchase${spend.receipts === 1 ? "" : "s"}`} tone="text-[#6b6b6b]" />
         <Kpi label="Value of stock used" value={m(u.totals.value)} sub={`taken ${u.totals.takes} time${u.totals.takes === 1 ? "" : "s"}`} tone="text-burgundy" />
         <Kpi label="Stock in − stock out" value={`${inTotal - outTotal >= 0 ? "+" : "−"}${m(Math.abs(inTotal - outTotal))}`} sub={inTotal - outTotal >= 0 ? "stock value grew" : "stock value fell"} />
         <Kpi label="Items · workers" value={`${u.totals.items} · ${u.totals.workers}`} sub="different items taken · workers" />
@@ -218,8 +218,8 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
         bodyClass=""
       >
         <div className="grid grid-cols-2 gap-px border-b border-white/80 bg-white/60 sm:grid-cols-4">
-          <MiniStat label="Total stocked in" value={m(inTotal)} dot="#2a78d6" />
-          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#b3141f" />
+          <MiniStat label="Total stocked in" value={m(inTotal)} dot="#6b6b6b" />
+          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#111111" />
           <MiniStat label={`Average in per ${word}`} value={m(periods.length ? inTotal / periods.length : 0)} />
           <MiniStat label={`Average out per ${word}`} value={m(periods.length ? outTotal / periods.length : 0)} />
         </div>
@@ -227,8 +227,8 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
           <div className="flex h-48 items-end gap-[3px] sm:h-56" role="img" aria-label={`Amount stocked in and out per ${word}`}>
             {periods.map((p) => (
               <div key={p.period} className="group relative flex h-full min-w-0 flex-1 items-end justify-center gap-[1px]">
-                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#2a78d6]" style={{ height: `${Math.max(Number(p.in_value) ? 2 : 0, (Number(p.in_value) / maxBar) * 100)}%` }} />
-                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#b3141f]" style={{ height: `${Math.max(Number(p.out_value) ? 2 : 0, (Number(p.out_value) / maxBar) * 100)}%` }} />
+                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#6b6b6b]" style={{ height: `${Math.max(Number(p.in_value) ? 2 : 0, (Number(p.in_value) / maxBar) * 100)}%` }} />
+                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#111111]" style={{ height: `${Math.max(Number(p.out_value) ? 2 : 0, (Number(p.out_value) / maxBar) * 100)}%` }} />
                 <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-xl bg-night px-2.5 py-1.5 text-[11px] leading-snug text-white group-hover:block">
                   <strong>{periodName(p.period, group)}</strong><br />In {m(p.in_value)} · Out {m(p.out_value)}
                 </span>
@@ -238,8 +238,8 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
           <div className="mt-2 flex justify-between text-[11px] text-muted">
             <span>{periods[0] ? periodName(periods[0].period, group, true) : ""}</span>
             <span className="flex gap-3">
-              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#2a78d6]" /> Stock in</span>
-              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#b3141f]" /> Stock out</span>
+              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#6b6b6b]" /> Stock in</span>
+              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#111111]" /> Stock out</span>
             </span>
             <span>{periods.length ? periodName(periods[periods.length - 1].period, group, true) : ""}</span>
           </div>
@@ -262,7 +262,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
                 return (
                   <tr key={p.period}>
                     <Td><span className="whitespace-nowrap font-medium">{periodName(p.period, group)}</span></Td>
-                    <Td right><span className="text-[#2a78d6]">{m(p.in_value)}</span></Td>
+                    <Td right><span className="text-[#6b6b6b]">{m(p.in_value)}</span></Td>
                     <Td right><span className="text-burgundy">{m(p.out_value)}</span></Td>
                     <Td right><span className={diff < 0 ? "text-bad" : ""}>{diff >= 0 ? "+" : "−"}{m(Math.abs(diff))}</span></Td>
                     <Td right>{p.in_count}</Td><Td right>{p.out_count}</Td>
@@ -327,7 +327,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
                         <Td>{x.href ? <Link href={x.href} className="font-semibold hover:text-burgundy">{x.label}</Link> : <span className="font-semibold">{x.label}</span>}</Td>
                         {spendBy === "item" && <Td right>{formatQty(x.qty ?? "0")} {x.unit}</Td>}
                         <Td right>{m(x.value)}</Td>
-                        <Td><div className="flex items-center gap-2"><div className="h-1.5 w-24 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-[#2a78d6]" style={{ width: `${pct}%` }} /></div><span className="text-xs text-muted">{pct.toFixed(pct < 1 ? 1 : 0)}%</span></div></Td>
+                        <Td><div className="flex items-center gap-2"><div className="h-1.5 w-24 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-[#6b6b6b]" style={{ width: `${pct}%` }} /></div><span className="text-xs text-muted">{pct.toFixed(pct < 1 ? 1 : 0)}%</span></div></Td>
                         <Td right>{x.count}</Td>
                       </tr>
                     );

@@ -66,12 +66,12 @@ export function AuditItemSearch({ month, maxMonth, itemName }: { month: string; 
           role="combobox"
           aria-expanded={open}
           aria-controls="audit-item-results"
-          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(0_0_0/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
         />
         {loading && <Spinner className={`absolute top-1/2 size-4 -translate-y-1/2 ${q ? "right-[5.5rem]" : "right-4"}`} />}
         {q && <ClearSearchButton onClear={() => { setQ(""); setOpen(false); input.current?.focus(); }} />}
         {open && q.trim() && (
-          <ul id="audit-item-results" role="listbox" className="absolute inset-x-0 top-full z-20 mt-2 max-h-80 overflow-auto rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(82_8_16/0.6)] ring-1 ring-burgundy/15">
+          <ul id="audit-item-results" role="listbox" className="absolute inset-x-0 top-full z-20 mt-2 max-h-80 overflow-auto rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(0_0_0/0.6)] ring-1 ring-burgundy/15">
             {hits.length ? hits.map((h, i) => (
               <li key={h.id} role="option" aria-selected={i === active}>
                 <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(h)} onMouseEnter={() => setActive(i)}

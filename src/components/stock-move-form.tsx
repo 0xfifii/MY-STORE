@@ -235,7 +235,7 @@ export function StockMoveForm({
   if (step === "done") {
     return (
       <div className="text-center">
-        <Mascot mood="excited" className="mx-auto h-32 w-28" label="Velvy celebrating" />
+        <Mascot mood="excited" className="mx-auto h-32 w-28" label="The helper celebrating" />
         <p className="mt-3 font-display text-xl font-bold">{mode === "in" ? "Stock received" : "Stock issued"}</p>
         <p className="mt-1 text-sm text-muted">Transaction {lastTxn?.txn_no}</p>
         <div className="mx-auto mt-5 max-w-xs rounded-3xl bg-white/80 p-5 shadow-sm">
@@ -392,7 +392,7 @@ export function StockMoveForm({
                     onClick={() => setReason(r.value)}
                     className={clsx(
                       "h-11 rounded-xl border text-sm font-semibold transition-colors",
-                      reason === r.value ? "border-burgundy bg-burgundy text-paper shadow-[0_8px_18px_-12px_rgb(82_8_16/0.8)]" : "border-burgundy/15 bg-paper text-ink hover:border-burgundy/40 hover:text-burgundy",
+                      reason === r.value ? "border-burgundy bg-burgundy text-paper shadow-[0_8px_18px_-12px_rgb(0_0_0/0.8)]" : "border-burgundy/15 bg-paper text-ink hover:border-burgundy/40 hover:text-burgundy",
                     )}
                   >
                     {r.label}

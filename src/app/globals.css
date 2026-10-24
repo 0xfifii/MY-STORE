@@ -1,44 +1,45 @@
 @import "tailwindcss";
 
 /*
-  The Velvet Store: velvet red and kraft cream
-  Soft warm canvas with blurred burgundy glows, frosted-glass panels, pill controls,
-  near-black pill buttons with a round arrow, light large numerals (DM Sans).
+  ÌṢÚRA: black and white.
+  Clean light-grey canvas, white rounded cards, black accents and buttons, bold geometric type (DM Sans).
+  Token names (burgundy, claret, paper...) are kept from the earlier theme so every screen follows;
+  their values are now black, white and greys.
 */
 @theme {
-  --color-claret: #520810;
-  --color-claret-deep: #3d050b;
-  --color-burgundy: #9e1018;   /* velvet */
-  --color-burgundy-hover: #82080f;
-  --color-glow: #c9302c;
-  --color-rose: #f7e8dd;
-  --color-rose-strong: #efd6c5;
-  --color-ink: #2b1613;
-  --color-night: #2b1613;
-  --color-muted: #85706a;
-  --color-line: #e9dace;
-  --color-paper: #fffaf3;
-  --color-white: #fffcf8;      /* warm white everywhere */
-  --color-canvas: #f2e6d6;     /* kraft cream */
-  --color-kraft: #e9d6c2;
-  --color-ok: #2a6b45;
-  --color-ok-bg: #e6efdf;
-  --color-warn: #a35310;
-  --color-warn-bg: #fbefe2;
+  --color-claret: #000000;
+  --color-claret-deep: #000000;
+  --color-burgundy: #111111;   /* brand black */
+  --color-burgundy-hover: #2b2b2b;
+  --color-glow: #555555;
+  --color-rose: #f2f2f2;
+  --color-rose-strong: #e6e6e6;
+  --color-ink: #111111;
+  --color-night: #111111;
+  --color-muted: #6b6b6b;
+  --color-line: #e6e6e6;
+  --color-paper: #ffffff;
+  --color-white: #ffffff;
+  --color-canvas: #f4f4f4;
+  --color-kraft: #ebebeb;
+  --color-ok: #1a1a1a;
+  --color-ok-bg: #ececec;
+  --color-warn: #4d4d4d;
+  --color-warn-bg: #f0f0f0;
   --color-bad: #b42318;
   --color-bad-bg: #fbe9e7;
 
-  /* Accents that sit with burgundy (validated for colour-blind separation in charts) */
-  --color-gold: #f5b51c;
-  --color-gold-bg: #fff6dc;
-  --color-sky: #2a78d6;
-  --color-sky-bg: #e8f1fc;
-  --color-mint: #1baf7a;
-  --color-mint-bg: #e3f6ee;
-  --color-plum: #6250d6;
-  --color-plum-bg: #eeebfc;
-  --color-coral: #e0603a;
-  --color-coral-bg: #fbe8dd;
+  /* Greyscale accents */
+  --color-gold: #ffffff;
+  --color-gold-bg: #f2f2f2;
+  --color-sky: #6b6b6b;
+  --color-sky-bg: #f0f0f0;
+  --color-mint: #9a9a9a;
+  --color-mint-bg: #f0f0f0;
+  --color-plum: #3d3d3d;
+  --color-plum-bg: #f0f0f0;
+  --color-coral: #7a7a7a;
+  --color-coral-bg: #f0f0f0;
 
   --font-sans: "DM Sans Variable", "DM Sans Naira", "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "DM Sans Variable", "DM Sans Naira", "DM Sans", ui-sans-serif, system-ui, sans-serif;
@@ -52,8 +53,6 @@ html {
 
 body {
   background-color: var(--color-canvas);
-  /* faint kraft-paper grain */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: "tnum" 1, "ss01" 1;
@@ -65,38 +64,36 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Soft burgundy light behind the whole app (fixed, behind content). */
+/* Soft light behind the whole app (fixed, behind content). */
 .app-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(38rem 30rem at 92% -6%, rgb(158 16 24 / 0.16), transparent 70%),
-    radial-gradient(30rem 26rem at -8% 108%, rgb(158 16 24 / 0.12), transparent 70%),
-    radial-gradient(28rem 22rem at 55% 50%, rgb(255 250 243 / 0.75), transparent 70%),
+    radial-gradient(40rem 30rem at 90% -10%, rgb(255 255 255 / 0.9), transparent 70%),
+    radial-gradient(32rem 26rem at -10% 110%, rgb(0 0 0 / 0.04), transparent 70%),
     var(--color-canvas);
 }
 
 /* Frosted glass surface */
 .glass {
-  background: rgb(255 251 245 / 0.72);
-  border: 1px solid rgb(255 250 243 / 0.85);
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -18px rgb(82 8 16 / 0.28);
+  background: rgb(255 255 255 / 0.72);
+  border: 1px solid rgb(255 255 255 / 0.85);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -18px rgb(0 0 0 / 0.28);
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
 }
 .glass-strong {
-  background: rgb(255 251 245 / 0.88);
+  background: rgb(255 255 255 / 0.88);
   border: 1px solid rgb(255 255 255 / 0.9);
-  box-shadow: 0 16px 40px -20px rgb(82 8 16 / 0.3);
+  box-shadow: 0 16px 40px -20px rgb(0 0 0 / 0.3);
   backdrop-filter: blur(22px) saturate(1.2);
   -webkit-backdrop-filter: blur(22px) saturate(1.2);
 }
-/* The blurred burgundy sphere from the reference */
+/* Soft dark sphere used behind the sign-in art */
 .glow-orb {
-  background: radial-gradient(circle at 40% 40%, #d9443a 0%, #b3141f 38%, rgb(143 14 22 / 0.35) 62%, transparent 72%);
+  background: radial-gradient(circle at 40% 40%, #444444 0%, #111111 38%, rgb(60 60 60 / 0.35) 62%, transparent 72%);
   filter: blur(6px);
 }
 
@@ -165,7 +162,7 @@ select::-ms-expand { display: none; }
 /* Cards and glass panels respond to the pointer. */
 .lift { transition: transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease; }
 @media (hover: hover) {
-  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 22px 40px -22px rgb(82 8 16 / 0.45); }
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 22px 40px -22px rgb(0 0 0 / 0.45); }
 }
 .lift:active { transform: translateY(0) scale(0.99); }
 
@@ -182,7 +179,7 @@ tbody tr { transition: background-color 150ms ease; }
 }
 @media (hover: hover) { .btn-shine:hover::after { transform: translateX(120%); } }
 
-::selection { background: rgb(201 48 44 / 0.22); }
+::selection { background: rgb(0 0 0 / 0.22); }
 
 /* ---------- Velvy the mascot ---------- */
 @keyframes velvy-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -209,3 +206,14 @@ tbody tr { transition: background-color 150ms ease; }
 h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
 .text-xs { letter-spacing: 0.005em; }
+
+/* ÌṢÚRA: the sign-in cowry drifts gently */
+@keyframes cowry-float { 0%, 100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-10px) rotate(-4deg); } }
+.cowry-float { animation: cowry-float 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .cowry-float { animation: none; } }
+
+/* ÌṢÚRA product cards: lift and press */
+.product-card { transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease; }
+@media (hover: hover) { .product-card:hover { transform: translateY(-4px); box-shadow: 0 30px 50px -30px rgb(0 0 0 / 0.55); } }
+.product-card:active { transform: scale(.99); }
+@media (prefers-reduced-motion: reduce) { .product-card, .product-card:hover { transform: none; } }

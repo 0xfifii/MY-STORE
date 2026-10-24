@@ -69,9 +69,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ActivityProvider>
     <div className="min-h-dvh lg:pl-[17.5rem]">
-      {/* Desktop sidebar: a floating burgundy panel */}
-      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-burgundy to-claret text-white shadow-[0_20px_50px_-25px_rgb(82_8_16/0.7)] lg:flex">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-3" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgb(255 250 243 / 0.9) 0 16px, transparent 16px 32px)" }} />
+      {/* Desktop sidebar: a floating black panel */}
+      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-burgundy to-claret text-white shadow-[0_20px_50px_-25px_rgb(0_0_0/0.7)] lg:flex">
         <div className="relative flex h-full flex-col">{nav}</div>
       </aside>
 
@@ -114,7 +113,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-90", active ? "bg-gradient-to-br from-[#b3141f] to-claret text-white shadow-md" : "text-muted hover:text-ink")}
+              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-90", active ? "bg-gradient-to-br from-[#111111] to-claret text-white shadow-md" : "text-muted hover:text-ink")}
               aria-current={active ? "page" : undefined}
             >
               <span className="flex h-6 items-center justify-center">
@@ -162,7 +161,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
                 >
                   <Icon className={clsx("size-[18px] transition-transform duration-200 group-hover:scale-110", active && "text-burgundy")} />
                   {item.label}
-                  {item.href === "/activity" && !active ? <UnreadBadge className="ml-auto" /> : active && <span className="ml-auto size-1.5 rounded-full bg-gold" aria-hidden />}
+                  {item.href === "/activity" && !active ? <UnreadBadge className="ml-auto" /> : active && <span className="ml-auto size-1.5 rounded-full bg-ink" aria-hidden />}
                 </Link>
               </li>
             );
@@ -174,7 +173,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
   return (
     <div className="flex h-full flex-col overflow-y-auto px-3 py-5">
       <Link href="/dashboard" className="mt-2 block px-3" aria-label={app.storeName}>
-        <VelvetWordmark className="h-[72px] w-auto" ink="#fffaf3" paper="#9e1018" title={app.storeName} />
+        <VelvetWordmark className="h-[72px] w-auto" ink="#ffffff" paper="#111111" title={app.storeName} />
       </Link>
       {group("Daily work", MAIN)}
       {group("Reports", REPORTS)}

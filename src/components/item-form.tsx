@@ -9,6 +9,7 @@ import { Modal } from "./ui/dialog";
 import { useToast } from "./ui/toast";
 import { useApp } from "./app-context";
 import { api, newRequestId } from "@/lib/client";
+import { uploadPhoto } from "./item-photo";
 import { formatMoney, formatQty } from "@/lib/format";
 
 type Opt = { id: number; name: string };
@@ -52,6 +53,8 @@ export function ItemForm({
   const [openingCost, setOpeningCost] = useState(initial.price ?? "");
   const [priceReason, setPriceReason] = useState("");
   const [unitFactor, setUnitFactor] = useState("1");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const canPrice = app.can("price.edit");
   const [conversions, setConversions] = useState<{ unit_id: string; factor: string }[]>([]);
   const [similar, setSimilar] = useState<{ id: string; name: string; sku: string; archived: boolean }[]>([]);
@@ -125,6 +128,7 @@ export function ItemForm({
             conversions: conversions.map((c) => ({ unit_id: Number(c.unit_id), factor: c.factor })), request_id: requestId,
           },
         });
+        if (photo) await uploadPhoto(res.id, photo).catch((e) => toast.error("Item added, but the photo didn't upload", (e as Error).message));
         toast.success("Item added", `${v.name} is now in your inventory.`);
         router.push(thenStockIn ? `/stock-in?item=${res.id}` : `/items/${res.id}`);
       } else {
@@ -285,6 +289,24 @@ export function ItemForm({
 
       {mode === "create" && (
         <section className="glass rounded-[var(--radius-card)] p-4 sm:p-6">
+          <div className="mb-5 flex items-center gap-4">
+            <label className="group relative flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[20px] bg-[#111111] text-white transition hover:scale-[1.03]" data-testid="new-photo">
+              {photoUrl
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={photoUrl} alt="" className="size-full object-cover grayscale" />
+                : <span className="text-3xl font-light">+</span>}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setPhoto(f);
+                setPhotoUrl((old) => { if (old) URL.revokeObjectURL(old); return f ? URL.createObjectURL(f) : null; });
+              }} />
+            </label>
+            <div>
+              <p className="font-semibold">Photo</p>
+              <p className="text-sm text-muted">Optional. It shows on the item&apos;s card so it&apos;s easy to spot.</p>
+              {photo && <button type="button" className="mt-1 text-xs font-semibold text-ink underline" onClick={() => { setPhoto(null); setPhotoUrl(null); }}>Remove photo</button>}
+            </div>
+          </div>
           <h2 className="font-semibold">Price and opening stock</h2>
           <p className="mt-0.5 text-sm text-muted">The price is filled in for you on every Stock In. Any quantity you have on hand now is recorded as the first Stock In, so the history starts correctly.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">

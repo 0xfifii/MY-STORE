@@ -67,14 +67,14 @@ export function LineChart({ series, format, symbol = "", unit = "", height = 240
         aria-label={series.map((s) => `${s.name}: ${s.points.filter((p) => p.y !== null).map((p) => `${p.x} ${f(p.y!)}`).join(", ")}`).join("; ")} className="block touch-pan-y overflow-visible">
         {ticks.map((t, i) => (
           <g key={i}>
-            <line x1={padL} x2={w - padR} y1={Y(t)} y2={Y(t)} stroke="#eadcce" strokeDasharray={i === 0 ? "" : "3 4"} />
-            <text x={padL - 8} y={Y(t) + 4} textAnchor="end" fontSize="11" fill="#85706a">{format === "money" ? fmtMoney(t >= 100 ? Math.round(t) : t, symbol) : fmtQty(t)}</text>
+            <line x1={padL} x2={w - padR} y1={Y(t)} y2={Y(t)} stroke="#e5e5e5" strokeDasharray={i === 0 ? "" : "3 4"} />
+            <text x={padL - 8} y={Y(t) + 4} textAnchor="end" fontSize="11" fill="#6b6b6b">{format === "money" ? fmtMoney(t >= 100 ? Math.round(t) : t, symbol) : fmtQty(t)}</text>
           </g>
         ))}
         {labels.map((l, i) => (i % step === 0 || i === labels.length - 1) && (
-          <text key={i} x={X(i)} y={height - 8} textAnchor={i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"} fontSize="11" fill="#85706a">{l}</text>
+          <text key={i} x={X(i)} y={height - 8} textAnchor={i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"} fontSize="11" fill="#6b6b6b">{l}</text>
         ))}
-        {hover !== null && <line x1={X(hover)} x2={X(hover)} y1={padT} y2={padT + ih} stroke="#2b1613" strokeOpacity="0.25" />}
+        {hover !== null && <line x1={X(hover)} x2={X(hover)} y1={padT} y2={padT + ih} stroke="#111111" strokeOpacity="0.25" />}
         {series.map((s) => {
           let d = "", pen = false;
           s.points.forEach((p, i) => {
@@ -88,7 +88,7 @@ export function LineChart({ series, format, symbol = "", unit = "", height = 240
               {s.points.map((p, i) => {
                 if (p.y === null) return null;
                 const prevY = s.points.slice(0, i).reverse().find((q) => q.y !== null)?.y ?? null;
-                const mark = markChanges && prevY !== null && p.y !== prevY ? (p.y > prevY ? "#b42318" : "#1baf7a") : s.color;
+                const mark = markChanges && prevY !== null && p.y !== prevY ? (p.y > prevY ? "#b42318" : "#9a9a9a") : s.color;
                 const r = hover === i ? 6 : labels.length > 40 ? 0 : 3.5;
                 return r ? <circle key={i} cx={X(i)} cy={Y(p.y)} r={r} fill="#fff" stroke={mark} strokeWidth={markChanges && mark !== s.color ? 3 : 2} /> : null;
               })}

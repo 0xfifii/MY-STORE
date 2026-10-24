@@ -1,5 +1,5 @@
 /**
- * The Velvet Store icon set: hand-drawn, single-weight line icons in the same pen style as the
+ * ÌṢÚRA icon set: hand-drawn, single-weight line icons in the same pen style as the
  * mascot (round ends, slightly loose curves). Drop-in names so screens read naturally.
  */
 type P = { className?: string; strokeWidth?: number; "aria-hidden"?: boolean };

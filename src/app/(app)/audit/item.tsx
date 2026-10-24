@@ -68,7 +68,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
                     <Td>{r.label}</Td>
                     <Td right><strong>{fmtv(r.kind, c[r.key])}</strong></Td>
                     <Td right><span className="text-muted">{fmtv(r.kind, p[r.key])}</span></Td>
-                    <Td right>{diff === 0 ? <span className="text-xs text-muted">-</span> : <span className={`text-xs font-semibold ${diff > 0 ? "text-[#2a78d6]" : "text-burgundy"}`}>{diff > 0 ? "+" : "−"}{fmtv(r.kind, String(Math.abs(Math.round(diff * 1e6) / 1e6)))}</span>}</Td>
+                    <Td right>{diff === 0 ? <span className="text-xs text-muted">-</span> : <span className={`text-xs font-semibold ${diff > 0 ? "text-[#6b6b6b]" : "text-burgundy"}`}>{diff > 0 ? "+" : "−"}{fmtv(r.kind, String(Math.abs(Math.round(diff * 1e6) / 1e6)))}</span>}</Td>
                   </tr>
                 );
               })}
@@ -103,17 +103,17 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Panel title={`Stock balance · last 12 months (${u})`}>
-          <LineChart format="qty" unit={u} series={[{ name: "Closing stock", color: "#b3141f", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.closing })) }]} />
+          <LineChart format="qty" unit={u} series={[{ name: "Closing stock", color: "#111111", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.closing })) }]} />
         </Panel>
         <Panel title={`Average purchase price · last 12 months (per ${u})`}>
           <LineChart format="money" symbol={sym} markChanges zeroBase={false} emptyText="No purchases in the last 12 months."
-            series={[{ name: "Average price", color: "#2a78d6", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.avg_price })) }]} />
+            series={[{ name: "Average price", color: "#6b6b6b", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.avg_price })) }]} />
           <p className="mt-1 text-xs text-muted">Weighted by quantity. Red dot = price went up, green = went down. Gaps = no purchase that month.</p>
         </Panel>
       </div>
 
       <Panel title={`Daily balance in ${mLabel(month)} (${u})`}>
-        <LineChart format="qty" unit={u} height={200} series={[{ name: "Balance", color: "#1baf7a", points: d.days.map((x) => ({ x: x.day.slice(8), y: x.balance })) }]} />
+        <LineChart format="qty" unit={u} height={200} series={[{ name: "Balance", color: "#9a9a9a", points: d.days.map((x) => ({ x: x.day.slice(8), y: x.balance })) }]} />
       </Panel>
 
       {losses.length > 0 && (
@@ -128,7 +128,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
               {d.counts.map((x) => (
                 <li key={x.id} className="rounded-xl bg-white/60 px-3 py-2">
                   <strong>{x.count_no}</strong> · {formatDateTime(x.counted_at, tz)} · system {formatQty(x.system_qty)}, counted {formatQty(x.counted_qty)} {u}
-                  {" "}(<span className={Number(x.difference) < 0 ? "text-bad" : "text-[#2a78d6]"}>{Number(x.difference) > 0 ? "+" : ""}{formatQty(x.difference)}</span>, {m(x.value_difference)}) · {x.status}{x.decided_by ? ` by ${x.decided_by}` : ""}
+                  {" "}(<span className={Number(x.difference) < 0 ? "text-bad" : "text-[#6b6b6b]"}>{Number(x.difference) > 0 ? "+" : ""}{formatQty(x.difference)}</span>, {m(x.value_difference)}) · {x.status}{x.decided_by ? ` by ${x.decided_by}` : ""}
                 </li>
               ))}
             </ul>

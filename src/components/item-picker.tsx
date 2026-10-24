@@ -81,7 +81,7 @@ export function ItemPicker({
           role="combobox"
           aria-expanded="true"
           aria-controls="item-picker-list"
-          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(0_0_0/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10"
         />
         {loading && <Spinner className={`absolute top-1/2 size-5 -translate-y-1/2 ${q ? "right-[5.5rem]" : "right-3"}`} />}
         {q && <ClearSearchButton onClear={() => { setQ(""); box.current?.focus(); }} />}
@@ -90,7 +90,7 @@ export function ItemPicker({
       {!q && (
         <RecentSearchList list={recent.list} onPick={(t) => { setQ(t); box.current?.focus(); }} onRemove={recent.remove} onClearAll={recent.clear} className="mt-2" />
       )}
-      <ul id="item-picker-list" role="listbox" className="mt-2 max-h-[22rem] space-y-1 overflow-y-auto rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(82_8_16/0.6)] ring-1 ring-burgundy/15">
+      <ul id="item-picker-list" role="listbox" className="mt-2 max-h-[22rem] space-y-1 overflow-y-auto rounded-2xl bg-paper p-1.5 shadow-[0_14px_30px_-20px_rgb(0_0_0/0.6)] ring-1 ring-burgundy/15">
         {results.map((it, i) => (
           <li key={it.id} role="option" aria-selected={i === active}>
             <button

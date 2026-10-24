@@ -76,7 +76,7 @@ export function ListFilters({
           placeholder={searchPlaceholder}
           aria-label={searchPlaceholder}
           autoComplete="off"
-          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(82_8_16/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10 [&::-webkit-search-cancel-button]:hidden"
+          className="h-12 w-full rounded-2xl border border-burgundy/15 bg-paper pl-11 pr-24 text-[15px] shadow-[0_6px_18px_-14px_rgb(0_0_0/0.6)] placeholder:text-burgundy/40 transition focus:border-burgundy/50 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10 [&::-webkit-search-cancel-button]:hidden"
         />
         {pending && <Spinner className={`absolute top-1/2 size-4 -translate-y-1/2 ${q ? "right-[5.5rem]" : "right-3"}`} />}
         {q && <ClearSearchButton onClear={() => { setQ(""); setFocused(true); box.current?.focus(); }} />}

@@ -12,7 +12,7 @@ type Link_ = (p: Record<string, string | null>) => string;
 type R = { from: string; to: string; tz: string };
 
 function Callout({ label, title, sub, tone = "white" }: { label: string; title: string; sub: string; tone?: "night" | "white" | "blue" | "rose" }) {
-  const cls = { night: "bg-night text-white", white: "bg-white/80 ring-1 ring-white", blue: "bg-[#2a78d6] text-white", rose: "bg-rose ring-1 ring-white" }[tone];
+  const cls = { night: "bg-night text-white", white: "bg-white/80 ring-1 ring-white", blue: "bg-[#6b6b6b] text-white", rose: "bg-rose ring-1 ring-white" }[tone];
   return (
     <div className={`rounded-3xl p-4 transition-transform duration-200 hover:-translate-y-0.5 ${cls}`}>
       <p className="text-xs opacity-75">{label}</p>
@@ -74,7 +74,7 @@ export async function PurchasesTab({ r, period, sym, sort, link, ditem }: { r: R
                   <Td right>{x.restock_days}</Td>
                   <Td right>{formatUnitCost(x.avg_price, sym)} / {x.unit}</Td>
                   <Td right><strong>{m(x.spend)}</strong></Td>
-                  <Td><ShareBar pct={(Number(x.spend) / (spent || 1)) * 100} color="bg-[#2a78d6]" /></Td>
+                  <Td><ShareBar pct={(Number(x.spend) / (spent || 1)) * 100} color="bg-[#6b6b6b]" /></Td>
                   <Td><span className="whitespace-nowrap text-xs text-muted">{formatDate(x.last_day)}</span></Td>
                 </tr>
               ))}
@@ -120,7 +120,7 @@ function DailySpending({ daily, allDaily, period, sym, ditem, link }: { daily: D
   return (
     <>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="stockin-worth">
-        <div className="rounded-3xl bg-gradient-to-br from-burgundy to-claret p-4 text-paper shadow-[0_14px_30px_-18px_rgb(26_4_6/0.9)]">
+        <div className="rounded-3xl bg-gradient-to-br from-burgundy to-claret p-4 text-paper shadow-[0_14px_30px_-18px_rgb(0_0_0/0.9)]">
           <p className="text-xs opacity-80">Total stock-in worth{itemName ? ` · ${itemName}` : ""}</p>
           <p className="mt-1 text-2xl font-bold tracking-tight tabular-nums">{m(total)}</p>
           <p className="text-sm opacity-80">quantity received × unit price · {period.label}</p>
@@ -136,7 +136,7 @@ function DailySpending({ daily, allDaily, period, sym, ditem, link }: { daily: D
       >
         {chart.length > 1 && daily.length > 0 && (
           <div className="mb-5">
-            <LineChart format="money" symbol={sym} height={200} series={[{ name: itemName ? `Spent on ${itemName}` : "Spent per day", color: "#b3141f", points: chart }]} />
+            <LineChart format="money" symbol={sym} height={200} series={[{ name: itemName ? `Spent on ${itemName}` : "Spent per day", color: "#111111", points: chart }]} />
           </div>
         )}
         {days.length ? (
@@ -236,8 +236,8 @@ export async function StockOutTab({ r, period, sym, sort, link }: { r: R; period
                       <Td right>{m(x.out_value)}</Td>
                       <Td>
                         <div className="w-36 space-y-1 text-[11px]">
-                          <div className="flex items-center gap-1.5"><div className="h-1.5 rounded-full bg-[#2a78d6]" style={{ width: `${(Number(x.in_qty) / mx) * 100}%`, minWidth: Number(x.in_qty) ? 3 : 0 }} /><span className="text-muted">in {formatQty(x.in_qty)}</span></div>
-                          <div className="flex items-center gap-1.5"><div className="h-1.5 rounded-full bg-[#b3141f]" style={{ width: `${(Number(x.out_qty) / mx) * 100}%`, minWidth: 3 }} /><span className="text-muted">out {formatQty(x.out_qty)}</span></div>
+                          <div className="flex items-center gap-1.5"><div className="h-1.5 rounded-full bg-[#6b6b6b]" style={{ width: `${(Number(x.in_qty) / mx) * 100}%`, minWidth: Number(x.in_qty) ? 3 : 0 }} /><span className="text-muted">in {formatQty(x.in_qty)}</span></div>
+                          <div className="flex items-center gap-1.5"><div className="h-1.5 rounded-full bg-[#111111]" style={{ width: `${(Number(x.out_qty) / mx) * 100}%`, minWidth: 3 }} /><span className="text-muted">out {formatQty(x.out_qty)}</span></div>
                         </div>
                       </Td>
                       <Td right>{x.turnover ? `${x.turnover}%` : "-"}</Td>
@@ -255,7 +255,7 @@ export async function StockOutTab({ r, period, sym, sort, link }: { r: R; period
               {reasons.map((x) => (
                 <li key={x.reason}>
                   <div className="flex justify-between text-sm"><span className="font-medium">{reasonLabel(x.reason)}</span><span className="text-muted">{x.count}× · <strong className="text-ink">{m(x.value)}</strong></span></div>
-                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-gradient-to-r from-[#b3141f] to-[#d9443a]" style={{ width: `${(Number(x.value) / (reasonTotal || 1)) * 100}%` }} /></div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-gradient-to-r from-[#111111] to-[#444444]" style={{ width: `${(Number(x.value) / (reasonTotal || 1)) * 100}%` }} /></div>
                 </li>
               ))}
             </ul>
@@ -289,7 +289,7 @@ export async function PricesTab({ r, period, sym, q, dir, pitem, link }: { r: R;
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <div>
               <LineChart format="money" symbol={sym} markChanges zeroBase={false}
-                series={[{ name: "Price", color: "#b3141f", points: sel.points.map((p) => ({ x: formatDate(p.day).replace(/ \d{4}$/, ""), y: p.price, note: `${formatQty(String(p.qty))} ${sel.unit}${p.supplier ? ` · ${p.supplier}` : ""}` })) }]} />
+                series={[{ name: "Price", color: "#111111", points: sel.points.map((p) => ({ x: formatDate(p.day).replace(/ \d{4}$/, ""), y: p.price, note: `${formatQty(String(p.qty))} ${sel.unit}${p.supplier ? ` · ${p.supplier}` : ""}` })) }]} />
               {sel.points.length === 1 && <p className="mt-2 text-xs text-muted">Only one purchase in this period{sel.historyBefore ? ` (plus ${sel.historyBefore} earlier)` : ""}. Pick a longer period to see a trend.</p>}
             </div>
             <div className="space-y-2 text-sm">

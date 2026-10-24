@@ -34,7 +34,7 @@ export async function buildAuditReport(month: string, generatedBy: string): Prom
 
 export const auditFileName = (month: string, ext: string) => `velvet-store-monthly-audit-${month}.${ext}`;
 
-const BURGUNDY = "#8f0e16";
+const BURGUNDY = "#111111";
 type Cell = Record<string, unknown> | string;
 
 export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
@@ -81,7 +81,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
         card("Count differences", `−${m(sm.counts.shortage)} / +${m(sm.counts.excess)}`, `${sm.counts.pending} counts pending`),
       ]],
     },
-    layout: { hLineColor: "#ead8c8", vLineColor: "#ead8c8", fillColor: () => "#fbf4ec" },
+    layout: { hLineColor: "#e5e5e5", vLineColor: "#e5e5e5", fillColor: () => "#f7f7f7" },
   });
 
   // 1. Opening and closing balances
@@ -137,8 +137,8 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
     for (const p of a.prices) {
       const up = (p.change ?? 0) > 0, down = (p.change ?? 0) < 0;
       body.push([`${p.name} (per ${p.unit})`, R(c(p.previous)), R(c(p.latest), { bold: true }),
-        R(p.change === null ? "-" : `${up ? "+" : down ? "−" : ""}${c(Math.abs(p.change))}`, { color: up ? "#B42318" : down ? "#166534" : "#111", bold: up || down }),
-        R(p.changePct === null ? "first purchase" : `${p.changePct > 0 ? "+" : ""}${p.changePct.toFixed(2)}%`, { color: up ? "#B42318" : down ? "#166534" : "#111" }),
+        R(p.change === null ? "-" : `${up ? "+" : down ? "−" : ""}${c(Math.abs(p.change))}`, { color: up ? "#B42318" : down ? "#1a1a1a" : "#111", bold: up || down }),
+        R(p.changePct === null ? "first purchase" : `${p.changePct > 0 ? "+" : ""}${p.changePct.toFixed(2)}%`, { color: up ? "#B42318" : down ? "#1a1a1a" : "#111" }),
         R(c(p.high)), R(c(p.low)), R(c(p.avgWeighted)), R(String(p.points.length)), p.suppliers.join(", ") || "-"]);
     }
     if (!a.prices.length) body.push(none(10, "No supplier purchases this month, so there is no price history to compare."));
@@ -161,7 +161,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
     for (const x of a.counts) {
       const d = Number(x.difference);
       body.push([x.count_no, x.item_name, R(`${formatQty(x.system_qty)} ${x.unit}`), R(`${formatQty(x.counted_qty)} ${x.unit}`),
-        R(`${d > 0 ? "+" : ""}${formatQty(x.difference)}`, { color: d < 0 ? "#B42318" : d > 0 ? "#1D4ED8" : "#166534", bold: d !== 0 }), R(m(x.value_difference)),
+        R(`${d > 0 ? "+" : ""}${formatQty(x.difference)}`, { color: d < 0 ? "#B42318" : d > 0 ? "#1D4ED8" : "#1a1a1a", bold: d !== 0 }), R(m(x.value_difference)),
         x.status, x.counted_by ?? "-", x.decided_by ? `${x.decided_by}${x.decided_at ? `, ${formatDateTime(x.decided_at, s.timezone)}` : ""}` : "-", x.txn_no ?? "-"]);
     }
     if (!a.counts.length) body.push(none(10, "No physical counts were recorded this month."));
@@ -172,7 +172,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
   content.push({ text: "7. Low stock and damaged, expired or wasted stock", style: "h2" });
   {
     const low: Cell[][] = [[h("Item"), h("Closing", true), h("Minimum", true), h("Status")]];
-    for (const b of a.report.lowStock) low.push([b.name, R(`${formatQty(b.closing_qty)} ${b.unit}`), R(`${formatQty(b.min_stock_level)} ${b.unit}`), { text: statusText(b.status), bold: true, color: b.status === "out" ? "#B91C1C" : "#B45309" }]);
+    for (const b of a.report.lowStock) low.push([b.name, R(`${formatQty(b.closing_qty)} ${b.unit}`), R(`${formatQty(b.min_stock_level)} ${b.unit}`), { text: statusText(b.status), bold: true, color: b.status === "out" ? "#B91C1C" : "#555555" }]);
     if (!a.report.lowStock.length) low.push(none(4, "No items low or out of stock."));
     const lossRows = a.report.stockOut.filter((t) => ["damage", "expiry", "wastage"].includes(t.reason ?? "") && !t.reversed_by_txn_no);
     const loss: Cell[][] = [[h("Date"), h("Item"), h("Reason"), h("Qty", true), h("Value", true)]];
@@ -225,7 +225,7 @@ export async function auditReportXlsx(a: AuditReportData): Promise<Buffer> {
   const sheet = (name: string, cols: [string, number, string?][], rows: unknown[][], note?: string) => {
     const ws = wb.addWorksheet(name, { views: [{ state: "frozen", ySplit: 1 }] });
     ws.columns = cols.map(([header, width, fmt]) => ({ header, width, style: fmt ? { numFmt: fmt } : {} }));
-    ws.getRow(1).eachCell((c) => { c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "ff8f0e16" } }; c.alignment = { wrapText: true, vertical: "middle" }; });
+    ws.getRow(1).eachCell((c) => { c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "ff111111" } }; c.alignment = { wrapText: true, vertical: "middle" }; });
     ws.getRow(1).height = 24;
     rows.forEach((r) => ws.addRow(r));
     if (!rows.length) ws.addRow(["No records for this month"]).font = { italic: true, color: { argb: "FF666666" } };
@@ -235,7 +235,7 @@ export async function auditReportXlsx(a: AuditReportData): Promise<Buffer> {
   const sm = a.summary, rs = a.report.summary;
   const sumWs = wb.addWorksheet("Summary", { views: [{ showGridLines: false }] });
   sumWs.columns = [{ width: 40 }, { width: 30 }];
-  sumWs.addRow([s.store_name]).font = { bold: true, size: 18, color: { argb: "ff8f0e16" } };
+  sumWs.addRow([s.store_name]).font = { bold: true, size: 18, color: { argb: "ff111111" } };
   sumWs.addRow(["Monthly Audit Report"]).font = { bold: true, size: 13 };
   const rows: [string, unknown, string?][] = [
     ["Reporting period", `${a.label} (${a.report.params.from} to ${a.report.params.to})`],

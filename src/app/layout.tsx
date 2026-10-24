@@ -4,17 +4,17 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
-  title: { default: "The Velvet Store", template: "%s · The Velvet Store" },
-  description: "Inventory for The Velvet Store",
+  title: { default: "ÌṢÚRA", template: "%s · ÌṢÚRA" },
+  description: "ÌṢÚRA. Every Valuable, Accounted For.",
   icons: {
-    icon: [{ url: "/icon.svg?v=velvet2", type: "image/svg+xml" }, { url: "/favicon-32.png?v=velvet2", sizes: "32x32", type: "image/png" }],
-    apple: "/apple-touch-icon.png?v=velvet2",
+    icon: [{ url: "/icon.svg?v=isura1", type: "image/svg+xml" }, { url: "/favicon-32.png?v=isura1", sizes: "32x32", type: "image/png" }],
+    apple: "/apple-touch-icon.png?v=isura1",
   },
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#9e1018",
+  themeColor: "#111111",
   width: "device-width",
   initialScale: 1,
 };

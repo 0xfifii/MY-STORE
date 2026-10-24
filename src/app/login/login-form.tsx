@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { AtSign, KeyRound, Loader2 } from "@/components/hand-icons";
 
 const pill =
-  "flex h-14 items-center gap-3 rounded-full bg-white/70 pl-2 pr-2 shadow-[inset_0_1px_2px_rgb(82_8_16/0.06)] ring-1 ring-white focus-within:bg-white focus-within:ring-burgundy/25";
+  "flex h-14 items-center gap-3 rounded-full bg-white/70 pl-2 pr-2 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-white focus-within:bg-white focus-within:ring-burgundy/25";
 const knob = "flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-ink shadow-sm";
 
 export function LoginForm({ next, initialError = null, initialEmail = "" }: { next: string; initialError?: string | null; initialEmail?: string }) {
