@@ -1329,3 +1329,26 @@ describe("25. Businesses, subscriptions and ownership (ÌṢÚRA)", () => {
     if (MAIL_DIR) expect(MAILS().some((m) => /^To: .*manager@palmspring\.test/m.test(m) && /ends on/.test(m.replace(/=\r?\n/g, "")))).toBe(true);
   });
 });
+
+describe("26. Adding many items at once", () => {
+  it("adds a pasted list into a new category with opening stock; sending it again adds nothing", async () => {
+    const units = (await owner.get("/api/units")).data.units;
+    const pcs = units.find((u: { symbol: string }) => u.symbol === "pcs").id;
+    const rows = [["MONIN BLUE BERRY", "6"], ["MONIN KIWI", "6"], ["EVA", "18"], ["SPORT CURACO BLEU", "3"], ["BACARDI", "24"]].map(([name, quantity]) => ({ name, quantity }));
+    const r = await owner.post("/api/items/bulk", { unit_id: pcs, category_name: "DRINKS", rows });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    expect(r.data.created.length).toBe(5);
+    expect(r.data.skipped).toEqual([]);
+    const list = (await owner.get(`/api/items?category=${r.data.category_id}&pageSize=50`)).data.rows;
+    expect(list.map((x: { name: string }) => x.name).sort()).toEqual(rows.map((x) => x.name).sort());
+    const eva = list.find((x: { name: string }) => x.name === "EVA");
+    expect(Number(eva.quantity)).toBe(18);
+    expect(eva.unit_symbol).toBe("pcs");
+    const again = await owner.post("/api/items/bulk", { unit_id: pcs, category_name: "drinks", rows });
+    expect(again.data.created).toEqual([]);
+    expect(again.data.skipped.length).toBe(5);
+    expect(again.data.category_id).toBe(r.data.category_id);
+    expect((await viewer.post("/api/items/bulk", { unit_id: pcs, category_name: "DRINKS", rows })).status).toBe(403);
+    expect((await owner.get("/items/bulk")).status).toBe(200);
+  });
+});

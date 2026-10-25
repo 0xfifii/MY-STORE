@@ -53,6 +53,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
             <a href="/api/reports/export?kind=balance&preset=today&format=xlsx" className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold shadow-sm ring-1 ring-black/10 transition hover:-translate-y-px hover:shadow-md">
               <Download className="size-4" /> Balance sheet
             </a>
+            {can(user, "item.write") && <LinkButton href="/items/bulk" variant="secondary"><Plus className="size-4" /> Add many</LinkButton>}
             {can(user, "item.write") && <LinkButton href="/items/new"><Plus className="size-4" /> Add New Item</LinkButton>}
           </>
         }
