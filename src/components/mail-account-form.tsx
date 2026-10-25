@@ -20,7 +20,7 @@ const PRESETS: Record<Exclude<Provider, "other">, { host: string; port: string }
 
 /** Store Settings, Email account: the mailbox the app sends from. */
 export function MailAccountForm({ initial, active, ownerEmail }: {
-  initial: MailAccount; active: { source: "server" | "settings"; from: string } | null; ownerEmail: string;
+  initial: MailAccount; active: { source: "server" | "settings" | "isura"; from: string } | null; ownerEmail: string;
 }) {
   const guess: Provider = !initial.smtp_host ? "brevo_api" : initial.smtp_host === "api.brevo.com" ? "brevo_api" : initial.smtp_host.includes("gmail") ? "gmail" : initial.smtp_host.includes("brevo") ? "brevo" : "other";
   const [provider, setProvider] = useState<Provider>(guess);
@@ -87,7 +87,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
       {active ? (
         <p className="mb-4 flex items-start gap-2 rounded-2xl bg-ok-bg px-3 py-2 text-sm text-ok">
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-          <span>Emails are sent from <strong>{active.from}</strong>{fromServer ? " (set on the server). Saving an account below will replace it." : "."}</span>
+          <span>Emails are sent from <strong>{active.from}</strong>{fromServer ? " (set on the server). Saving an account below will replace it." : active.source === "isura" ? " (ÌṢÚRA's shared account). Save your own below to send from your address instead." : "."}</span>
         </p>
       ) : (
         <p className="mb-4 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">Not set up yet. Until it is, the app can&apos;t send receipts, reports, messages or welcome emails.</p>

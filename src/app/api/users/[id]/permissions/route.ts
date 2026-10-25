@@ -16,7 +16,7 @@ export const PUT = handle<Ctx>(async (req, { params }) => {
   const valid = new Set<string>(TOGGLEABLE.map((t) => t.action));
   const perms = input.permissions ? Array.from(new Set(input.permissions.filter((p) => valid.has(p)))) : null;
   const before = await queryOne<{ role: string; permissions: string[] | null; allowed_category_ids: number[] | null }>(
-    "SELECT role, permissions, allowed_category_ids FROM users WHERE id = $1", [id]);
+    "SELECT role, permissions, allowed_category_ids FROM users WHERE id = $1 AND store_id = current_store()", [id]);
   if (!before) throw new AppError("NOT_FOUND", "User not found.", 404);
   if (before.role === "owner") throw new AppError("OWNER_ALL", "Owners always have full access.", 409);
   await queryOne("UPDATE users SET permissions = $2, allowed_category_ids = $3, updated_at = now() WHERE id = $1 RETURNING id",

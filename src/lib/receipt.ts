@@ -14,7 +14,7 @@ export function receiptTitle(t: TxnRow) {
 }
 
 export function receiptFileName(t: TxnRow) {
-  return `velvet-store-receipt-${t.txn_no}.pdf`;
+  return `isura-receipt-${t.txn_no}.pdf`;
 }
 
 export async function loadReceipt(id: string) {

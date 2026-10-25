@@ -1,6 +1,6 @@
 import "server-only";
 import nodemailer from "nodemailer";
-import { query, queryOne } from "./db";
+import { currentStoreId, query, queryOne, withStore } from "./db";
 
 export type MailConfig = {
   host: string;
@@ -10,7 +10,7 @@ export type MailConfig = {
   from: string;
   secure: boolean;
   /** "server" = SMTP_* environment variables, "settings" = saved in Store Settings. */
-  source: "server" | "settings";
+  source: "server" | "settings" | "isura";
 };
 
 export type MailKind = "message" | "receipt" | "report" | "audit_report" | "welcome" | "test" | "scheduled";
@@ -32,13 +32,21 @@ export type MailPayload = {
  * Store Settings. Returns null when neither is set.
  */
 export async function mailConfig(): Promise<MailConfig | null> {
-  // The account saved in Store Settings wins; server SMTP_* variables are the fallback.
-  const s = await queryOne<{ smtp_host: string | null; smtp_port: number | null; smtp_user: string | null; smtp_pass: string | null; smtp_from: string | null }>(
-    "SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from FROM settings WHERE id = 1",
-  );
-  if (s?.smtp_host && (s.smtp_from || s.smtp_user)) {
+  // 1. this business's own account (Store Settings), 2. ÌṢÚRA's own account (its home business),
+  // 3. server SMTP_* variables.
+  type Row = { smtp_host: string | null; smtp_port: number | null; smtp_user: string | null; smtp_pass: string | null; smtp_from: string | null };
+  const fromRow = (s: Row | null, source: MailConfig["source"]): MailConfig | null => {
+    if (!s?.smtp_host || !(s.smtp_from || s.smtp_user)) return null;
     const port = s.smtp_port ?? 465;
-    return { host: s.smtp_host, port, user: s.smtp_user, pass: s.smtp_pass, from: s.smtp_from || s.smtp_user!, secure: port === 465, source: "settings" };
+    return { host: s.smtp_host, port, user: s.smtp_user, pass: s.smtp_pass, from: s.smtp_from || s.smtp_user!, secure: port === 465, source };
+  };
+  const sel = "SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from FROM settings LIMIT 1";
+  const own = fromRow((await currentStoreId()) === null ? null : await queryOne<Row>(sel), "settings");
+  if (own) return own;
+  const home = await queryOne<{ home_store_id: number | null }>("SELECT home_store_id FROM platform_settings WHERE id = 1").catch(() => null);
+  if (home?.home_store_id && home.home_store_id !== (await currentStoreId())) {
+    const shared = fromRow(await withStore(home.home_store_id, () => queryOne<Row>(sel)), "isura");
+    if (shared) return shared;
   }
   if (process.env.SMTP_HOST && process.env.SMTP_FROM) {
     const port = Number(process.env.SMTP_PORT ?? 587);
@@ -143,7 +151,7 @@ export async function sendMail(opts: {
   resendOf?: string | null;
 }) {
   const cfg0 = await mailConfig();
-  const store = (await queryOne<{ store_name: string }>("SELECT store_name FROM settings WHERE id = 1").catch(() => null))?.store_name || "ÌṢÚRA";
+  const store = (await queryOne<{ store_name: string }>("SELECT store_name FROM settings LIMIT 1").catch(() => null))?.store_name || "ÌṢÚRA";
   // Every email carries the ÌṢÚRA look and a recognisable sender name.
   if (!opts.html) opts = { ...opts, html: emailHtml(store, opts.subject.replace(new RegExp(`^${store.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:\\s*`), ""), opts.text) };
   const cfg = cfg0 && !/</.test(cfg0.from) ? { ...cfg0, from: `"${store.replace(/"/g, "")}" <${cfg0.from.trim()}>` } : cfg0;
@@ -228,7 +236,7 @@ async function connect(cfg: MailConfig) {
     try {
       await t.verify();
       if (port !== cfg.port && cfg.source === "settings") {
-        await query("UPDATE settings SET smtp_port = $1 WHERE id = 1", [port]).catch(() => {});
+        if (cfg.source === "settings") await query("UPDATE settings SET smtp_port = $1", [port]).catch(() => {});
       }
       return t;
     } catch (e) {

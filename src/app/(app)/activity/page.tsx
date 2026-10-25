@@ -34,7 +34,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
 
   const [seen, people, feed] = await Promise.all([
     queryOne<{ at: string | null }>("SELECT activity_seen_at::text AS at FROM users WHERE id = $1", [me.id]),
-    everyone ? query<{ id: string; name: string; is_active: boolean; removed: boolean }>("SELECT id, name, is_active, deleted_at IS NOT NULL AS removed FROM users ORDER BY deleted_at IS NOT NULL, is_active DESC, name") : Promise.resolve([]),
+    everyone ? query<{ id: string; name: string; is_active: boolean; removed: boolean }>("SELECT id, name, is_active, deleted_at IS NOT NULL AS removed FROM users WHERE store_id = current_store() ORDER BY deleted_at IS NOT NULL, is_active DESC, name") : Promise.resolve([]),
     activityFeed({
       userId: everyone && sp.user && UUID.test(sp.user) ? sp.user : null,
       onlyUserId: everyone ? null : me.id,

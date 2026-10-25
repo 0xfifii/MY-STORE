@@ -423,7 +423,7 @@ export function reportFileName(p: ReportParams, ext: string) {
   const pt = periodTypeOf(p.from, p.to, p.periodType);
   const kind = (pt === "week" ? "weekly-" : pt === "month" ? "monthly-" : "") + (p.kind === "full" ? "report" : p.kind.replace("_", "-"));
   const period = p.from === p.to ? p.from : `${p.from}_to_${p.to}`;
-  return `velvet-store-${kind}-${period}.${ext}`;
+  return `isura-${kind}-${period}.${ext}`;
 }
 
 /** Which sections a report kind contains. */

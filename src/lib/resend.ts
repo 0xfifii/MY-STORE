@@ -27,7 +27,7 @@ export async function resendEmail(logId: string, by: { id: string; name: string;
   const p = row.payload;
 
   if (p.attach?.kind === "welcome") {
-    const u = await queryOne<{ id: string; name: string; email: string; role: Role }>("SELECT id, name, email, role FROM users WHERE id = $1", [p.attach.userId]);
+    const u = await queryOne<{ id: string; name: string; email: string; role: Role }>("SELECT id, name, email, role FROM users WHERE id = $1 AND store_id = current_store()", [p.attach.userId]);
     if (!u) throw new AppError("NOT_FOUND", "That user no longer exists.", 404);
     const r = await sendWelcomeEmail({ ...u, email: to[0] ?? u.email, password: null }, { by, url: opts.url, force: true, resendOf: row.id });
     if (r.status !== "sent") throw new AppError("EMAIL_FAILED", r.detail ?? "The welcome email could not be sent.", 502);

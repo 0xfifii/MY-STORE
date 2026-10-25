@@ -276,13 +276,17 @@ export async function skuExists(sku: string, excludeId?: string) {
 // ---------------------------------------------------------------------------
 // Writes
 // ---------------------------------------------------------------------------
+/** Next free ITM-00001 style code in this business (each business numbers its own items). */
 async function nextSku(client: PoolClient) {
-  for (let i = 0; i < 20; i++) {
-    const { rows } = await client.query<{ sku: string }>(
-      "SELECT 'ITM-' || lpad(nextval('item_sku_seq')::text, 5, '0') AS sku",
-    );
-    const exists = await client.query("SELECT 1 FROM items WHERE lower(sku) = lower($1)", [rows[0].sku]);
-    if (!exists.rowCount) return rows[0].sku;
+  // Serialise code generation within the business so two new items can't get the same code.
+  await client.query("SELECT pg_advisory_xact_lock(727300, current_store())");
+  const { rows } = await client.query<{ n: number }>(
+    "SELECT coalesce(max(substring(sku from '^ITM-([0-9]+)$')::int), 0) + 1 AS n FROM items",
+  );
+  for (let n = rows[0].n, i = 0; i < 50; i++, n++) {
+    const sku = `ITM-${String(n).padStart(5, "0")}`;
+    const exists = await client.query("SELECT 1 FROM items WHERE lower(sku) = lower($1)", [sku]);
+    if (!exists.rowCount) return sku;
   }
   throw new AppError("SKU_GENERATION", "Could not generate an item code; enter one manually.");
 }

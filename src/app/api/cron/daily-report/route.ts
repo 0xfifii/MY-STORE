@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { runScheduledReports } from "@/lib/reports/history";
+import { runForAllBusinesses } from "@/lib/businesses";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ function authorised(req: NextRequest) {
 async function run(req: NextRequest) {
   if (!authorised(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const result = await runScheduledReports();
+    const result = await runForAllBusinesses();
     return NextResponse.json(result);
   } catch (e) {
     console.error(e);

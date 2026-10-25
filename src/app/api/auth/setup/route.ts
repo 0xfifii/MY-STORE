@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { handle, ok, readJson } from "@/lib/api";
 import { createSession, hashPassword } from "@/lib/auth";
-import { withTransaction } from "@/lib/db";
+import { withStore, withTransaction } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { passwordSchema } from "@/lib/validation";
@@ -17,18 +17,24 @@ const schema = z.object({
 export const POST = handle(async (req) => {
   const input = schema.parse(await readJson(req));
   const hash = await hashPassword(input.password);
-  const id = await withTransaction(async (c) => {
+  // First run: the person setting up becomes the ÌṢÚRA admin and the owner of business #1.
+  const id = await withStore(null, () => withTransaction(async (c) => {
     await c.query("LOCK TABLE users IN EXCLUSIVE MODE");
     const n = await c.query("SELECT 1 FROM users LIMIT 1");
     if (n.rowCount) throw new AppError("SETUP_DONE", "Setup has already been completed. Please sign in.", 409);
     const { rows } = await c.query<{ id: string }>(
-      "INSERT INTO users (name, email, password_hash, role) VALUES ($1,$2,$3,'owner') RETURNING id",
+      "INSERT INTO users (name, email, password_hash, role, store_id, is_platform_admin) VALUES ($1,$2,$3,'owner',1,true) RETURNING id",
       [input.name, input.email, hash],
     );
-    if (input.store_name) await c.query("UPDATE settings SET store_name = $1, updated_at = now()", [input.store_name]);
+    // The rest happens inside business #1.
+    await c.query("SELECT set_config('isura.store_id', '1', true)");
+    if (input.store_name) {
+      await c.query("UPDATE settings SET store_name = $1, updated_at = now()", [input.store_name]);
+      await c.query("UPDATE stores SET name = $1 WHERE id = 1", [input.store_name]);
+    }
     await audit(rows[0].id, "setup.owner_created", "user", rows[0].id, { email: input.email }, c);
     return rows[0].id;
-  });
+  }));
   await createSession(id);
   return ok({ ok: true }, 201);
 });

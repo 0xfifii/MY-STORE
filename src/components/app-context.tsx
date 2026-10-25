@@ -5,7 +5,10 @@ import type { Action, Role } from "@/lib/permissions";
 import { can as canRole } from "@/lib/permissions";
 
 export type AppCtx = {
-  user: { id: string; name: string; email: string; role: Role; permissions: string[] | null; allowed_category_ids: number[] | null };
+  user: {
+    id: string; name: string; email: string; role: Role; permissions: string[] | null; allowed_category_ids: number[] | null;
+    is_platform_admin: boolean; store_id: number; home_store_id: number; store_name: string; paid_until: string | null;
+  };
   storeName: string;
   currencySymbol: string;
   currencyCode: string;

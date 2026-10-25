@@ -1,6 +1,6 @@
 import "server-only";
 import type { PoolClient } from "pg";
-import { db } from "./db";
+import { query } from "./db";
 
 export async function audit(
   userId: string | null,
@@ -10,8 +10,14 @@ export async function audit(
   details: Record<string, unknown> = {},
   client?: PoolClient,
 ) {
-  const q = client ?? (await db());
-  await q.query(
+  if (client) {
+    await client.query(
+      "INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details) VALUES ($1, $2, $3, $4, $5)",
+      [userId, action, entityType, entityId === null ? null : String(entityId), JSON.stringify(details)],
+    );
+    return;
+  }
+  await query(
     "INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details) VALUES ($1, $2, $3, $4, $5)",
     [userId, action, entityType, entityId === null ? null : String(entityId), JSON.stringify(details)],
   );

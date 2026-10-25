@@ -1,5 +1,5 @@
 import "server-only";
-import { query, queryOne } from "./db";
+import { query, queryOne, withStore } from "./db";
 
 export type ActivityKind = "stock_in" | "stock_out" | "correction" | "price" | "count" | "item" | "setup" | "email" | "report" | "user" | "settings" | "signin";
 
@@ -69,7 +69,7 @@ const FEED = `
            WHEN 'supplier.create' THEN 'Added supplier ' WHEN 'supplier.update' THEN 'Edited supplier ' WHEN 'supplier.archive' THEN 'Archived supplier ' WHEN 'supplier.restore' THEN 'Restored supplier '
            WHEN 'worker.create' THEN 'Added worker ' WHEN 'worker.update' THEN 'Edited worker ' WHEN 'worker.archive' THEN 'Archived worker ' WHEN 'worker.restore' THEN 'Restored worker '
            WHEN 'unit.create' THEN 'Added unit ' WHEN 'unit_conversion.set' THEN 'Set a unit conversion ' WHEN 'unit_conversion.remove' THEN 'Removed a unit conversion '
-           WHEN 'user.create' THEN 'Added user ' WHEN 'user.delete' THEN 'Removed user ' WHEN 'user.update' THEN 'Updated user ' WHEN 'user.permissions' THEN 'Changed permissions for '
+           WHEN 'business.owner_changed' THEN 'Took over as the owner, ' WHEN 'user.joined' THEN 'Joined the business, ' WHEN 'user.create' THEN 'Added user ' WHEN 'user.delete' THEN 'Removed user ' WHEN 'user.update' THEN 'Updated user ' WHEN 'user.permissions' THEN 'Changed permissions for '
            WHEN 'settings.update' THEN 'Changed store settings' WHEN 'settings.email' THEN 'Changed the email account' WHEN 'setup.owner_created' THEN 'Set up the store'
            ELSE initcap(replace(replace(a.action, '.', ' '), '_', ' ')) || ' '
          END || coalesce(CASE
@@ -141,5 +141,6 @@ export async function unreadActivity(userId: string, limit = 5) {
 }
 
 export async function markActivitySeen(userId: string) {
-  await query("UPDATE users SET activity_seen_at = now() WHERE id = $1", [userId]);
+  // The person's own row, whichever business they're looking at (the ÌṢÚRA admin may be in another).
+  await withStore(null, () => query("UPDATE users SET activity_seen_at = now() WHERE id = $1", [userId]));
 }

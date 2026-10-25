@@ -7,16 +7,17 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, X, ArchiveRestore,
-  HardHat, ChartPie, ClipboardCheck, Mail, Bell,
+  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck,
 } from "@/components/hand-icons";
 import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
+import { BusinessBanner } from "./business-banner";
 import { useApp } from "./app-context";
 import { VelvetWordmark } from "./logo";
 import { StockDialogProvider } from "./stock-dialog";
 import { api } from "@/lib/client";
 import { ROLE_LABELS, type Action } from "@/lib/permissions";
 
-type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; perm?: Action; match?: string[] };
+type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; perm?: Action; match?: string[]; adminOnly?: boolean };
 
 const MAIN: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -41,6 +42,7 @@ const SETUP: NavItem[] = [
   { href: "/units", label: "Units", icon: Ruler, perm: "page.setup" },
   { href: "/users", label: "Users", icon: Users, perm: "users.manage" },
   { href: "/settings", label: "Store Settings", icon: Settings, perm: "settings.write" },
+  { href: "/isura", label: "ÌṢÚRA admin", icon: ShieldCheck, adminOnly: true },
 ];
 
 const BOTTOM: NavItem[] = [
@@ -101,6 +103,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main className="mx-auto w-full max-w-7xl px-4 pb-32 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-9">
+        <BusinessBanner />
         <StockDialogProvider><div key={pathname} className="page-enter">{children}</div></StockDialogProvider>
       </main>
 
@@ -140,7 +143,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
     router.refresh();
   };
   const group = (label: string, items: NavItem[]) => {
-    const visible = items.filter((i) => !i.perm || app.can(i.perm));
+    const visible = items.filter((i) => (!i.perm || app.can(i.perm)) && (!i.adminOnly || app.user.is_platform_admin));
     if (!visible.length) return null;
     return (
       <div className="mt-5">

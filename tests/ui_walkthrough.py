@@ -153,6 +153,8 @@ with sync_playwright() as p:
     page.get_by_role("radio", name="Sale").click()
     page.get_by_role("button", name="Review stock out").click()
     page.get_by_test_id("confirm-stock").click()
+    # wait for the saved confirmation (the review screen already shows 22.25 as a preview)
+    expect(page.get_by_text("Stock out recorded").first).to_be_visible(timeout=15000)
     expect(page.get_by_text("22.25").first).to_be_visible()
 
     # ---- Item page, dashboard, low stock, transactions, reports

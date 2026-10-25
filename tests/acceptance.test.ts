@@ -420,12 +420,12 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
 
   it("weekly and monthly reports cover the right dates and are named accordingly", async () => {
     const w = await owner.get("/api/reports/export?format=csv&preset=this_week");
-    expect(w.headers.get("content-disposition")).toMatch(/velvet-store-weekly-report-\d{4}-\d{2}-\d{2}(_to_\d{4}-\d{2}-\d{2})?\.csv/);
+    expect(w.headers.get("content-disposition")).toMatch(/isura-weekly-report-\d{4}-\d{2}-\d{2}(_to_\d{4}-\d{2}-\d{2})?\.csv/);
     const wText = (w.data as Buffer).toString();
     expect(wText).toContain("Weekly Inventory Report");
     const m = await owner.get(`/api/reports/export?format=csv&preset=month&month=${today.slice(0, 7)}`);
     const mText = (m.data as Buffer).toString();
-    expect(m.headers.get("content-disposition")).toContain(`velvet-store-monthly-report-${today.slice(0, 8)}01_to_`);
+    expect(m.headers.get("content-disposition")).toContain(`isura-monthly-report-${today.slice(0, 8)}01_to_`);
     expect(mText).toContain("Monthly Inventory Report");
     // The month's closing equals today's closing (same end state)
     const get = (csv: string, label: string) => csv.split("\r\n").find((l) => l.startsWith(label))!.split(",")[1];
@@ -443,7 +443,7 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
   it("xlsx has General Report / Stock Sheet / Stock In & Out sheets with matching totals", async () => {
     const r = await owner.get("/api/reports/export?format=xlsx&preset=today");
     expect(r.status).toBe(200);
-    expect(r.headers.get("content-disposition")).toMatch(/velvet-store-report-\d{4}-\d{2}-\d{2}\.xlsx/);
+    expect(r.headers.get("content-disposition")).toMatch(/isura-report-\d{4}-\d{2}-\d{2}\.xlsx/);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(r.data);
     const names = wb.worksheets.map((w) => w.name);
@@ -511,7 +511,7 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
   });
 
   it("does nothing while disabled, generates once when due, and emails the files", async () => {
-    const call = () => fetch(`${BASE}/api/cron/daily-report`, { headers: { authorization: `Bearer ${CRON}` } }).then((r) => r.json());
+    const call = () => fetch(`${BASE}/api/cron/daily-report`, { headers: { authorization: `Bearer ${CRON}` } }).then((r) => r.json()).then((j) => j.businesses[0]);
     expect((await call()).status).toBe("disabled");
     const s = await owner.patch("/api/settings", {
       store_name: "ÌṢÚRA", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos",
@@ -523,8 +523,8 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
     const first = await call();
     expect(first.status).toBe("ran");
     expect(first.generated).toHaveLength(9); // daily + weekly + monthly, 3 formats each
-    expect(first.generated.some((f: string) => f.startsWith("velvet-store-weekly-report-"))).toBe(true);
-    expect(first.generated.some((f: string) => f.startsWith("velvet-store-monthly-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("isura-weekly-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("isura-monthly-report-"))).toBe(true);
     const second = await call();
     expect(second.generated).toHaveLength(0); // once per day per format
     const { rows } = await db.query("SELECT format, status, delivery_status, period_type FROM generated_reports WHERE trigger='scheduled'");
@@ -540,9 +540,9 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
       const raw = readFileSync(join(MAIL_DIR, mails[mails.length - 1]), "utf8");
       expect(raw).toMatch(/Daily.*Weekly.*Monthly/s);
       expect(raw).toContain("To: owner@mystore.test");
-      for (const ext of ["pdf", "xlsx", "csv"]) expect(raw).toMatch(new RegExp(`velvet-store-report-\\d{4}-\\d{2}-\\d{2}\\.${ext}`));
-      expect(raw).toContain("velvet-store-weekly-report-");
-      expect(raw).toContain("velvet-store-monthly-report-");
+      for (const ext of ["pdf", "xlsx", "csv"]) expect(raw).toMatch(new RegExp(`isura-report-\\d{4}-\\d{2}-\\d{2}\\.${ext}`));
+      expect(raw).toContain("isura-weekly-report-");
+      expect(raw).toContain("isura-monthly-report-");
     } else {
       expect(existsSync("/")).toBe(true);
     }
@@ -731,7 +731,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     const id = out.data.txn.id;
     const pdf = await staff.get(`/api/transactions/${id}/receipt`);
     expect(pdf.status).toBe(200);
-    expect(pdf.headers.get("content-disposition")).toContain(`velvet-store-receipt-${out.data.txn.txn_no}.pdf`);
+    expect(pdf.headers.get("content-disposition")).toContain(`isura-receipt-${out.data.txn.txn_no}.pdf`);
     const dir = mkdtempSync(join(tmpdir(), "rcp-"));
     writeFileSync(join(dir, "r.pdf"), pdf.data);
     const text = execFileSync("pdftotext", ["-layout", join(dir, "r.pdf"), "-"]).toString();
@@ -746,7 +746,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     if (MAIL_DIR) {
       expect(sent.status, JSON.stringify(sent.data)).toBe(200);
       const m = mails().find((x) => x.includes("kitchen@mystore.test") && x.includes("receipt"));
-      expect(m).toContain(`velvet-store-receipt-${out.data.txn.txn_no}.pdf`);
+      expect(m).toContain(`isura-receipt-${out.data.txn.txn_no}.pdf`);
       const log = await db.query("SELECT status, kind FROM email_log WHERE kind = 'receipt' ORDER BY id DESC LIMIT 1");
       expect(log.rows[0]).toEqual({ status: "sent", kind: "receipt" });
     }
@@ -757,7 +757,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     const r = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Monthly audit", message: "Please review.", attach: { kind: "audit", month, format: "pdf" } });
     if (MAIL_DIR) {
       expect(r.status, JSON.stringify(r.data)).toBe(200);
-      expect(r.data.attachments).toEqual([`velvet-store-monthly-audit-${month}.pdf`]);
+      expect(r.data.attachments).toEqual([`isura-monthly-audit-${month}.pdf`]);
       const r2 = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Today", message: "Hi", attach: { kind: "report", preset: "today", format: "xlsx" } });
       expect(r2.status).toBe(200);
     }
@@ -872,7 +872,7 @@ describe("18. Resending emails and welcome emails", () => {
       const row = (await db.query("SELECT status, resend_of::text, attachments FROM email_log ORDER BY id DESC LIMIT 1")).rows[0];
       expect(row.status).toBe("sent");
       expect(row.resend_of).toBe(String(last.id));
-      expect(row.attachments[0]).toMatch(/^velvet-store-receipt-TXN-/);
+      expect(row.attachments[0]).toMatch(/^isura-receipt-TXN-/);
     }
     expect((await owner.post("/api/mail/resend/999999", {})).status).toBe(404);
   });
@@ -913,7 +913,7 @@ describe("19. Brevo API email (most reliable on Vercel)", () => {
     const mails = sent();
     expect(mails.some((m) => m.to[0].email === "me@velvet.test" && m.sender.email === "store@velvet.test" && m.sender.name === "ÌṢÚRA")).toBe(true);
     const receipt = mails.find((m) => m.to[0].email === "chef@velvet.test");
-    expect(receipt.attachment[0].name).toMatch(/^velvet-store-receipt-TXN-\d+\.pdf$/);
+    expect(receipt.attachment[0].name).toMatch(/^isura-receipt-TXN-\d+\.pdf$/);
     expect(Buffer.from(receipt.attachment[0].content, "base64").subarray(0, 4).toString()).toBe("%PDF");
     expect(mails.some((m) => m.to[0].email === "brevo.person@velvet.test" && m.htmlContent.includes("/login"))).toBe(true);
     expect((await owner.req("DELETE", "/api/settings/email")).status).toBe(200);
@@ -1182,5 +1182,150 @@ describe("24. Recording a missed day (owners only)", () => {
     expect(o.status).toBe(409);
     expect(o.data.code).toBe("INSUFFICIENT_STOCK");
     expect((await stockOut(owner, r.data.id, "1", "btl", { occurred_at: new Date(Date.now() + 3_600_000).toISOString() })).status).toBe(400); // future
+  });
+});
+
+describe("25. Businesses, subscriptions and ownership (ÌṢÚRA)", () => {
+  const MAILS = () => (MAIL_DIR && existsSync(MAIL_DIR) ? readdirSync(MAIL_DIR).filter((f) => f.endsWith(".eml")).map((f) => readFileSync(join(MAIL_DIR, f), "utf8")) : []);
+  const palm = new Session();
+  let palmId = 0;
+  let homeItem = "";
+  const tokenOf = (link: string) => link.split("/invite/")[1];
+
+  it("only the ÌṢÚRA admin can manage businesses", async () => {
+    expect((await staff.get("/api/isura/businesses")).status).toBe(403);
+    const r = await owner.get("/api/isura/businesses");
+    expect(r.status).toBe(200);
+    expect(r.data.businesses.map((b: { id: number }) => b.id)).toEqual([1]);
+    expect((await owner.req("PUT", "/api/isura/settings", { paystack_secret_key: "not-a-key" })).status).toBe(400);
+    expect((await owner.req("PUT", "/api/isura/settings", { paystack_secret_key: "sk_test_abcdefghijklmnop1234" })).status).toBe(200);
+    expect((await owner.get("/api/isura/settings")).data.paystack).toEqual({ saved: true, mode: "test", ending: "1234" });
+  });
+
+  it("a new business is created and handed to its owner by invitation; it starts locked until paid", async () => {
+    const r = await owner.post("/api/isura/businesses", { name: "Palmspring Social Eatery", owner_email: "ceo@palmspring.test", price_naira: 15000, free_days: 0 });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    palmId = r.data.id;
+    expect(r.data.invite_link).toMatch(/\/invite\/[A-Za-z0-9_-]{20,}$/);
+    if (MAIL_DIR) expect(MAILS().some((m) => m.includes("To: ceo@palmspring.test") && m.includes("/invite/"))).toBe(true);
+    const page = ((await new Session().get(`/invite/${tokenOf(r.data.invite_link)}`)).data as Buffer).toString().replace(/<!-- -->/g, "");
+    expect(page).toContain("You're the new owner of Palmspring Social Eatery");
+
+    const a = await palm.post("/api/invites/accept", { token: tokenOf(r.data.invite_link), name: "Pam Spring", password: "palm-pass-123" });
+    expect(a.status, JSON.stringify(a.data)).toBe(200);
+    expect((await new Session().post("/api/invites/accept", { token: tokenOf(r.data.invite_link), password: "x" })).data.code).toBe("INVITE_USED");
+
+    // free_days 0: locked until the first payment
+    const items = await palm.get("/api/items");
+    expect(items.status).toBe(402);
+    expect(items.data.code).toBe("SUBSCRIPTION_ENDED");
+    expect((await palm.get("/dashboard")).headers.get("location")).toMatch(/\/billing$/);
+    const billing = ((await palm.get("/billing")).data as Buffer).toString();
+    expect(billing).toContain("Your subscription has ended");
+  });
+
+  it("paying with Paystack unlocks the business; the same payment never counts twice", async () => {
+    const c = await palm.post("/api/billing/checkout", { months: 3 });
+    expect(c.status, JSON.stringify(c.data)).toBe(200);
+    expect(c.data.url).toContain("/pay/");
+    const back = await palm.get(`/billing/callback?reference=${encodeURIComponent(c.data.reference)}`);
+    expect(back.status).toBe(303);
+    expect(back.headers.get("location")).toContain("/dashboard?renewed=1");
+    const b = (await owner.get("/api/isura/businesses")).data.businesses.find((x: { id: number }) => x.id === palmId);
+    expect(b.locked).toBe(false);
+    expect(b.days_left).toBeGreaterThan(85);
+    const until = b.paid_until;
+    // the webhook for the same payment changes nothing
+    const body = JSON.stringify({ event: "charge.success", data: { reference: c.data.reference } });
+    const { createHmac } = await import("node:crypto");
+    const sig = createHmac("sha512", "sk_test_abcdefghijklmnop1234").update(body).digest("hex");
+    expect((await fetch(`${BASE}/api/paystack/webhook`, { method: "POST", headers: { "x-paystack-signature": "bad", "content-type": "application/json" }, body })).status).toBe(401);
+    expect((await fetch(`${BASE}/api/paystack/webhook`, { method: "POST", headers: { "x-paystack-signature": sig, "content-type": "application/json" }, body })).status).toBe(200);
+    expect((await owner.get("/api/isura/businesses")).data.businesses.find((x: { id: number }) => x.id === palmId).paid_until).toBe(until);
+    const { rows } = await db.query("SELECT count(*)::int n, sum(amount_kobo)::text a FROM payments WHERE store_id = $1 AND status = 'success'", [palmId]);
+    expect(rows[0]).toEqual({ n: 1, a: "4500000" });
+    expect((await palm.get("/api/items")).status).toBe(200);
+    // staff of a business can't start a payment
+    expect((await staff.post("/api/billing/checkout", { months: 1 })).status).toBe(403);
+  });
+
+  it("each business only ever sees its own data", async () => {
+    const home = (await owner.get("/api/items?pageSize=100")).data.rows;
+    expect(home.length).toBeGreaterThan(3);
+    homeItem = home[0].id;
+    expect((await palm.get("/api/items")).data.rows).toEqual([]);
+    // same item code in both businesses is fine
+    const units = (await palm.get("/api/units")).data.units;
+    const btl = units.find((u: { symbol: string }) => u.symbol === "btl").id;
+    const r = await palm.post("/api/items", { name: "Zobo drink", unit_id: btl, opening_quantity: "40", opening_unit_cost: "300", request_id: randomUUID() });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    expect((await palm.get(`/api/items/${r.data.id}`)).data.item.sku).toBe("ITM-00001");
+    expect((await owner.get(`/api/items/${r.data.id}`)).status).toBe(404);
+    expect(((await owner.get("/api/items?q=Zobo")).data.rows)).toEqual([]);
+    // reaching into another business by id fails
+    expect((await palm.get(`/api/items/${homeItem}`)).status).toBe(404);
+    expect((await palm.post("/api/stock/out", { item_id: homeItem, quantity: "1", unit_id: btl, reason: "sale", request_id: randomUUID() })).status).toBe(404);
+    // users, activity and reports are separate too
+    const users = (await palm.get("/api/users")).data.users.map((u: { email: string }) => u.email);
+    expect(users).toEqual(["ceo@palmspring.test"]);
+    const ownerId = (await db.query("SELECT id FROM users WHERE is_platform_admin")).rows[0].id;
+    expect((await palm.patch(`/api/users/${ownerId}`, { name: "Hacked" })).status).toBe(404);
+    expect((await db.query("SELECT name FROM users WHERE id = $1", [ownerId])).rows[0].name).not.toBe("Hacked");
+    const act = ((await palm.get("/activity")).data as Buffer).toString();
+    expect(act).toContain("Zobo drink");
+    expect(act).not.toContain("Coke 50cl");
+    const csv = ((await palm.get("/api/reports/export?format=csv&preset=today")).data as Buffer).toString();
+    expect(csv).toContain("Zobo drink");
+    expect(csv).not.toContain("Coke 50cl");
+    // a business can't see or touch ÌṢÚRA's own custom units
+    const homeCustom = (await db.query("SELECT id FROM units WHERE store_id = 1 LIMIT 1")).rows[0];
+    if (homeCustom) expect((await palm.get("/api/units")).data.units.some((u: { id: number }) => u.id === homeCustom.id)).toBe(false);
+  });
+
+  it("the ÌṢÚRA admin can open a business to help, then go back", async () => {
+    expect((await owner.post("/api/isura/open", { store_id: palmId })).status).toBe(200);
+    const rows = (await owner.get("/api/items")).data.rows;
+    expect(rows.map((x: { name: string }) => x.name)).toEqual(["Zobo drink"]);
+    const page = ((await owner.get("/dashboard")).data as Buffer).toString().replace(/<!-- -->/g, "");
+    expect(page).toContain("as the ÌṢÚRA admin");
+    expect((await staff.post("/api/isura/open", { store_id: palmId })).status).toBe(403);
+    expect((await owner.post("/api/isura/open", { store_id: 1 })).status).toBe(200);
+    expect((await owner.get(`/api/items/${homeItem}`)).status).toBe(200);
+  });
+
+  it("pausing locks the business completely; resuming unlocks it", async () => {
+    expect((await owner.patch(`/api/isura/businesses/${palmId}`, { status: "paused" })).status).toBe(200);
+    expect((await palm.get("/api/items")).status).toBe(402);
+    expect(((await palm.get("/billing")).data as Buffer).toString()).toContain("Your account is paused");
+    expect((await owner.patch(`/api/isura/businesses/${palmId}`, { status: "active" })).status).toBe(200);
+    expect((await palm.get("/api/items")).status).toBe(200);
+    // a recorded bank transfer extends it too
+    const before = (await owner.get("/api/isura/businesses")).data.businesses.find((x: { id: number }) => x.id === palmId).paid_until;
+    const ext = await owner.post(`/api/isura/businesses/${palmId}/extend`, { months: 1, amount_naira: 15000, note: "Transfer" });
+    expect(ext.status).toBe(200);
+    expect(new Date(ext.data.paid_until).getTime()).toBeGreaterThan(new Date(before).getTime() + 27 * 86400_000);
+  });
+
+  it("ownership can be handed to a new email; the old owner becomes staff", async () => {
+    const r = await owner.post(`/api/isura/businesses/${palmId}/invite`, { email: "manager@palmspring.test", role: "owner", demote_previous: true });
+    expect(r.status).toBe(201);
+    const mgr = new Session();
+    // an email used by another business can't be invited in
+    const clash = await owner.post(`/api/isura/businesses/${palmId}/invite`, { email: "staff@mystore.test" });
+    expect((await new Session().post("/api/invites/accept", { token: tokenOf(clash.data.invite_link), password: "staff-pass-123" })).data.code).toBe("EMAIL_IN_OTHER_BUSINESS");
+    expect((await mgr.post("/api/invites/accept", { token: tokenOf(r.data.invite_link), name: "Mo Manager", password: "mgr-pass-1234" })).status).toBe(200);
+    const roles = Object.fromEntries((await mgr.get("/api/users")).data.users.map((u: { email: string; role: string }) => [u.email, u.role]));
+    expect(roles).toEqual({ "ceo@palmspring.test": "staff", "manager@palmspring.test": "owner" });
+    expect((await mgr.get("/api/items")).data.rows.length).toBe(1);
+    // the ÌṢÚRA admin is untouched
+    expect((await db.query("SELECT is_platform_admin, role FROM users WHERE email = 'owner@mystore.test'")).rows[0]).toEqual({ is_platform_admin: true, role: "owner" });
+  });
+
+  it("owners get a reminder a few days before the end, once", async () => {
+    await db.query("UPDATE stores SET paid_until = now() + interval '2 days', reminded_for = NULL WHERE id = $1", [palmId]);
+    const call = () => fetch(`${BASE}/api/cron/daily-report`, { headers: { authorization: `Bearer ${CRON}` } }).then((r) => r.json());
+    expect((await call()).reminders).toEqual([palmId]);
+    expect((await call()).reminders).toEqual([]);
+    if (MAIL_DIR) expect(MAILS().some((m) => /^To: .*manager@palmspring\.test/m.test(m) && /ends on/.test(m.replace(/=\r?\n/g, "")))).toBe(true);
   });
 });

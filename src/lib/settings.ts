@@ -1,5 +1,5 @@
 import "server-only";
-import { queryOne } from "./db";
+import { currentStoreId, queryOne } from "./db";
 
 export type StoreSettings = {
   store_name: string;
@@ -19,9 +19,18 @@ export type StoreSettings = {
   updated_at: string;
 };
 
+export const DEFAULT_SETTINGS: StoreSettings = {
+  store_name: "ÌṢÚRA", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos", costing_method: "weighted_average",
+  auto_report_enabled: false, auto_report_time: "07:00:00", auto_report_covers: "previous_day", auto_weekly_enabled: false,
+  auto_monthly_enabled: false, auto_report_formats: ["pdf", "xlsx"], email_enabled: false, email_recipients: [],
+  welcome_email_enabled: true, updated_at: new Date(0).toISOString(),
+};
+
+/** The current business's settings (defaults when no business is selected, e.g. the sign-in page). */
 export async function getSettings(): Promise<StoreSettings> {
-  const s = await queryOne<StoreSettings & Record<string, unknown>>("SELECT * FROM settings WHERE id = 1");
-  if (!s) throw new Error("Settings row missing, run database migrations.");
+  if ((await currentStoreId()) === null) return { ...DEFAULT_SETTINGS };
+  const s = await queryOne<StoreSettings & Record<string, unknown>>("SELECT * FROM settings LIMIT 1");
+  if (!s) throw new Error("Settings row missing for this business.");
   // The mail account (and its password) never leaves the server through general settings.
   for (const k of ["smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"]) delete s[k];
   return s;
@@ -36,7 +45,7 @@ export type MailAccount = {
 export async function getMailAccount(): Promise<MailAccount> {
   const r = await queryOne<MailAccount>(
     `SELECT smtp_host, smtp_port, smtp_user, smtp_from, (coalesce(smtp_pass,'') <> '') AS has_password, welcome_email_enabled
-       FROM settings WHERE id = 1`,
+       FROM settings LIMIT 1`,
   );
   return r!;
 }

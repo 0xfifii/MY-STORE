@@ -60,6 +60,6 @@ export const GET = handle(async (req) => {
   }
   const text = L.map((l) => l.map(cell).join(",")).join("\r\n") + "\r\n";
   return new Response(Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(text)]), {
-    headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="velvet-store-usage-${from}_to_${to}.csv"` },
+    headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="isura-usage-${from}_to_${to}.csv"` },
   });
 });

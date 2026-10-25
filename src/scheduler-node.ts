@@ -1,4 +1,4 @@
-import { runScheduledReports } from "./lib/reports/history";
+import { runForAllBusinesses } from "./lib/businesses";
 
 /** Node-only part of the built-in scheduler (see instrumentation.ts). */
 export function startScheduler() {
@@ -8,8 +8,8 @@ export function startScheduler() {
     if (running) return;
     running = true;
     try {
-      const r = await runScheduledReports();
-      if (r.status === "ran" && r.generated.length) console.log(`[scheduler] generated ${r.generated.join(", ")}`);
+      const r = await runForAllBusinesses();
+      for (const b of r.businesses) if (b.generated.length) console.log(`[scheduler] business ${b.store_id}: generated ${b.generated.join(", ")}`);
     } catch (e) {
       console.error("[scheduler] report run failed:", (e as Error).message);
     } finally {

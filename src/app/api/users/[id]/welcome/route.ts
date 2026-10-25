@@ -18,7 +18,7 @@ export const POST = handle<Ctx>(async (req, { params }) => {
   const me = await requireApiUser("users.manage");
   const { id } = await params;
   const b = z.object({ new_password: passwordSchema.optional() }).parse(await readJson(req));
-  const u = /^[0-9a-f-]{36}$/i.test(id) ? await queryOne<{ id: string; name: string; email: string; role: Role }>("SELECT id, name, email, role FROM users WHERE id = $1", [id]) : null;
+  const u = /^[0-9a-f-]{36}$/i.test(id) ? await queryOne<{ id: string; name: string; email: string; role: Role }>("SELECT id, name, email, role FROM users WHERE id = $1 AND store_id = current_store()", [id]) : null;
   if (!u) throw new AppError("NOT_FOUND", "User not found.", 404);
   if (b.new_password) {
     await query("UPDATE users SET password_hash = $2 WHERE id = $1", [id, await hashPassword(b.new_password)]);

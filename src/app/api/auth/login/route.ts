@@ -2,7 +2,7 @@ import { z } from "zod";
 import { NextResponse, type NextRequest } from "next/server";
 import { handle, ok, readJson } from "@/lib/api";
 import { createSession, isLoginThrottled, recordLoginAttempt, verifyPassword } from "@/lib/auth";
-import { queryOne, query } from "@/lib/db";
+import { queryOne, query, withStore } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 
 const schema = z.object({ email: z.string().trim().toLowerCase().min(1, "Enter your email"), password: z.string().min(1, "Enter your password") });
@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
   return jsonLogin(req, undefined as never);
 }
 
-const jsonLogin = handle(async (req) => {
+// Sign-in looks people up across all businesses, so it runs with no business selected.
+const jsonLogin = handle(async (req) => withStore(null, async () => {
   const { email, password } = schema.parse(await readJson(req));
   if (await isLoginThrottled(email)) {
     throw new AppError("THROTTLED", "Too many failed attempts. Wait 15 minutes and try again.", 429);
@@ -54,4 +55,4 @@ const jsonLogin = handle(async (req) => {
   await createSession(user.id);
   await query("UPDATE users SET last_login_at = now() WHERE id = $1", [user.id]);
   return ok();
-});
+}));

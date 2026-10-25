@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PAGES = ["/login", "/setup"];
+const PUBLIC_PAGES = ["/login", "/setup", "/invite/", "/billing/callback"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // CSRF defence for state-changing API calls: the request must come from this site.
-  if (pathname.startsWith("/api/") && !["GET", "HEAD", "OPTIONS"].includes(req.method) && !pathname.startsWith("/api/cron/")) {
+  if (pathname.startsWith("/api/") && !["GET", "HEAD", "OPTIONS"].includes(req.method) && !pathname.startsWith("/api/cron/") && !pathname.startsWith("/api/paystack/")) {
     const origin = req.headers.get("origin");
     const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
     if (origin && host && new URL(origin).host !== host) {

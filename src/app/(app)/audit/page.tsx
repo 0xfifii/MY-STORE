@@ -98,7 +98,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
     usesRange ? listWorkers(true) : Promise.resolve([]),
     usesRange ? listCategories() : Promise.resolve([]),
     usesRange ? query<{ id: string; name: string }>("SELECT id, name FROM items ORDER BY lower(name)") : Promise.resolve([]),
-    usesRange ? query<{ id: string; name: string }>("SELECT id, name FROM users ORDER BY name") : Promise.resolve([]),
+    usesRange ? query<{ id: string; name: string }>("SELECT id, name FROM users WHERE store_id = current_store() ORDER BY name") : Promise.resolve([]),
     tab === "item" && f.itemId ? query<{ name: string }>("SELECT name FROM items WHERE id = $1", [f.itemId]).then((x) => x[0]?.name ?? null) : Promise.resolve(null),
   ]);
 
