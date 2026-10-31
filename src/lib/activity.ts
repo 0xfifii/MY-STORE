@@ -30,7 +30,7 @@ export const KIND_LABELS: Record<ActivityKind, string> = {
 };
 
 const REASONS = `CASE t.reason WHEN 'store_usage' THEN 'Store usage' WHEN 'kitchen_usage' THEN 'Kitchen usage' WHEN 'bakery_usage' THEN 'Bakery usage'
-  WHEN 'bar_usage' THEN 'Bar usage' WHEN 'cleaning_usage' THEN 'Cleaning usage' WHEN 'sale' THEN 'Sale' WHEN 'transfer' THEN 'Transfer'
+  WHEN 'bar_usage' THEN 'Bar usage' WHEN 'cleaning_usage' THEN 'Cleaning usage' WHEN 'runner_usage' THEN 'Runner usage' WHEN 'sale' THEN 'Sale' WHEN 'transfer' THEN 'Transfer'
   WHEN 'damage' THEN 'Damage' WHEN 'expiry' THEN 'Expiry' WHEN 'wastage' THEN 'Wastage' ELSE 'Other' END`;
 
 /**

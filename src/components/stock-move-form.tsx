@@ -392,7 +392,7 @@ export function StockMoveForm({
                     onClick={() => setReason(r.value)}
                     className={clsx(
                       "h-11 rounded-xl border text-sm font-semibold transition-colors",
-                      reason === r.value ? "border-burgundy bg-burgundy text-paper shadow-[0_8px_18px_-12px_rgb(0_0_0/0.8)]" : "border-burgundy/15 bg-paper text-ink hover:border-burgundy/40 hover:text-burgundy",
+                      reason === r.value ? "chip-pop border-burgundy bg-burgundy text-paper shadow-[0_8px_18px_-12px_rgb(0_0_0/0.8)]" : "border-burgundy/15 bg-paper text-ink hover:border-burgundy/40 hover:text-burgundy",
                     )}
                   >
                     {r.label}

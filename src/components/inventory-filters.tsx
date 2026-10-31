@@ -61,7 +61,7 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
   const allCount = categories.reduce((a, c) => a + c.count, 0);
   const tile = (on: boolean) => clsx(
     "group flex h-[92px] w-[92px] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-[22px] text-[13px] font-semibold transition duration-200 active:scale-95",
-    on ? "bg-[#111111] text-white shadow-[0_14px_26px_-14px_rgb(0_0_0/0.8)]" : "bg-white text-[#111111] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_-16px_rgb(0_0_0/0.5)]",
+    on ? "chip-pop bg-[#111111] text-white shadow-[0_14px_26px_-14px_rgb(0_0_0/0.8)]" : "bg-white text-[#111111] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_-16px_rgb(0_0_0/0.5)]",
   );
 
   return (

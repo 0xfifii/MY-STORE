@@ -1196,14 +1196,14 @@ describe("24b. Several items for one worker", () => {
       ({ item_id, quantity, unit_id: units[unit], reason, notes, request_id: randomUUID() });
     const r = await staff.post("/api/stock/out/batch", {
       worker_id: tobi, recipient: "Bar",
-      lines: [line(a, "2", "btl", "bar_usage"), line(b, "3.5", "kg", "bakery_usage"), line(a, "1", "btl", "other", "Broken on shelf")],
+      lines: [line(a, "2", "btl", "bar_usage"), line(b, "3.5", "kg", "bakery_usage"), line(a, "1", "btl", "other", "Broken on shelf"), line(b, "1", "kg", "runner_usage")],
     });
     expect(r.status, JSON.stringify(r.data)).toBe(201);
-    expect(r.data.txns).toHaveLength(3);
+    expect(r.data.txns).toHaveLength(4);
     expect(Number((await item(a)).quantity)).toBe(7);
-    expect(Number((await item(b)).quantity)).toBe(16.5);
+    expect(Number((await item(b)).quantity)).toBe(15.5);
     const { rows } = await db.query("SELECT reason, worker_id, recipient FROM stock_transactions WHERE txn_no = ANY($1) ORDER BY id", [r.data.txns.map((t: any) => t.txn_no)]);
-    expect(rows.map((x) => x.reason)).toEqual(["bar_usage", "bakery_usage", "other"]);
+    expect(rows.map((x) => x.reason)).toEqual(["bar_usage", "bakery_usage", "other", "runner_usage"]);
     expect(rows.every((x) => x.worker_id === tobi && x.recipient === "Bar")).toBe(true);
   });
 

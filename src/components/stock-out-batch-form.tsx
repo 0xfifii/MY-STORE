@@ -11,6 +11,7 @@ import { Button, Field, Input, Select, Spinner, StatusBadge, buttonClass } from 
 import { useToast } from "./ui/toast";
 import { useApp } from "./app-context";
 import { WhenPicker, nowLocalInput } from "./stock-move-form";
+import { SuccessCheck } from "./motion";
 import { api, newRequestId } from "@/lib/client";
 import { add, cmp, isValidQty, mulFactor } from "@/lib/decimal";
 import { STOCK_OUT_REASONS, formatMoney, formatQty, reasonLabel, type StockStatus } from "@/lib/format";
@@ -167,13 +168,14 @@ export function StockOutBatchForm() {
     const byId = new Map(saved.items.map((i) => [i.id, i]));
     return (
       <div data-testid="batch-done">
+        <SuccessCheck className="mb-3 size-14" />
         <p className="font-display text-xl font-bold">Stock out recorded</p>
         <p className="mt-1 text-sm text-muted">{saved.txns.length} item{saved.txns.length === 1 ? "" : "s"} taken out by {worker?.name}.</p>
         <ul className="mt-4 divide-y divide-black/5 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5">
           {saved.txns.map((t) => {
             const it = byId.get(t.item_id);
             return (
-              <li key={t.txn_no} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+              <li key={t.txn_no} className="pop-in flex items-center justify-between gap-3 px-4 py-3 text-sm">
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{it?.name}</p>
                   <p className="text-xs text-muted">{t.txn_no}</p>
@@ -258,7 +260,7 @@ export function StockOutBatchForm() {
           const failed = error?.line !== undefined && filled[error.line]?.key === l.key;
           return (
             <div key={l.key} data-testid="batch-line"
-              className={clsx("rounded-2xl bg-white p-3 ring-1 transition", problem || failed ? "ring-bad/50" : "ring-black/5")}>
+              className={clsx("pop-in rounded-2xl bg-white p-3 ring-1 transition", problem || failed ? "ring-bad/50" : "ring-black/5")}>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase tracking-wide text-muted">Item {i + 1}</span>
                 <button type="button" onClick={() => removeLine(l.key)} aria-label={`Remove item ${i + 1}`}

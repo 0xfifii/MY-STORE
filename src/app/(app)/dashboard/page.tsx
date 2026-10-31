@@ -1,4 +1,5 @@
 import { StockInIcon, StockOutIcon } from "@/components/icons";
+import { CountUp } from "@/components/motion";
 import Link from "next/link";
 import { AlertTriangle, Download, Plus, Boxes, History, TrendingDown, TrendingUp } from "@/components/hand-icons";
 import { EmptyState, LinkButton, PageHeader, Panel, StatusBadge } from "@/components/ui/primitives";
@@ -69,7 +70,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="pointer-events-none absolute -right-14 -top-16 size-56 rounded-full bg-paper/10" aria-hidden />
           <p className="relative text-[11px] font-semibold uppercase tracking-[0.16em] text-paper/70">Total inventory worth</p>
           <p className="relative mt-3 text-[40px] font-semibold leading-none tracking-[-0.035em] tabular-nums sm:text-[50px]" data-testid="inventory-worth">
-            {formatMoney(d.totals.worth, sym)}
+            <CountUp value={Number(d.totals.worth)} decimals={2} prefix={sym} />
           </p>
           <p className="relative mt-3 text-sm text-paper/75">{d.totals.items} {d.totals.items === 1 ? "item" : "items"} · weighted-average cost</p>
           {d.byUnit.length > 0 && (
@@ -81,10 +82,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           )}
         </div>
         <dl className="stagger grid grid-cols-2 gap-3">
-          <Stat label="Received today" value={formatMoney(d.today.in_value, sym)} sub={`${d.today.in_count} receipt${d.today.in_count === 1 ? "" : "s"}`} tone="black" href="/transactions?type=stock_in" icon={<StockInIcon className="size-5" />} />
-          <Stat label="Issued today" value={formatMoney(d.today.out_value, sym)} sub={`${d.today.out_count} issue${d.today.out_count === 1 ? "" : "s"}`} tone="burgundy" href="/transactions?type=stock_out" icon={<StockOutIcon className="size-5" />} />
-          <Stat label="Low stock" value={String(d.totals.low)} sub="at or below minimum" tone="black" href="/low-stock" icon={<AlertTriangle className="size-5" />} />
-          <Stat label="Out of stock" value={String(d.totals.out)} sub="need restocking" tone="burgundy" href="/low-stock?status=out" icon={<Boxes className="size-5" />} />
+          <Stat label="Received today" value={<CountUp value={Number(d.today.in_value)} decimals={2} prefix={sym} />} sub={`${d.today.in_count} receipt${d.today.in_count === 1 ? "" : "s"}`} tone="black" href="/transactions?type=stock_in" icon={<StockInIcon className="size-5" />} />
+          <Stat label="Issued today" value={<CountUp value={Number(d.today.out_value)} decimals={2} prefix={sym} />} sub={`${d.today.out_count} issue${d.today.out_count === 1 ? "" : "s"}`} tone="burgundy" href="/transactions?type=stock_out" icon={<StockOutIcon className="size-5" />} />
+          <Stat label="Low stock" value={<CountUp value={d.totals.low} />} sub="at or below minimum" tone="black" href="/low-stock" icon={<AlertTriangle className="size-5" />} />
+          <Stat label="Out of stock" value={<CountUp value={d.totals.out} />} sub="need restocking" tone="burgundy" href="/low-stock?status=out" icon={<Boxes className="size-5" />} />
         </dl>
       </section>
 
@@ -174,7 +175,7 @@ const TONE = {
   black: "bg-white text-[#111111] ring-1 ring-black/5 shadow-[0_18px_36px_-26px_rgb(0_0_0/0.6)]",
 };
 
-function Stat({ label, value, sub, tone, href, icon }: { label: string; value: string; sub: string; tone: keyof typeof TONE; href: string; icon: React.ReactNode }) {
+function Stat({ label, value, sub, tone, href, icon }: { label: string; value: React.ReactNode; sub: string; tone: keyof typeof TONE; href: string; icon: React.ReactNode }) {
   const dark = tone === "burgundy";
   return (
     <Link href={href} className={`lift group relative block overflow-hidden rounded-[var(--radius-card)] p-4 ${TONE[tone]}`}>

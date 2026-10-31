@@ -1,4 +1,6 @@
 "use client";
+import { Suspense } from "react";
+import { RouteProgress } from "./motion";
 import { StockInIcon, StockOutIcon } from "@/components/icons";
 
 import Link from "next/link";
@@ -102,6 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
+      <Suspense fallback={null}><RouteProgress /></Suspense>
       <main className="mx-auto w-full max-w-7xl px-4 pb-32 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-9">
         <BusinessBanner />
         <StockDialogProvider><div key={pathname} className="page-enter">{children}</div></StockDialogProvider>
@@ -116,7 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-90", active ? "bg-gradient-to-br from-[#111111] to-claret text-white shadow-md" : "text-muted hover:text-ink")}
+              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-90", active ? "nav-active bg-gradient-to-br from-[#111111] to-claret text-white shadow-md" : "text-muted hover:text-ink")}
               aria-current={active ? "page" : undefined}
             >
               <span className="flex h-6 items-center justify-center">

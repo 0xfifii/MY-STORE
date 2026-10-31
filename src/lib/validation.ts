@@ -86,7 +86,7 @@ export const stockInSchema = z.object({
   request_id: uuid,
 });
 
-const stockOutReason = z.enum(["store_usage", "kitchen_usage", "bakery_usage", "bar_usage", "cleaning_usage", "sale", "transfer", "damage", "expiry", "wastage", "other"], {
+const stockOutReason = z.enum(["store_usage", "kitchen_usage", "bakery_usage", "bar_usage", "cleaning_usage", "runner_usage", "sale", "transfer", "damage", "expiry", "wastage", "other"], {
   message: "Choose a reason",
 });
 

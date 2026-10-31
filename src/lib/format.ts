@@ -67,6 +67,7 @@ export const STOCK_OUT_REASONS = [
   { value: "bakery_usage", label: "Bakery usage" },
   { value: "bar_usage", label: "Bar usage" },
   { value: "cleaning_usage", label: "Cleaning usage" },
+  { value: "runner_usage", label: "Runner usage" },
   { value: "sale", label: "Sale" },
   { value: "transfer", label: "Transfer" },
   { value: "damage", label: "Damage" },
