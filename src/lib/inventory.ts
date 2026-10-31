@@ -3,9 +3,9 @@ import type { PoolClient } from "pg";
 import type { z } from "zod";
 import { query, queryOne, withTransaction } from "./db";
 import { audit } from "./audit";
-import { AppError } from "./errors";
+import { AppError, friendlyDbError } from "./errors";
 import { can, type Role } from "./permissions";
-import type { itemCreateSchema, itemUpdateSchema, stockInSchema, stockOutSchema } from "./validation";
+import type { itemCreateSchema, itemUpdateSchema, stockInSchema, stockOutBatchSchema, stockOutSchema } from "./validation";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -512,6 +512,42 @@ export async function recordStockOut(input: z.infer<typeof stockOutSchema>, user
        userId, input.request_id, input.occurred_at ?? null],
     );
     return rows[0] as { id: string; txn_no: string };
+  });
+}
+
+/**
+ * Records several stock-outs for one worker in a single transaction: either every line is saved or none is.
+ * A failing line is reported by its number and item name, e.g. "Line 3, BACARDI: Only 2 was in stock".
+ */
+export async function recordStockOutBatch(input: z.infer<typeof stockOutBatchSchema>, userId: string) {
+  return withTransaction(async (client) => {
+    if (input.worker_id) {
+      const w = await client.query("SELECT 1 FROM workers WHERE id = $1 AND archived_at IS NULL", [input.worker_id]);
+      if (!w.rowCount) throw new AppError("INVALID_WORKER", "Choose a worker from the list.");
+      await client.query("SELECT set_config('mystore.worker_id', $1, true)", [String(input.worker_id)]);
+    }
+    const ids = [...new Set(input.lines.map((l) => l.item_id))];
+    const names = new Map(
+      (await client.query<{ id: string; name: string }>("SELECT id::text, name FROM items WHERE id = ANY($1::uuid[])", [ids])).rows.map((r) => [r.id, r.name]),
+    );
+    const out: { id: string; txn_no: string; item_id: string }[] = [];
+    for (const [i, l] of input.lines.entries()) {
+      const name = names.get(l.item_id);
+      if (!name) throw new AppError("ITEM_NOT_FOUND", `Line ${i + 1}: item not found.`, 404, { line: i });
+      try {
+        const { rows } = await client.query(
+          "SELECT id::text, txn_no FROM stock_out($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+          [l.item_id, l.quantity, l.unit_id, l.reason, input.recipient, input.reference, l.notes,
+           userId, l.request_id, input.occurred_at ?? null],
+        );
+        out.push({ ...(rows[0] as { id: string; txn_no: string }), item_id: l.item_id });
+      } catch (e) {
+        const f = friendlyDbError(e);
+        if (!f) throw e;
+        throw new AppError(f.code, `Line ${i + 1}, ${name}: ${f.message}`, f.status, { line: i });
+      }
+    }
+    return out;
   });
 }
 

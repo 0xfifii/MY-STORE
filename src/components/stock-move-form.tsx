@@ -23,7 +23,7 @@ type FullItem = PickerItem & { avg_cost: string; price: string | null; min_stock
 type UnitOpt = { unit_id: number; symbol: string; name: string; factor: string; is_base: boolean; allow_decimal: boolean };
 type Supplier = { id: number; name: string };
 
-function nowLocalInput() {
+export function nowLocalInput() {
   const d = new Date();
   d.setSeconds(0, 0);
   const off = d.getTimezoneOffset();
@@ -456,7 +456,7 @@ function trimCost(v: string) {
  * When the stock moved. Everyone can pick a time earlier today; owners (or people given "Record for an
  * earlier date") also get Yesterday and any earlier day, so a missed day can be filled in and balance.
  */
-function WhenPicker({ label, value, touched, canBackdate, onChange }: {
+export function WhenPicker({ label, value, touched, canBackdate, onChange }: {
   label: string; value: string; touched: boolean; canBackdate: boolean; onChange: (v: string, touched: boolean) => void;
 }) {
   const now = nowLocalInput();

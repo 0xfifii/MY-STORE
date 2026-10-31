@@ -86,13 +86,15 @@ export const stockInSchema = z.object({
   request_id: uuid,
 });
 
+const stockOutReason = z.enum(["store_usage", "kitchen_usage", "bakery_usage", "bar_usage", "cleaning_usage", "sale", "transfer", "damage", "expiry", "wastage", "other"], {
+  message: "Choose a reason",
+});
+
 export const stockOutSchema = z.object({
   item_id: uuid,
   quantity: positiveQty,
   unit_id: z.coerce.number().int().positive(),
-  reason: z.enum(["store_usage", "kitchen_usage", "bakery_usage", "bar_usage", "cleaning_usage", "sale", "transfer", "damage", "expiry", "wastage", "other"], {
-    message: "Choose a reason",
-  }),
+  reason: stockOutReason,
   recipient: optText(200),
   worker_id: optInt,
   occurred_at: z
@@ -104,6 +106,31 @@ export const stockOutSchema = z.object({
   reference: optText(120),
   notes: optText(1000),
   request_id: uuid,
+});
+
+/** Several items taken out by one worker at once (up to 20 lines), each with its own quantity and reason. */
+export const MAX_BATCH_LINES = 20;
+export const stockOutBatchSchema = z.object({
+  worker_id: optInt,
+  recipient: optText(200),
+  reference: optText(120),
+  occurred_at: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || !Number.isNaN(Date.parse(v)), { message: "Invalid date" }),
+  lines: z
+    .array(z.object({
+      item_id: uuid,
+      quantity: positiveQty,
+      unit_id: z.coerce.number().int().positive(),
+      reason: stockOutReason,
+      notes: optText(1000),
+      request_id: uuid,
+    }))
+    .min(1, "Add at least one item")
+    .max(MAX_BATCH_LINES, `You can record up to ${MAX_BATCH_LINES} items at a time`),
 });
 
 export const reverseSchema = z.object({

@@ -1185,6 +1185,48 @@ describe("24. Recording a missed day (owners only)", () => {
   });
 });
 
+describe("24b. Several items for one worker", () => {
+  it("records up to 20 lines for one worker, each with its own quantity and reason", async () => {
+    const w = await owner.post("/api/workers", { name: "Bartender Tobi", department: "Bar" });
+    expect(w.status).toBe(201);
+    const tobi = w.data.worker.id;
+    const a = await createItem("Batch Gin", "btl", { opening_quantity: "10", opening_unit_cost: "5000" });
+    const b = await createItem("Batch Flour", "kg", { opening_quantity: "20", opening_unit_cost: "800" });
+    const line = (item_id: string, quantity: string, unit: string, reason: string, notes = "") =>
+      ({ item_id, quantity, unit_id: units[unit], reason, notes, request_id: randomUUID() });
+    const r = await staff.post("/api/stock/out/batch", {
+      worker_id: tobi, recipient: "Bar",
+      lines: [line(a, "2", "btl", "bar_usage"), line(b, "3.5", "kg", "bakery_usage"), line(a, "1", "btl", "other", "Broken on shelf")],
+    });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    expect(r.data.txns).toHaveLength(3);
+    expect(Number((await item(a)).quantity)).toBe(7);
+    expect(Number((await item(b)).quantity)).toBe(16.5);
+    const { rows } = await db.query("SELECT reason, worker_id, recipient FROM stock_transactions WHERE txn_no = ANY($1) ORDER BY id", [r.data.txns.map((t: any) => t.txn_no)]);
+    expect(rows.map((x) => x.reason)).toEqual(["bar_usage", "bakery_usage", "other"]);
+    expect(rows.every((x) => x.worker_id === tobi && x.recipient === "Bar")).toBe(true);
+  });
+
+  it("saves nothing if any line fails, and names the line", async () => {
+    const a = await createItem("Batch Rum", "btl", { opening_quantity: "5", opening_unit_cost: "4000" });
+    const b = await createItem("Batch Sugar", "kg", { opening_quantity: "2", opening_unit_cost: "1000" });
+    const line = (item_id: string, quantity: string, unit: string) => ({ item_id, quantity, unit_id: units[unit], reason: "kitchen_usage", request_id: randomUUID() });
+    const r = await owner.post("/api/stock/out/batch", { lines: [line(a, "1", "btl"), line(b, "3", "kg")] });
+    expect(r.status).toBe(409);
+    expect(r.data.code).toBe("INSUFFICIENT_STOCK");
+    expect(r.data.line).toBe(1);
+    expect(r.data.error).toContain("Line 2, Batch Sugar");
+    expect(Number((await item(a)).quantity)).toBe(5); // line 1 was rolled back
+    const tooMany = Array.from({ length: 21 }, () => line(a, "0.001", "btl"));
+    expect((await owner.post("/api/stock/out/batch", { lines: tooMany })).status).toBe(400);
+    expect((await viewer.post("/api/stock/out/batch", { lines: [line(a, "1", "btl")] })).status).toBe(403);
+    const { rows } = await db.query("SELECT ((now() AT TIME ZONE 'Africa/Lagos')::date - 1)::text y");
+    const back = await staff.post("/api/stock/out/batch", { occurred_at: `${rows[0].y}T15:00:00+01:00`, lines: [line(a, "1", "btl")] });
+    expect(back.data.code).toBe("BACKDATE_NOT_ALLOWED");
+    expect((await owner.get("/stock-out?mode=many")).status).toBe(200);
+  });
+});
+
 describe("25. Businesses, subscriptions and ownership (ÌṢÚRA)", () => {
   const MAILS = () => (MAIL_DIR && existsSync(MAIL_DIR) ? readdirSync(MAIL_DIR).filter((f) => f.endsWith(".eml")).map((f) => readFileSync(join(MAIL_DIR, f), "utf8")) : []);
   const palm = new Session();

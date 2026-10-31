@@ -69,6 +69,14 @@ export function errorResponse(e: unknown) {
   return NextResponse.json({ error: "Something went wrong. Please try again.", code: "SERVER_ERROR" }, { status: 500 });
 }
 
+/** The friendly code, status and message for a database error raised by the ledger functions, if it is one. */
+export function friendlyDbError(e: unknown): { code: string; status: number; message: string } | null {
+  if (e instanceof AppError) return { code: e.code, status: e.status, message: e.message };
+  const m = ((e as { message?: string })?.message ?? "").match(/^([A-Z_]+):?\s*(.*)$/);
+  if (!m || !FRIENDLY[m[1]]) return null;
+  return { code: m[1], status: FRIENDLY[m[1]].status, message: FRIENDLY[m[1]].message ?? capitalise(m[2] || m[1]) };
+}
+
 function capitalise(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1) + (/[.!?]$/.test(s) ? "" : ".");
 }
