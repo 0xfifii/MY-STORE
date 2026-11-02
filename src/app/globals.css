@@ -2,7 +2,8 @@
 
 /*
   ÌṢÚRA: black and white.
-  Clean light-grey canvas, white rounded cards, black accents and buttons, bold geometric type (DM Sans).
+  Clean light-grey canvas, white rounded cards, black accents and buttons, bold geometric type (DM Sans),
+  plus one accent: cowry gold, for highlights only (the active tab, key figures, confirm buttons, focus).
   Token names (burgundy, claret, paper...) are kept from the earlier theme so every screen follows;
   their values are now black, white and greys.
 */
@@ -29,9 +30,10 @@
   --color-bad: #b42318;
   --color-bad-bg: #fbe9e7;
 
-  /* Greyscale accents */
-  --color-gold: #ffffff;
-  --color-gold-bg: #f2f2f2;
+  /* Cowry gold: the one accent, used sparingly for highlights (on black use gold; on white use gold-deep for text) */
+  --color-gold: #c9a227;
+  --color-gold-bg: #f7efd6;
+  --color-gold-deep: #8a6a10;
   --color-sky: #6b6b6b;
   --color-sky-bg: #f0f0f0;
   --color-mint: #9a9a9a;
@@ -102,7 +104,7 @@ body {
 }
 
 :focus-visible:not(input):not(textarea):not(select) {
-  outline: 2px solid var(--color-burgundy);
+  outline: 2px solid var(--color-gold);
   outline-offset: 2px;
 }
 input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
@@ -179,7 +181,7 @@ tbody tr { transition: background-color 150ms ease; }
 }
 @media (hover: hover) { .btn-shine:hover::after { transform: translateX(120%); } }
 
-::selection { background: rgb(0 0 0 / 0.22); }
+::selection { background: rgb(201 162 39 / 0.35); }
 
 /* ---------- Velvy the mascot ---------- */
 @keyframes velvy-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -220,8 +222,8 @@ p { text-wrap: pretty; }
 
 /* ---------- Motion pass (black & white kept; only movement added) ---------- */
 /* Loading bar across the top while a page opens */
-.route-progress { position: fixed; inset: 0 auto auto 0; z-index: 60; height: 3px; width: 0; background: #111111;
-  box-shadow: 0 0 10px rgb(0 0 0 / .35); opacity: 0; pointer-events: none; }
+.route-progress { position: fixed; inset: 0 auto auto 0; z-index: 60; height: 3px; width: 0; background: linear-gradient(90deg, #a87f12, #c9a227, #e3c463);
+  box-shadow: 0 0 12px rgb(201 162 39 / .55); opacity: 0; pointer-events: none; }
 .route-progress--loading { opacity: 1; animation: route-crawl 8s cubic-bezier(.1,.7,.2,1) forwards; }
 .route-progress--done { opacity: 0; width: 100%; transition: width 200ms ease, opacity 300ms ease 200ms; }
 @keyframes route-crawl { 0% { width: 0; } 10% { width: 35%; } 40% { width: 70%; } 100% { width: 92%; } }
@@ -245,7 +247,7 @@ main tbody tr:nth-child(8) { animation-delay: 175ms; } main tbody tr:nth-child(n
 input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea {
   transition: border-color 180ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), background-color 180ms ease;
 }
-input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus { transform: translateY(-1px); box-shadow: 0 10px 24px -16px rgb(0 0 0 / .55); }
+input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgb(201 162 39 / .28), 0 10px 24px -16px rgb(0 0 0 / .55); }
 
 /* Bottom bar: the active tab pops, its icon bounces */
 @keyframes nav-pop { 0% { transform: scale(.82); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
@@ -262,7 +264,7 @@ input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus
 
 /* A tick that draws itself */
 .success-check circle { stroke: #111111; stroke-width: 2.5; stroke-dasharray: 152; stroke-dashoffset: 152; animation: draw 520ms cubic-bezier(.65,0,.45,1) forwards; }
-.success-check path { stroke: #111111; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 340ms cubic-bezier(.65,0,.45,1) 440ms forwards; }
+.success-check path { stroke: #c9a227; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 340ms cubic-bezier(.65,0,.45,1) 440ms forwards; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
 /* Loading skeleton shimmer */
@@ -283,3 +285,10 @@ input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus
 /* A chip or tile pops when it's chosen */
 .chip-pop { animation: nav-pop 320ms cubic-bezier(.2,.8,.2,1); }
 @media (prefers-reduced-motion: reduce) { .chip-pop { animation: none; } }
+
+/* Cowry gold touches */
+.nav-active svg { color: var(--color-gold); }
+.gold-figure { background: linear-gradient(100deg, #e9cf77 0%, #c9a227 45%, #f0d98c 60%, #c9a227 80%); background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: gold-sheen 5s ease-in-out 1.2s infinite; }
+@keyframes gold-sheen { 0%, 70%, 100% { background-position: 100% 0; } 85% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .gold-figure { animation: none; } }

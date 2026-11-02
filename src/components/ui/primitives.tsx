@@ -10,7 +10,7 @@ type Size = "sm" | "md" | "lg";
 
 const variantClass: Record<Variant, string> = {
   primary: "btn-shine bg-night text-white shadow-[0_8px_18px_-10px_rgb(0_0_0/0.7)] hover:bg-claret hover:shadow-[0_12px_24px_-10px_rgb(0_0_0/0.7)] disabled:bg-night/40 disabled:shadow-none",
-  accent: "btn-shine bg-gradient-to-br from-[#111111] to-burgundy text-white shadow-[0_8px_18px_-10px_rgb(0_0_0/0.8)] hover:from-burgundy hover:to-claret disabled:opacity-50",
+  accent: "btn-shine bg-gradient-to-br from-[#d8b443] to-gold text-[#111111] shadow-[0_10px_22px_-12px_rgb(168_127_18/0.9)] hover:from-gold hover:to-[#a87f12] disabled:opacity-50",
   secondary: "bg-white/80 text-ink border border-white shadow-sm hover:bg-white hover:text-burgundy disabled:opacity-60",
   ghost: "text-burgundy hover:bg-rose/70 disabled:opacity-50",
   danger: "bg-bad text-white hover:bg-bad/90 disabled:opacity-60",
@@ -112,7 +112,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttrib
 export function StatusBadge({ status }: { status: StockStatus }) {
   const map = {
     in_stock: { cls: "bg-mint-bg text-ok", label: "In stock" },
-    low: { cls: "bg-gold-bg text-warn", label: "Low stock" },
+    low: { cls: "bg-warn-bg text-warn", label: "Low stock" },
     out: { cls: "bg-bad-bg text-bad", label: "Out of stock" },
   }[status];
   return (

@@ -167,7 +167,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
                 >
                   <Icon className={clsx("size-[18px] transition-transform duration-200 group-hover:scale-110", active && "text-burgundy")} />
                   {item.label}
-                  {item.href === "/activity" && !active ? <UnreadBadge className="ml-auto" /> : active && <span className="ml-auto size-1.5 rounded-full bg-ink" aria-hidden />}
+                  {item.href === "/activity" && !active ? <UnreadBadge className="ml-auto" /> : active && <span className="ml-auto size-1.5 rounded-full bg-gold" aria-hidden />}
                 </Link>
               </li>
             );

@@ -70,7 +70,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="pointer-events-none absolute -right-14 -top-16 size-56 rounded-full bg-paper/10" aria-hidden />
           <p className="relative text-[11px] font-semibold uppercase tracking-[0.16em] text-paper/70">Total inventory worth</p>
           <p className="relative mt-3 text-[40px] font-semibold leading-none tracking-[-0.035em] tabular-nums sm:text-[50px]" data-testid="inventory-worth">
-            <CountUp value={Number(d.totals.worth)} decimals={2} prefix={sym} />
+            <CountUp value={Number(d.totals.worth)} decimals={2} prefix={sym} className="gold-figure" />
           </p>
           <p className="relative mt-3 text-sm text-paper/75">{d.totals.items} {d.totals.items === 1 ? "item" : "items"} · weighted-average cost</p>
           {d.byUnit.length > 0 && (

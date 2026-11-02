@@ -100,7 +100,7 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
       {categories.length > 0 && (
         <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Categories">
           <button type="button" onClick={() => push({ category: "" })} className={tile(!category)} aria-pressed={!category}>
-            <LayoutDashboard className="size-6" />
+            <LayoutDashboard className={clsx("size-6", !category && "text-gold")} />
             <span>All <span className={clsx("font-medium", !category ? "text-white/60" : "text-[#111111]/45")}>{allCount}</span></span>
           </button>
           {categories.map((c) => {
@@ -108,7 +108,7 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
             const initials = c.name.replace(/[^\p{L} ]/gu, " ").split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
             return (
               <button key={c.id} type="button" onClick={() => push({ category: on ? "" : String(c.id) })} className={tile(on)} aria-pressed={on} title={c.name}>
-                <span className={clsx("flex size-8 items-center justify-center rounded-xl text-[12px] font-bold transition group-hover:scale-110", on ? "bg-white text-[#111111]" : "bg-[#111111] text-white")}>{initials}</span>
+                <span className={clsx("flex size-8 items-center justify-center rounded-xl text-[12px] font-bold transition group-hover:scale-110", on ? "bg-gold text-[#111111]" : "bg-[#111111] text-white")}>{initials}</span>
                 <span className="max-w-[80px] truncate">{c.name}</span>
               </button>
             );
@@ -125,7 +125,7 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
               <button key={v || "all"} type="button" role="tab" aria-selected={on} onClick={() => push({ status: v })}
                 className={clsx("relative shrink-0 pb-1.5 text-[17px] font-bold tracking-[-0.01em] transition", on ? "text-[#111111]" : "text-[#111111]/30 hover:text-[#111111]/60")}>
                 {label}
-                <span className={clsx("absolute inset-x-0 -bottom-0.5 h-[3px] rounded-full bg-[#111111] transition-transform duration-300", on ? "scale-x-100" : "scale-x-0")} />
+                <span className={clsx("absolute inset-x-0 -bottom-0.5 h-[3px] rounded-full bg-gold transition-transform duration-300", on ? "scale-x-100" : "scale-x-0")} />
               </button>
             );
           })}
