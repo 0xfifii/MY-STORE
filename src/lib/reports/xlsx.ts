@@ -124,6 +124,7 @@ export async function reportToXlsx(r: ReportData): Promise<Buffer> {
     })), adjAll, true);
     if (r.days.length > 1) {
       for (const d of r.days) {
+        if (r.params.kind === "movement" && !d.rows.length) continue;
         block(new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }),
           d.rows, d.rows.some((x) => x.adj !== "0"), false);
       }

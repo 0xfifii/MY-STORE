@@ -17,7 +17,8 @@ const PRESETS = [
   { v: "custom", l: "Date range" },
 ];
 const KINDS = [
-  { v: "full", l: "Full report" },
+  { v: "full", l: "Full report (all items)" },
+  { v: "movement", l: "Items that moved (in & out)" },
   { v: "stock_in", l: "Stock in only" },
   { v: "stock_out", l: "Stock out only" },
   { v: "balance", l: "Inventory balance" },

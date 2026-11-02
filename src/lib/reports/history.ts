@@ -101,6 +101,7 @@ export async function runScheduledReports(now = new Date()) {
   if (settings.auto_report_enabled) {
     const day = settings.auto_report_covers === "previous_day" ? addDays(today, -1) : today;
     periods.push({ type: "day", params: { from: day, to: day, kind: "full", periodType: "day" } });
+    periods.push({ type: "day", params: { from: day, to: day, kind: "movement", periodType: "day" } });
   }
   if (settings.auto_weekly_enabled) {
     const from = addDays(weekStart(today), -7);
@@ -109,6 +110,7 @@ export async function runScheduledReports(now = new Date()) {
   if (settings.auto_monthly_enabled) {
     const lastOfPrev = addDays(today.slice(0, 8) + "01", -1);
     periods.push({ type: "month", params: { from: lastOfPrev.slice(0, 8) + "01", to: lastOfPrev, kind: "full", periodType: "month" } });
+    periods.push({ type: "month", params: { from: lastOfPrev.slice(0, 8) + "01", to: lastOfPrev, kind: "movement", periodType: "month" } });
   }
 
   const generated: { id: string; fileName: string; content: Buffer; format: ReportFormat; type: string }[] = [];
@@ -116,8 +118,8 @@ export async function runScheduledReports(now = new Date()) {
   for (const p of periods) {
     for (const format of settings.auto_report_formats) {
       const exists = await queryOne(
-        "SELECT 1 FROM generated_reports WHERE trigger='scheduled' AND status='success' AND period_type=$1 AND period_start=$2 AND format=$3",
-        [p.type, p.params.from, format],
+        "SELECT 1 FROM generated_reports WHERE trigger='scheduled' AND status='success' AND period_type=$1 AND period_start=$2 AND format=$3 AND report_kind=$4",
+        [p.type, p.params.from, format, p.params.kind],
       );
       if (exists) continue;
       const res = await generateAndStore(p.params, format, { trigger: "scheduled", settings });

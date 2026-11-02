@@ -4,7 +4,7 @@ import { getSettings, type StoreSettings } from "../settings";
 import { TXN_SELECT, type TxnRow } from "../inventory";
 import { addDays, formatDate, todayIn } from "../format";
 
-export type ReportKind = "full" | "stock_in" | "stock_out" | "balance";
+export type ReportKind = "full" | "movement" | "stock_in" | "stock_out" | "balance";
 
 export type ReportParams = {
   from: string; // YYYY-MM-DD (inclusive, store time zone)
@@ -97,6 +97,7 @@ export type DaySheet = { day: string; rows: DaySheetRow[] };
 
 export const KIND_LABEL: Record<ReportKind, string> = {
   full: "Inventory Report",
+  movement: "Stock Movement Report",
   stock_in: "Stock In Report",
   stock_out: "Stock Out Report",
   balance: "Inventory Balance Report",
@@ -156,7 +157,7 @@ export function normaliseParams(raw: Record<string, string | null | undefined>, 
   // Reports can't cover the future: a current week/month runs to today.
   if (to > today) to = today;
   if (from > today) from = today;
-  const kind = (["full", "stock_in", "stock_out", "balance"].includes(raw.kind ?? "") ? raw.kind : "full") as ReportKind;
+  const kind = (["full", "movement", "stock_in", "stock_out", "balance"].includes(raw.kind ?? "") ? raw.kind : "full") as ReportKind;
   const itemId = raw.item && /^[0-9a-f-]{36}$/i.test(raw.item) ? raw.item : null;
   const categoryId = raw.category && /^\d+$/.test(raw.category) ? Number(raw.category) : null;
   const periodType: PeriodType | undefined =
@@ -373,6 +374,33 @@ export async function buildReport(params: ReportParams, settings?: StoreSettings
       .sort((a, b) => Number(b.value) - Number(a.value) || Number(b.qty) - Number(a.qty) || b.count - a.count)
       .slice(0, 5);
 
+  // Movement report: only items that had stock in or stock out in the period; each day lists only that day's movers.
+  if (params.kind === "movement") {
+    const moved = (b: { in_qty: string; out_qty: string }) => Number(b.in_qty) > 0 || Number(b.out_qty) > 0;
+    const keep = new Set(balances.filter(moved).map((b) => b.item_id));
+    const filtered = balances.filter((b) => keep.has(b.item_id));
+    balances.length = 0; balances.push(...filtered);
+    for (const d of days) d.rows = d.rows.filter((r) => r.in !== "0" || r.out !== "0");
+    const sum = (f: (b: BalanceRow) => string) => filtered.reduce((a, b) => a + Number(f(b)), 0).toFixed(4);
+    Object.assign(totals!, {
+      opening_value: sum((b) => b.opening_value), in_value: sum((b) => b.in_value), out_value: sum((b) => b.out_value),
+      adj_value: sum((b) => b.adj_value), closing_value: sum((b) => b.closing_value),
+    });
+    const cats = new Map<string, CategoryTotal>();
+    for (const b of filtered) {
+      const k = b.category ?? "Uncategorised";
+      const c = cats.get(k) ?? { category: k, items: 0, opening_value: "0", in_value: "0", out_value: "0", closing_value: "0" };
+      c.items += 1;
+      c.opening_value = (Number(c.opening_value) + Number(b.opening_value)).toFixed(2);
+      c.in_value = (Number(c.in_value) + Number(b.in_value)).toFixed(2);
+      c.out_value = (Number(c.out_value) + Number(b.out_value)).toFixed(2);
+      c.closing_value = (Number(c.closing_value) + Number(b.closing_value)).toFixed(2);
+      cats.set(k, c);
+    }
+    byCategory.length = 0;
+    byCategory.push(...[...cats.values()].sort((a, b) => Number(b.closing_value) - Number(a.closing_value)));
+  }
+
   return {
     params,
     periodType,
@@ -421,7 +449,7 @@ export function titleFor(kind: ReportKind, periodType: PeriodType) {
 
 export function reportFileName(p: ReportParams, ext: string) {
   const pt = periodTypeOf(p.from, p.to, p.periodType);
-  const kind = (pt === "week" ? "weekly-" : pt === "month" ? "monthly-" : "") + (p.kind === "full" ? "report" : p.kind.replace("_", "-"));
+  const kind = (pt === "week" ? "weekly-" : pt === "month" ? "monthly-" : "") + (p.kind === "full" ? "report" : p.kind === "movement" ? "movement-report" : p.kind.replace("_", "-"));
   const period = p.from === p.to ? p.from : `${p.from}_to_${p.to}`;
   return `isura-${kind}-${period}.${ext}`;
 }
@@ -429,8 +457,8 @@ export function reportFileName(p: ReportParams, ext: string) {
 /** Which sections a report kind contains. */
 export function sectionsFor(kind: ReportKind) {
   return {
-    stockIn: kind === "full" || kind === "stock_in",
-    stockOut: kind === "full" || kind === "stock_out",
+    stockIn: kind === "full" || kind === "movement" || kind === "stock_in",
+    stockOut: kind === "full" || kind === "movement" || kind === "stock_out",
     corrections: kind === "full",
     // Every report ends with each item's opening → closing balance (closing carries forward as the next opening).
     balances: true,

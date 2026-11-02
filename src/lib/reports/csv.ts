@@ -59,6 +59,7 @@ export function reportToCsv(r: ReportData): Buffer {
     lines.push(["DAY BY DAY"]);
     const hasAdj = r.days.some((d) => d.rows.some((x) => x.adj !== "0"));
     for (const d of r.days) {
+      if (r.params.kind === "movement" && !d.rows.length) continue;
       lines.push([d.day]);
       lines.push(["S/N", "Item name", "Item code", "Unit", "Opening stock", "Stock in", `Cost of stock in (${cur})`, "Stock out",
         `Cost of stock out (${cur})`, ...(hasAdj ? ["Corrections"] : []), "Closing (Bal)"]);

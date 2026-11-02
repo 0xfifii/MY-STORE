@@ -1,5 +1,5 @@
 /**
- * The ÌṢÚRA helper: a cheerful paper shopping bag drawn in black line on white.
+ * The ÌṢÚRA helper: a cheerful cowry shell (the brand mark) drawn in black line on white, with gold speckles.
  * Pure SVG + CSS animation (blink, bob, wave, jump), so it costs nothing to load and respects
  * reduced-motion settings.
  */
@@ -41,8 +41,6 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
     <svg viewBox="0 0 120 150" className={className} role="img" aria-label={label ?? "The ÌṢÚRA helper"}>
       <ellipse cx="60" cy="143" rx="34" ry="4.5" fill={ink} opacity="0.12" className="velvy-shadow" />
       <g className={anim}>
-        {/* handles */}
-        <path d="M40 42c0-24 40-24 40 0" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
         {/* left arm */}
         <g className={mood === "worried" ? "velvy-fidget" : ""}>
           <path d="M19 92c-8-2-12 4-12 10" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
@@ -53,23 +51,30 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
           <path d={mood === "wave" || mood === "excited" ? "M101 90c8-4 12-12 12-20" : "M101 92c8-2 12 4 12 10"} fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
           <circle cx={113} cy={mood === "wave" || mood === "excited" ? 67 : 104} r="4" fill="#ffffff" stroke={ink} strokeWidth="3" />
         </g>
-        {/* bag */}
-        <path d="M23 42h74l5 84c.3 5-3 8-8 8H26c-5 0-8.3-3-8-8z" fill="#ffffff" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
-        <path d="M23 52h74" stroke={ink} strokeWidth="2.4" opacity="0.35" />
-        {/* tiny awning print on the bag */}
-        <g stroke={ink} strokeWidth="1.4">
-          <path d="M44 112h8v5h-8z" fill={ink} /><path d="M52 112h8v5h-8z" fill="#ffffff" /><path d="M60 112h8v5h-8z" fill={ink} /><path d="M68 112h8v5h-8z" fill="#ffffff" />
+        {/* cowry shell body: an egg-shaped shell with small notches at each end */}
+        <path d="M60 28C88 28 100 58 100 84s-15 50-40 50-40-24-40-50S32 28 60 28z" fill="#ffffff" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
+        <path d="M56 30l4 5 4-5M56 132l4-5 4 5" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        {/* gold speckles on the shell's back */}
+        <g fill="#c9a227">
+          <circle cx="44" cy="50" r="2.6" opacity=".7" /><circle cx="58" cy="43" r="2" opacity=".55" /><circle cx="73" cy="49" r="2.8" opacity=".7" />
+          <circle cx="85" cy="62" r="1.9" opacity=".5" /><circle cx="33" cy="64" r="1.9" opacity=".5" /><circle cx="64" cy="55" r="1.5" opacity=".45" />
         </g>
-        <path d="M54 121l6 7 6-7" fill="none" stroke={ink} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        {/* soft shine */}
+        <path d="M36 52q6-12 18-16" fill="none" stroke={ink} strokeWidth="2" strokeLinecap="round" opacity=".18" />
+        {/* the cowry's toothed opening */}
+        <path d="M46 118q14 7 28 0" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" opacity=".7" />
+        <g stroke={ink} strokeWidth="1.5" strokeLinecap="round" opacity=".45">
+          <path d="M51 120.3v3M55.5 121.4v3M60 121.8v3M64.5 121.4v3M69 120.3v3" />
+        </g>
         {/* face */}
-        <ellipse cx="39" cy="90" rx="6" ry="3.6" fill="#bdbdbd" opacity="0.75" />
-        <ellipse cx="81" cy="90" rx="6" ry="3.6" fill="#bdbdbd" opacity="0.75" />
+        <ellipse cx="39" cy="90" rx="6" ry="3.6" fill="#e3c463" opacity="0.6" />
+        <ellipse cx="81" cy="90" rx="6" ry="3.6" fill="#e3c463" opacity="0.6" />
         {brows}
         {eyes}
         {mouth}
         {mood === "sleepy" && (
           <g fill={ink} fontFamily="'DM Sans Variable', sans-serif" fontWeight="700" className="velvy-zz">
-            <text x="92" y="38" fontSize="12">z</text><text x="101" y="26" fontSize="9">z</text>
+            <text x="94" y="36" fontSize="12">z</text><text x="103" y="24" fontSize="9">z</text>
           </g>
         )}
         {mood === "excited" && (
@@ -77,7 +82,7 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
             <path d="M14 46l-6-4M12 58H5M104 34l6-5" />
           </g>
         )}
-        {mood === "thinking" && <text x="92" y="40" fontSize="20" fontWeight="700" fill={ink} fontFamily="'DM Sans Variable', sans-serif" className="velvy-zz">?</text>}
+        {mood === "thinking" && <text x="96" y="38" fontSize="20" fontWeight="700" fill={ink} fontFamily="'DM Sans Variable', sans-serif" className="velvy-zz">?</text>}
       </g>
     </svg>
   );

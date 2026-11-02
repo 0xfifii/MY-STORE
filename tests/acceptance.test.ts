@@ -522,13 +522,15 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
     expect(s.status, JSON.stringify(s.data)).toBe(200);
     const first = await call();
     expect(first.status).toBe("ran");
-    expect(first.generated).toHaveLength(9); // daily + weekly + monthly, 3 formats each
+    expect(first.generated).toHaveLength(15); // daily + weekly + monthly full, plus daily + monthly movement, 3 formats each
+    expect(first.generated.some((f: string) => f.startsWith("isura-movement-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("isura-monthly-movement-report-"))).toBe(true);
     expect(first.generated.some((f: string) => f.startsWith("isura-weekly-report-"))).toBe(true);
     expect(first.generated.some((f: string) => f.startsWith("isura-monthly-report-"))).toBe(true);
     const second = await call();
     expect(second.generated).toHaveLength(0); // once per day per format
     const { rows } = await db.query("SELECT format, status, delivery_status, period_type FROM generated_reports WHERE trigger='scheduled'");
-    expect(rows).toHaveLength(9);
+    expect(rows).toHaveLength(15);
     expect(new Set(rows.map((r) => r.period_type))).toEqual(new Set(["day", "week", "month"]));
     for (const r of rows) {
       expect(r.status).toBe("success");
@@ -1224,6 +1226,27 @@ describe("24b. Several items for one worker", () => {
     const back = await staff.post("/api/stock/out/batch", { occurred_at: `${rows[0].y}T15:00:00+01:00`, lines: [line(a, "1", "btl")] });
     expect(back.data.code).toBe("BACKDATE_NOT_ALLOWED");
     expect((await owner.get("/stock-out?mode=many")).status).toBe(200);
+  });
+});
+
+describe("24c. Movement report (only items that moved)", () => {
+  it("lists items with stock in or out in the period and leaves the rest out", async () => {
+    const { rows } = await db.query("SELECT (now() AT TIME ZONE 'Africa/Lagos')::date::text t");
+    const today = rows[0].t;
+    const still = await createItem("Untouched Candle", "pcs");
+    const moved = await createItem("Moved Matches", "pcs", { opening_quantity: "10", opening_unit_cost: "50" });
+    expect((await stockOut(owner, moved, "3", "pcs")).status).toBe(201);
+    const csv = ((await owner.get(`/api/reports/export?format=csv&kind=movement&from=${today}&to=${today}`)).data as Buffer).toString();
+    expect(csv).toContain("Moved Matches");
+    expect(csv).not.toContain("Untouched Candle");
+    const full = ((await owner.get(`/api/reports/export?format=csv&kind=full&from=${today}&to=${today}`)).data as Buffer).toString();
+    expect(full).toContain("Untouched Candle");
+    const month = today.slice(0, 7);
+    const pdf = await owner.get(`/api/reports/export?format=pdf&kind=movement&preset=month&month=${month}`);
+    expect(pdf.status).toBe(200);
+    const xlsx = await owner.get(`/api/reports/export?format=xlsx&kind=movement&from=${today.slice(0, 8)}01&to=${today}&period_type=month`);
+    expect(xlsx.status).toBe(200);
+    void still;
   });
 });
 

@@ -111,15 +111,26 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
 
   // ---- Stock sheet first: opening, stock in + cost, stock out + cost, closing, one table
   if (sec.balances) {
-    content.push({ text: r.periodType === "day" ? "Stock sheet" : "Stock sheet for the whole period", style: "h2" });
-    content.push({ text: "Opening stock, stock in, stock out and their cost in one table. Each closing balance (Bal) is the next day's opening stock.", fontSize: 8, color: "#555", margin: [0, -2, 0, 6] });
+    content.push({ text: r.params.kind === "movement" ? (r.periodType === "day" ? "Items that moved today" : "Items that moved in this period") : r.periodType === "day" ? "Stock sheet" : "Stock sheet for the whole period", style: "h2" });
+    content.push({ text: r.params.kind === "movement"
+      ? "Only items with stock in or stock out in this period. Items that didn't move are left out (they're in the full report)."
+      : "Opening stock, stock in, stock out and their cost in one table. Each closing balance (Bal) is the next day's opening stock.", fontSize: 8, color: "#555", margin: [0, -2, 0, 6] });
     content.push(combined(r.balances.map((b) => ({
       name: b.name, sku: b.sku, unit: b.unit, opening: b.opening_qty, in: b.in_qty, in_value: b.in_value, out: b.out_qty, out_value: b.out_value,
       adj: b.adj_qty, closing: b.closing_qty, worth: b.closing_value, status: b.status,
     })), r.summary.adj_count > 0, true));
 
     // Day-by-day blocks for short periods (the Excel file always has every day).
-    if (r.days.length > 1 && r.days.length <= 7) {
+    const movementOnly = r.params.kind === "movement";
+    if (movementOnly && r.days.length > 1) {
+      // Every day that had movement, with only the items that moved that day.
+      const active = r.days.filter((d) => d.rows.length);
+      for (const d of active) {
+        content.push({ text: new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }), style: "h3" });
+        content.push(combined(d.rows, d.rows.some((x) => x.adj !== "0"), false));
+      }
+      if (!active.length) content.push({ text: "No stock moved in this period.", fontSize: 9, italics: true, color: "#555" });
+    } else if (r.days.length > 1 && r.days.length <= 7) {
       for (const d of r.days) {
         content.push({ text: new Date(d.day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }), style: "h3" });
         content.push(combined(d.rows, d.rows.some((x) => x.adj !== "0"), false));
