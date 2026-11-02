@@ -8,9 +8,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import {
-  LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, X, ArchiveRestore,
-  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck,
+  LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, ArchiveRestore,
+  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck, Search,
 } from "@/components/hand-icons";
+import { PageFinder } from "./page-finder";
 import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
 import { BusinessBanner } from "./business-banner";
 import { useApp } from "./app-context";
@@ -19,32 +20,32 @@ import { StockDialogProvider } from "./stock-dialog";
 import { api } from "@/lib/client";
 import { ROLE_LABELS, type Action } from "@/lib/permissions";
 
-type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; perm?: Action; match?: string[]; adminOnly?: boolean };
+export type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; perm?: Action; match?: string[]; adminOnly?: boolean; hint?: string; keywords?: string[] };
 
 const MAIN: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/inventory", label: "Inventory", icon: Boxes, match: ["/inventory", "/items"] },
-  { href: "/stock-in", label: "Stock In", icon: StockInIcon, perm: "stock.in" },
-  { href: "/stock-out", label: "Stock Out", icon: StockOutIcon, perm: "stock.out" },
-  { href: "/transactions", label: "Transactions", icon: History, perm: "page.transactions" },
-  { href: "/low-stock", label: "Low Stock", icon: AlertTriangle, perm: "page.low_stock" },
-  { href: "/stock-count", label: "Stock Count", icon: ClipboardCheck, perm: "stock.count" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, hint: "Today at a glance", keywords: ["home"] },
+  { href: "/inventory", label: "Inventory", icon: Boxes, match: ["/inventory", "/items"], hint: "Every item, price and photo", keywords: ["items", "products"] },
+  { href: "/stock-in", label: "Stock In", icon: StockInIcon, perm: "stock.in", hint: "Record stock received", keywords: ["receive", "purchase"] },
+  { href: "/stock-out", label: "Stock Out", icon: StockOutIcon, perm: "stock.out", hint: "Record stock used or taken", keywords: ["issue", "usage"] },
+  { href: "/transactions", label: "Transactions", icon: History, perm: "page.transactions", hint: "Every stock in and out", keywords: ["history", "ledger"] },
+  { href: "/low-stock", label: "Low Stock", icon: AlertTriangle, perm: "page.low_stock", hint: "What needs restocking", keywords: ["out of stock", "reorder"] },
+  { href: "/stock-count", label: "Stock Count", icon: ClipboardCheck, perm: "stock.count", hint: "Count shelves and fix differences" },
 ];
 const REPORTS: NavItem[] = [
-  { href: "/reports", label: "Reports", icon: FileBarChart, perm: "page.reports" },
-  { href: "/reports/history", label: "Report History", icon: ArchiveRestore, perm: "page.report_history" },
-  { href: "/audit", label: "Audit & Analytics", icon: ChartPie, perm: "audit.view" },
-  { href: "/mail", label: "Send Email", icon: Mail, perm: "mail.send" },
-  { href: "/activity", label: "Activity", icon: Bell },
+  { href: "/reports", label: "Reports", icon: FileBarChart, perm: "page.reports", hint: "Daily, monthly and movement reports", keywords: ["pdf", "movement"] },
+  { href: "/reports/history", label: "Report History", icon: ArchiveRestore, perm: "page.report_history", hint: "Saved and automatic reports" },
+  { href: "/audit", label: "Audit & Analytics", icon: ChartPie, perm: "audit.view", hint: "Spending, usage and trends", keywords: ["analysis"] },
+  { href: "/mail", label: "Send Email", icon: Mail, perm: "mail.send", hint: "Email reports and messages", keywords: ["mail"] },
+  { href: "/activity", label: "Activity", icon: Bell, hint: "What everyone has been doing", keywords: ["notifications"] },
 ];
 const SETUP: NavItem[] = [
-  { href: "/categories", label: "Categories", icon: Tags, perm: "page.setup" },
-  { href: "/suppliers", label: "Suppliers", icon: Truck, perm: "page.setup" },
-  { href: "/workers", label: "Workers", icon: HardHat, perm: "page.setup" },
-  { href: "/units", label: "Units", icon: Ruler, perm: "page.setup" },
-  { href: "/users", label: "Users", icon: Users, perm: "users.manage" },
-  { href: "/settings", label: "Store Settings", icon: Settings, perm: "settings.write" },
-  { href: "/isura", label: "ÌṢÚRA admin", icon: ShieldCheck, adminOnly: true },
+  { href: "/categories", label: "Categories", icon: Tags, perm: "page.setup", hint: "Group your items" },
+  { href: "/suppliers", label: "Suppliers", icon: Truck, perm: "page.setup", hint: "Where stock comes from" },
+  { href: "/workers", label: "Workers", icon: HardHat, perm: "page.setup", hint: "Who takes stock out", keywords: ["staff"] },
+  { href: "/units", label: "Units", icon: Ruler, perm: "page.setup", hint: "Measuring units and conversions" },
+  { href: "/users", label: "Users", icon: Users, perm: "users.manage", hint: "Logins and permissions", keywords: ["accounts", "staff"] },
+  { href: "/settings", label: "Store Settings", icon: Settings, perm: "settings.write", hint: "Name, email and automatic reports" },
+  { href: "/isura", label: "ÌṢÚRA admin", icon: ShieldCheck, adminOnly: true, hint: "Businesses and subscriptions", keywords: ["isura", "billing"] },
 ];
 
 const BOTTOM: NavItem[] = [
@@ -65,9 +66,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   const app = useApp();
   useEffect(() => setDrawer(false), [pathname]);
+  // Ctrl/⌘ K opens the page finder anywhere.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setDrawer((d) => !d); } };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const nav = (
-    <SidebarNav pathname={pathname} />
+    <SidebarNav pathname={pathname} onFind={() => setDrawer(true)} />
   );
 
   return (
@@ -91,18 +98,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Mobile drawer */}
-      {drawer && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-claret-deep/40 backdrop-blur-sm" onClick={() => setDrawer(false)} />
-          <aside className="animate-sheet absolute inset-y-2 right-2 flex w-72 max-w-[85vw] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-burgundy to-claret text-white">
-            <button onClick={() => setDrawer(false)} className="absolute right-3 top-3 rounded p-2 hover:bg-white/10" aria-label="Close menu">
-              <X className="size-5" />
-            </button>
-            {nav}
-          </aside>
-        </div>
-      )}
+      <PageFinder open={drawer} onClose={() => setDrawer(false)} isActive={(i) => isActive(pathname, i)}
+        groups={[{ label: "Daily work", items: MAIN }, { label: "Reports", items: REPORTS }, { label: "Setup", items: SETUP }]} />
 
       <Suspense fallback={null}><RouteProgress /></Suspense>
       <main className="mx-auto w-full max-w-7xl px-4 pb-32 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-9">
@@ -135,7 +132,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SidebarNav({ pathname }: { pathname: string }) {
+function SidebarNav({ pathname, onFind }: { pathname: string; onFind: () => void }) {
   const app = useApp();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -181,6 +178,10 @@ function SidebarNav({ pathname }: { pathname: string }) {
       <Link href="/dashboard" className="mt-2 block px-3" aria-label={app.storeName}>
         <VelvetWordmark className="h-[72px] w-auto" ink="#ffffff" paper="#111111" title={app.storeName} />
       </Link>
+      <button onClick={onFind} className="mx-1 mt-5 flex items-center gap-2.5 rounded-2xl bg-white/[0.07] px-3.5 py-2.5 text-left text-sm text-white/60 ring-1 ring-white/10 transition hover:bg-white/[0.12] hover:text-white hover:ring-gold/50" data-testid="find-page">
+        <Search className="size-4 text-gold" /> <span className="flex-1">Find a page</span>
+        <kbd className="rounded-md border border-white/15 px-1.5 text-[10px] font-semibold text-white/50">Ctrl K</kbd>
+      </button>
       {group("Daily work", MAIN)}
       {group("Reports", REPORTS)}
       {group("Setup", SETUP)}

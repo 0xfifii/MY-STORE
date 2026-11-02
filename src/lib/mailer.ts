@@ -123,7 +123,7 @@ export function emailHtml(storeName: string, title: string, text: string, button
     : "";
   const logo = `<img src="${base}/email-logo.png?v=isura1" width="260" height="110" alt="ÌṢÚRA. Every Valuable, Accounted For." style="display:block;margin:0 auto;width:260px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;color:#111111;font-size:22px;font-weight:700">`;
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
-<body style="margin:0;background:#f4f4f4;font-family:'DM Sans',Arial,Helvetica,sans-serif;color:#111111">
+<body style="margin:0;background:#f4f4f4;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;color:#111111">
 <div style="display:none;max-height:0;overflow:hidden">${esc(title)} from ${esc(storeName)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #ead8c6">

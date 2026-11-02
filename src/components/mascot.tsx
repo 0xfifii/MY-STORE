@@ -73,7 +73,7 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
         {eyes}
         {mouth}
         {mood === "sleepy" && (
-          <g fill={ink} fontFamily="'DM Sans Variable', sans-serif" fontWeight="700" className="velvy-zz">
+          <g fill={ink} fontFamily="'Plus Jakarta Sans Variable', sans-serif" fontWeight="700" className="velvy-zz">
             <text x="94" y="36" fontSize="12">z</text><text x="103" y="24" fontSize="9">z</text>
           </g>
         )}
@@ -82,7 +82,7 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
             <path d="M14 46l-6-4M12 58H5M104 34l6-5" />
           </g>
         )}
-        {mood === "thinking" && <text x="96" y="38" fontSize="20" fontWeight="700" fill={ink} fontFamily="'DM Sans Variable', sans-serif" className="velvy-zz">?</text>}
+        {mood === "thinking" && <text x="96" y="38" fontSize="20" fontWeight="700" fill={ink} fontFamily="'Plus Jakarta Sans Variable', sans-serif" className="velvy-zz">?</text>}
       </g>
     </svg>
   );

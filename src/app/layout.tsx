@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/dm-sans/opsz.css"; // weight + optical size axes
+import "@fontsource-variable/plus-jakarta-sans"; // brand typeface: has Ì Ṣ Ú and ₦ built in
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 

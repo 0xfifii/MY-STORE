@@ -141,7 +141,7 @@ export function PageHeader({
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         <span aria-hidden className="mb-2 block h-1 w-10 rounded-full bg-gradient-to-r from-gold to-[#e3c463] page-bar" />
-        <h1 className="font-display text-[28px] font-semibold leading-[1.1] tracking-[-0.025em] text-ink sm:text-[36px]">{title}</h1>
+        <h1 className="font-display text-[28px] font-extrabold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[36px]">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

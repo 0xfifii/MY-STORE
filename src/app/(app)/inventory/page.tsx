@@ -112,8 +112,8 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                   <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.07]">
                     <div className={`h-full rounded-full transition-[width] duration-700 ease-out ${it.status === "out" ? "bg-bad" : it.status === "low" ? "bg-gold" : "bg-gradient-to-r from-[#111111] to-[#3a3a3a]"}`} style={{ width: `${level}%` }} />
                   </div>
-                  <p className="mt-1.5 flex justify-between text-[11px] font-medium text-[#111111]/50 tabular-nums">
-                    <span>{formatUnitCost(it.avg_cost, sym)} / {it.unit_symbol}</span>
+                  <p className="mt-1.5 flex items-baseline justify-between text-[11px] font-medium text-[#111111]/50 tabular-nums">
+                    <span className="text-[13px] font-extrabold tracking-[-0.01em] text-[#111111]" data-testid="unit-cost">{formatUnitCost(it.avg_cost, sym)} <span className="font-semibold text-[#111111]/50">/ {it.unit_symbol}</span></span>
                     <span>Min {formatQty(it.min_stock_level)} {it.unit_symbol}</span>
                   </p>
                 </div>

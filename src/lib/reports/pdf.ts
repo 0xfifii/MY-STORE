@@ -11,11 +11,11 @@ const PdfPrinter = require("pdfmake");
 const BURGUNDY = "#111111";
 const fontDir = join(process.cwd(), "assets", "fonts");
 export const PDF_FONTS = {
-  DMSans: {
-    normal: join(fontDir, "DMSans-Regular.ttf"),
-    bold: join(fontDir, "DMSans-Bold.ttf"),
-    italics: join(fontDir, "DMSans-Regular.ttf"),
-    bolditalics: join(fontDir, "DMSans-Bold.ttf"),
+  Jakarta: {
+    normal: join(fontDir, "PlusJakartaSans-Regular.ttf"),
+    bold: join(fontDir, "PlusJakartaSans-Bold.ttf"),
+    italics: join(fontDir, "PlusJakartaSans-Regular.ttf"),
+    bolditalics: join(fontDir, "PlusJakartaSans-Bold.ttf"),
   },
 };
 
@@ -221,7 +221,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     pageOrientation: "landscape",
     pageMargins: [36, 36, 36, 40],
     info: { title: `${r.settings.store_name}: ${r.title}, ${r.periodLabel}`, author: r.settings.store_name },
-    defaultStyle: { font: "DMSans", fontSize: 8, color: "#111" },
+    defaultStyle: { font: "Jakarta", fontSize: 8, color: "#111" },
     styles: {
       brand: { fontSize: 20, bold: true, color: BURGUNDY },
       title: { fontSize: 12, bold: true, margin: [0, 2, 0, 0] },
@@ -243,12 +243,12 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   return renderPdf(docDefinition);
 }
 
-/** Renders a pdfmake document definition (DM Sans) to a Buffer. */
+/** Renders a pdfmake document definition (Plus Jakarta Sans) to a Buffer. */
 export function renderPdf(docDefinition: Record<string, unknown>): Promise<Buffer> {
   const printer = new PdfPrinter(PDF_FONTS);
   const doc = printer.createPdfKitDocument({
     ...docDefinition,
-    defaultStyle: { font: "DMSans", ...(docDefinition.defaultStyle as object) },
+    defaultStyle: { font: "Jakarta", ...(docDefinition.defaultStyle as object) },
     // Never leave a section heading alone at the bottom of a page.
     pageBreakBefore: (node: { style?: string | string[]; startPosition?: { top: number; pageInnerHeight: number } }) => {
       const st = Array.isArray(node.style) ? node.style : [node.style];
