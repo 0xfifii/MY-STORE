@@ -55,6 +55,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <a href="/api/reports/export?preset=today&format=pdf" className="inline-flex h-10 items-center gap-2 rounded-full bg-night px-5 text-sm font-semibold text-white hover:bg-claret">
               <Download className="size-4" /> Today&apos;s report
             </a>
+            <a href="/api/reports/export?preset=today&format=pdf&kind=movement" className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#111111] ring-1 ring-gold/50 transition hover:bg-gold">
+              <Download className="size-4 text-gold-deep" /> Today&apos;s movement
+            </a>
           </>
         }
       />
@@ -182,7 +185,7 @@ function Stat({ label, value, sub, tone, href, icon }: { label: string; value: R
       <div className={`pointer-events-none absolute -right-8 -top-10 size-28 rounded-full ${dark ? "bg-white/10" : "bg-black/[0.04]"}`} aria-hidden />
       <div className="relative flex items-start justify-between gap-2">
         <dt className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-white/60" : "text-[#111111]/50"}`}>{label}</dt>
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110 ${dark ? "bg-white text-[#111111]" : "bg-[#111111] text-white"}`}>{icon}</span>
+        <span className={`flex size-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110 ${dark ? "bg-gold text-[#111111]" : "bg-[#111111] text-gold"}`}>{icon}</span>
       </div>
       <dd className="relative mt-3 break-words text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular-nums sm:text-[28px]">{value}</dd>
       <dd className={`relative text-xs ${dark ? "text-white/60" : "text-[#111111]/50"}`}>{sub}</dd>

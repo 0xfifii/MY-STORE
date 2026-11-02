@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download } from "@/components/hand-icons";
 import { Panel, PageHeader, StatusBadge } from "@/components/ui/primitives";
 import { ReportControls } from "@/components/report-controls";
 import { PieChart } from "@/components/pie-chart";
@@ -31,6 +32,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
     <div>
       <PageHeader title="Reports" description="Daily, weekly or monthly. Pick a period and filters, then view or download."
         actions={<Link href="/reports/history" className="text-sm font-semibold text-burgundy hover:underline">Report History</Link>} />
+      <MovementQuick />
       <ReportControls
         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
         items={items}
@@ -317,3 +319,22 @@ const Th = ({ children, right, tone }: { children?: React.ReactNode; right?: boo
 const Td = ({ children, right, wide }: { children?: React.ReactNode; right?: boolean; wide?: boolean }) => (
   <td className={`px-4 py-2.5 align-top ${right ? "whitespace-nowrap text-right" : ""} ${wide ? "min-w-44" : ""}`}>{children}</td>
 );
+
+/** Separate stock-movement PDFs (only items that moved), one tap each. */
+function MovementQuick() {
+  const link = (q: string) => `/api/reports/export?format=pdf&kind=movement&${q}`;
+  const btn = "group flex items-center justify-between gap-3 rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/10 transition hover:bg-gold hover:text-[#111111] active:scale-[.98]";
+  return (
+    <section className="relative mb-4 overflow-hidden rounded-[var(--radius-card)] bg-[radial-gradient(120%_120%_at_0%_0%,#2a2a2a_0%,#111111_45%,#000000_100%)] p-5 text-white shadow-[0_22px_40px_-22px_rgb(0_0_0/0.9)]" data-testid="movement-quick">
+      <div aria-hidden className="pointer-events-none absolute -right-12 -top-16 size-48 rounded-full border border-gold/25" />
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold">Stock movement report</p>
+      <p className="mt-1 max-w-xl text-sm text-white/70">A separate PDF with only the items that moved (stock in or stock out), each with its quantity and value, and the total. Items that didn&apos;t move are left out.</p>
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <a className={btn} href={link("preset=today")}>Today <Download className="size-4 text-gold transition group-hover:text-[#111111]" /></a>
+        <a className={btn} href={link("preset=yesterday")}>Yesterday <Download className="size-4 text-gold transition group-hover:text-[#111111]" /></a>
+        <a className={btn} href={link("preset=this_month&period_type=month")}>This month <Download className="size-4 text-gold transition group-hover:text-[#111111]" /></a>
+        <a className={btn} href={link("preset=last_month&period_type=month")}>Last month <Download className="size-4 text-gold transition group-hover:text-[#111111]" /></a>
+      </div>
+    </section>
+  );
+}

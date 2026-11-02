@@ -108,6 +108,7 @@ export const RefreshCcw = (p: P) => (
   <I {...p}><path d="M19.4 11.6a7.4 7.4 0 0 0-13-4.6L4.3 9.2" /><path d="M4.2 4.9v4.3h4.3" /><path d="M4.6 12.5a7.4 7.4 0 0 0 13 4.6l2.1-2.2" /><path d="M19.8 19.2v-4.3h-4.3" /></I>
 );
 export const Play = (p: P) => (<I {...p}><path d="M7.4 5.1c0-.8.9-1.3 1.6-.8l9.5 6.8c.6.4.6 1.3 0 1.7L9 19.6c-.7.5-1.6 0-1.6-.8z" /></I>);
+export const ChevronRight = (p: P) => (<I {...p}><path d="m9.5 5.8 6.1 6.2-6.1 6.2" /></I>);
 export const Check = (p: P) => (<I {...p}><path d="m5 12.6 4.4 4.3L19.1 7" /></I>);
 export const CheckCircle2 = (p: P) => (<I {...p}><path d="M12 3.6a8.4 8.4 0 1 1-.1 16.8A8.4 8.4 0 0 1 12 3.6z" /><path d="m8.3 12.3 2.6 2.6 5-5.3" /></I>);
 export const Clock = (p: P) => (<I {...p}><path d="M12 3.7a8.3 8.3 0 1 1-.1 16.6A8.3 8.3 0 0 1 12 3.7z" /><path d="M12 7.6v4.6l3 1.9" /></I>);

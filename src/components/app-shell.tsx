@@ -150,7 +150,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
     if (!visible.length) return null;
     return (
       <div className="mt-5">
-        <p className="px-3 pb-1.5 text-xs font-medium text-white/45">{label}</p>
+        <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-gold/70">{label}</p>
         <ul className="space-y-0.5">
           {visible.map((item) => {
             const active = isActive(pathname, item);
@@ -162,10 +162,10 @@ function SidebarNav({ pathname }: { pathname: string }) {
                   aria-current={active ? "page" : undefined}
                   className={clsx(
                     "group flex items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200",
-                    active ? "bg-white text-claret shadow-[0_8px_20px_-10px_rgb(0_0_0/0.5)]" : "text-white/80 hover:translate-x-1 hover:bg-white/10 hover:text-white",
+                    active ? "bg-white text-claret shadow-[inset_4px_0_0_#c9a227,0_8px_20px_-10px_rgb(0_0_0/0.5)]" : "text-white/80 hover:translate-x-1 hover:bg-white/10 hover:text-gold",
                   )}
                 >
-                  <Icon className={clsx("size-[18px] transition-transform duration-200 group-hover:scale-110", active && "text-burgundy")} />
+                  <Icon className={clsx("size-[18px] transition-transform duration-200 group-hover:scale-110", active && "text-gold-deep")} />
                   {item.label}
                   {item.href === "/activity" && !active ? <UnreadBadge className="ml-auto" /> : active && <span className="ml-auto size-1.5 rounded-full bg-gold" aria-hidden />}
                 </Link>

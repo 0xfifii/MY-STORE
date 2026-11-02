@@ -4,6 +4,7 @@ import { buildReport, reportFileName } from "./engine";
 import { reportToCsv } from "./csv";
 import { reportToXlsx } from "./xlsx";
 import { reportToPdf } from "./pdf";
+import { movementToPdf } from "./pdf-movement";
 import type { StoreSettings } from "../settings";
 
 export type ReportFormat = "pdf" | "xlsx" | "csv";
@@ -17,7 +18,7 @@ export const MIME: Record<ReportFormat, string> = {
 export async function renderReport(data: ReportData, format: ReportFormat): Promise<Buffer> {
   if (format === "csv") return reportToCsv(data);
   if (format === "xlsx") return reportToXlsx(data);
-  return reportToPdf(data);
+  return data.params.kind === "movement" ? movementToPdf(data) : reportToPdf(data);
 }
 
 export async function buildAndRender(params: ReportParams, format: ReportFormat, settings?: StoreSettings) {

@@ -271,7 +271,7 @@ export function StockOutBatchForm() {
               {l.loading ? (
                 <div className="flex justify-center py-4"><Spinner className="size-5" /></div>
               ) : !l.item ? (
-                <ItemPicker autoFocus={i > 0} onSelect={(it) => pickItem(l.key, it)} placeholder="Search the item taken out" />
+                <ItemPicker compact autoFocus={i > 0} onSelect={(it) => pickItem(l.key, it)} placeholder="Search the item taken out" />
               ) : (
                 <>
                   <div className="flex items-start justify-between gap-2">

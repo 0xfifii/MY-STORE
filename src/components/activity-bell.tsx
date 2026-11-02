@@ -72,7 +72,7 @@ export function BellButton() {
   return (
     <Link href="/activity" aria-label={n ? `${n} new activities` : "Activity"} className="relative flex size-10 items-center justify-center rounded-xl bg-paper text-burgundy ring-1 ring-burgundy/15 transition active:scale-90">
       <Bell className="size-5" />
-      {n > 0 && <span className="absolute -right-1 -top-1 flex min-w-5 items-center justify-center rounded-md bg-burgundy px-1 text-[10px] font-bold leading-5 text-paper ring-2 ring-paper">{n > 99 ? "99+" : n}</span>}
+      {n > 0 && <span className="absolute -right-1 -top-1 flex min-w-5 items-center justify-center rounded-md bg-gold px-1 text-[10px] font-bold leading-5 text-[#111111] ring-2 ring-paper badge-ping">{n > 99 ? "99+" : n}</span>}
     </Link>
   );
 }

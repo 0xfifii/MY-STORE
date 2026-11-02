@@ -292,3 +292,14 @@ input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus
   -webkit-background-clip: text; background-clip: text; color: transparent; animation: gold-sheen 5s ease-in-out 1.2s infinite; }
 @keyframes gold-sheen { 0%, 70%, 100% { background-position: 100% 0; } 85% { background-position: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .gold-figure { animation: none; } }
+
+/* More cowry gold */
+.page-bar { transform-origin: left; animation: bar-grow 600ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+a.text-burgundy, button.text-burgundy { transition: color 160ms ease; }
+@media (hover: hover) { a.text-burgundy:hover, button.text-burgundy:hover { color: var(--color-gold-deep); } }
+main thead tr { box-shadow: inset 0 -2px 0 rgb(201 162 39 / .55); }
+.product-card { position: relative; }
+@media (hover: hover) { .product-card:hover { box-shadow: 0 30px 50px -30px rgb(0 0 0 / 0.55), 0 0 0 1.5px rgb(201 162 39 / .55); } }
+::-webkit-scrollbar-thumb { background: rgb(201 162 39 / .45); border-radius: 99px; }
+@media (prefers-reduced-motion: reduce) { .page-bar { animation: none; } }
