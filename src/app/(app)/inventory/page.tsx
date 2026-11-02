@@ -92,7 +92,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                   <span className={`absolute left-3 top-3 rounded-lg px-2.5 py-1 text-[11px] font-bold shadow-sm ${it.status === "out" ? "bg-white text-[#111111]" : it.status === "low" ? "bg-[#111111] text-white ring-1 ring-white/60" : "bg-white/90 text-[#111111]"}`}>
                     {status}
                   </span>
-                  <span className="absolute bottom-3 right-3 rounded-lg bg-gold px-2.5 py-1 text-[12px] font-bold text-[#111111] shadow-[0_6px_14px_-6px_rgb(168_127_18/0.9)] tabular-nums">
+                  <span className="absolute bottom-3 right-3 rounded-lg bg-white px-2.5 py-1 text-[12px] font-bold text-[#111111] shadow-sm tabular-nums">
                     {formatMoney(it.stock_value, sym)}
                   </span>
                 </Link>
@@ -104,7 +104,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                     <p className="mt-0.5 truncate text-[13px] text-[#111111]/55">{it.category_name ?? "Uncategorised"} · <span className="tabular-nums">{it.sku}</span></p>
                   </div>
                   <p className="flex shrink-0 items-center gap-1.5 pt-0.5 text-[15px] font-bold tabular-nums text-[#111111]" title={`${formatQty(it.quantity)} ${it.unit_symbol} in stock`}>
-                    <Boxes className="size-[18px] text-gold-deep" />{formatQty(it.quantity)} <span className="text-[13px] font-semibold text-[#111111]/55">{it.unit_symbol}</span>
+                    <Boxes className="size-[18px]" />{formatQty(it.quantity)} <span className="text-[13px] font-semibold text-[#111111]/55">{it.unit_symbol}</span>
                   </p>
                 </div>
 
@@ -122,7 +122,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                   <StockButtons itemId={it.id} name={it.name} />
                   <div className="flex gap-1.5">
                     <ChangePriceButton itemId={it.id} label={`Change the price of ${it.name}`}
-                      className="flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-gold-deep ring-1 ring-gold/50 transition hover:scale-110 hover:bg-gold hover:text-[#111111] active:scale-95">
+                      className="flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-[#111111] ring-1 ring-black/15 transition hover:scale-110 hover:bg-[#111111] hover:text-white active:scale-95">
                       {sym}
                     </ChangePriceButton>
                     {can(user, "item.write") && (

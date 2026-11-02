@@ -66,7 +66,7 @@ export function Wordmark({ className = "h-10", ink = "#111111", paper = "#ffffff
       {/* dot under the S */}
       <circle cx={x0 + 44} cy="76" r="5.2" fill={ink} />
       {tagline && (
-        <text x={x0} y="104" fill={ink} fontFamily="'Plus Jakarta Sans Variable', Arial, sans-serif" fontSize="14" fontWeight="600" letterSpacing="0.9">
+        <text x={x0} y="104" fill={ink} fontFamily="'Inter Variable', Arial, sans-serif" fontSize="14" fontWeight="600" letterSpacing="0.9">
           {TAGLINE}
         </text>
       )}

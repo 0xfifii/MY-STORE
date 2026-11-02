@@ -9,9 +9,8 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, ArchiveRestore,
-  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck, Search,
+  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck, X,
 } from "@/components/hand-icons";
-import { PageFinder } from "./page-finder";
 import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
 import { BusinessBanner } from "./business-banner";
 import { useApp } from "./app-context";
@@ -66,22 +65,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   const app = useApp();
   useEffect(() => setDrawer(false), [pathname]);
-  // Ctrl/⌘ K opens the page finder anywhere.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setDrawer((d) => !d); } };
+    if (!drawer) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setDrawer(false); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [drawer]);
 
   const nav = (
-    <SidebarNav pathname={pathname} onFind={() => setDrawer(true)} />
+    <SidebarNav pathname={pathname} />
   );
 
   return (
     <ActivityProvider>
     <div className="min-h-dvh lg:pl-[17.5rem]">
-      {/* Desktop sidebar: a floating black panel */}
-      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-burgundy to-claret text-white shadow-[0_20px_50px_-25px_rgb(0_0_0/0.7)] lg:flex">
+      {/* Desktop sidebar: a floating white panel */}
+      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-white text-[#111111] shadow-[0_20px_50px_-30px_rgb(0_0_0/0.35)] ring-1 ring-black/[0.06] lg:flex">
         <div className="relative flex h-full flex-col">{nav}</div>
       </aside>
 
@@ -98,8 +97,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <PageFinder open={drawer} onClose={() => setDrawer(false)} isActive={(i) => isActive(pathname, i)}
-        groups={[{ label: "Daily work", items: MAIN }, { label: "Reports", items: REPORTS }, { label: "Setup", items: SETUP }]} />
+      {/* Mobile menu: a white panel that slides in from the right */}
+      {drawer && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="finder-fade absolute inset-0 bg-black/30 backdrop-blur-[3px]" onClick={() => setDrawer(false)} />
+          <aside className="menu-slide absolute inset-y-2 right-2 flex w-[19rem] max-w-[88vw] flex-col overflow-hidden rounded-[28px] bg-white text-[#111111] shadow-[0_30px_70px_-30px_rgb(0_0_0/0.5)]">
+            <button onClick={() => setDrawer(false)} className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full bg-black/[0.05] transition hover:rotate-90 hover:bg-[#111111] hover:text-white active:scale-90" aria-label="Close menu">
+              <X className="size-4" />
+            </button>
+            {nav}
+          </aside>
+        </div>
+      )}
 
       <Suspense fallback={null}><RouteProgress /></Suspense>
       <main className="mx-auto w-full max-w-7xl px-4 pb-32 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-9">
@@ -132,7 +141,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SidebarNav({ pathname, onFind }: { pathname: string; onFind: () => void }) {
+function SidebarNav({ pathname }: { pathname: string }) {
   const app = useApp();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -147,7 +156,7 @@ function SidebarNav({ pathname, onFind }: { pathname: string; onFind: () => void
     if (!visible.length) return null;
     return (
       <div className="mt-5">
-        <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-gold/70">{label}</p>
+        <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#111111]/40">{label}</p>
         <ul className="space-y-0.5">
           {visible.map((item) => {
             const active = isActive(pathname, item);
@@ -159,10 +168,10 @@ function SidebarNav({ pathname, onFind }: { pathname: string; onFind: () => void
                   aria-current={active ? "page" : undefined}
                   className={clsx(
                     "group flex items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200",
-                    active ? "bg-white text-claret shadow-[inset_4px_0_0_#c9a227,0_8px_20px_-10px_rgb(0_0_0/0.5)]" : "text-white/80 hover:translate-x-1 hover:bg-white/10 hover:text-gold",
+                    active ? "bg-[#111111] text-white shadow-[0_10px_22px_-12px_rgb(0_0_0/0.7)]" : "text-[#111111]/70 hover:translate-x-1 hover:bg-black/[0.05] hover:text-[#111111]",
                   )}
                 >
-                  <Icon className={clsx("size-[18px] transition-transform duration-200 group-hover:scale-110", active && "text-gold-deep")} />
+                  <Icon className="size-[18px] transition-transform duration-200 group-hover:scale-110" />
                   {item.label}
                   {item.href === "/activity" && !active ? <UnreadBadge className="ml-auto" /> : active && <span className="ml-auto size-1.5 rounded-full bg-gold" aria-hidden />}
                 </Link>
@@ -176,19 +185,15 @@ function SidebarNav({ pathname, onFind }: { pathname: string; onFind: () => void
   return (
     <div className="flex h-full flex-col overflow-y-auto px-3 py-5">
       <Link href="/dashboard" className="mt-2 block px-3" aria-label={app.storeName}>
-        <VelvetWordmark className="h-[72px] w-auto" ink="#ffffff" paper="#111111" title={app.storeName} />
+        <VelvetWordmark className="h-[64px] w-auto" title={app.storeName} />
       </Link>
-      <button onClick={onFind} className="mx-1 mt-5 flex items-center gap-2.5 rounded-2xl bg-white/[0.07] px-3.5 py-2.5 text-left text-sm text-white/60 ring-1 ring-white/10 transition hover:bg-white/[0.12] hover:text-white hover:ring-gold/50" data-testid="find-page">
-        <Search className="size-4 text-gold" /> <span className="flex-1">Find a page</span>
-        <kbd className="rounded-md border border-white/15 px-1.5 text-[10px] font-semibold text-white/50">Ctrl K</kbd>
-      </button>
       {group("Daily work", MAIN)}
       {group("Reports", REPORTS)}
       {group("Setup", SETUP)}
-      <div className="mt-auto rounded-3xl bg-white/10 px-4 py-3">
+      <div className="mt-auto rounded-3xl bg-black/[0.04] px-4 py-3">
         <p className="truncate text-sm font-semibold">{app.user.name}</p>
-        <p className="truncate text-xs text-white/60">{ROLE_LABELS[app.user.role]}</p>
-        <button onClick={logout} disabled={busy} className="mt-3 flex items-center gap-2 text-sm text-white/80 hover:text-white">
+        <p className="truncate text-xs text-[#111111]/50">{ROLE_LABELS[app.user.role]}</p>
+        <button onClick={logout} disabled={busy} className="mt-3 flex items-center gap-2 text-sm font-medium text-[#111111]/70 hover:text-[#111111]">
           <LogOut className="size-4" /> Sign out
         </button>
       </div>

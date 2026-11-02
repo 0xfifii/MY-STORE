@@ -2,8 +2,8 @@
 
 /*
   ÌṢÚRA: black and white.
-  Clean light-grey canvas, white rounded cards, black accents and buttons, bold modern type (Plus Jakarta Sans),
-  plus one accent: cowry gold, for highlights only (the active tab, key figures, confirm buttons, focus).
+  Clean light-grey canvas, white rounded cards, black accents and buttons, crisp modern type (Inter),
+  plus a few small touches of cowry gold (the inventory worth figure, the active-page dot, running-low markers).
   Token names (burgundy, claret, paper...) are kept from the earlier theme so every screen follows;
   their values are now black, white and greys.
 */
@@ -21,7 +21,7 @@
   --color-line: #e6e6e6;
   --color-paper: #ffffff;
   --color-white: #ffffff;
-  --color-canvas: #f4f4f4;
+  --color-canvas: #fafafa;
   --color-kraft: #ebebeb;
   --color-ok: #1a1a1a;
   --color-ok-bg: #ececec;
@@ -43,8 +43,8 @@
   --color-coral: #7a7a7a;
   --color-coral-bg: #f0f0f0;
 
-  --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1.5rem;
 }
@@ -57,7 +57,9 @@ body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-feature-settings: "tnum" 1;
+  font-feature-settings: "tnum" 1, "cv11" 1, "ss03" 1;
+  font-optical-sizing: auto;
+  letter-spacing: -0.006em;
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -103,7 +105,7 @@ body {
 }
 
 :focus-visible:not(input):not(textarea):not(select) {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--color-burgundy);
   outline-offset: 2px;
 }
 input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
@@ -176,7 +178,7 @@ tbody tr { transition: background-color 150ms ease; }
 }
 @media (hover: hover) { .btn-shine:hover::after { transform: translateX(120%); } }
 
-::selection { background: rgb(201 162 39 / 0.35); }
+::selection { background: rgb(0 0 0 / 0.15); }
 
 /* ---------- Velvy the mascot ---------- */
 @keyframes velvy-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
@@ -217,8 +219,8 @@ p { text-wrap: pretty; }
 
 /* ---------- Motion pass (black & white kept; only movement added) ---------- */
 /* Loading bar across the top while a page opens */
-.route-progress { position: fixed; inset: 0 auto auto 0; z-index: 60; height: 3px; width: 0; background: linear-gradient(90deg, #a87f12, #c9a227, #e3c463);
-  box-shadow: 0 0 12px rgb(201 162 39 / .55); opacity: 0; pointer-events: none; }
+.route-progress { position: fixed; inset: 0 auto auto 0; z-index: 60; height: 3px; width: 0; background: #111111;
+  box-shadow: 0 0 10px rgb(0 0 0 / .25); opacity: 0; pointer-events: none; }
 .route-progress--loading { opacity: 1; animation: route-crawl 8s cubic-bezier(.1,.7,.2,1) forwards; }
 .route-progress--done { opacity: 0; width: 100%; transition: width 200ms ease, opacity 300ms ease 200ms; }
 @keyframes route-crawl { 0% { width: 0; } 10% { width: 35%; } 40% { width: 70%; } 100% { width: 92%; } }
@@ -242,7 +244,7 @@ main tbody tr:nth-child(8) { animation-delay: 175ms; } main tbody tr:nth-child(n
 input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea {
   transition: border-color 180ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), background-color 180ms ease;
 }
-input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgb(201 162 39 / .28), 0 10px 24px -16px rgb(0 0 0 / .55); }
+input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgb(0 0 0 / .08), 0 10px 24px -16px rgb(0 0 0 / .45); }
 
 /* Bottom bar: the active tab pops, its icon bounces */
 @keyframes nav-pop { 0% { transform: scale(.82); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
@@ -259,7 +261,7 @@ input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:
 
 /* A tick that draws itself */
 .success-check circle { stroke: #111111; stroke-width: 2.5; stroke-dasharray: 152; stroke-dashoffset: 152; animation: draw 520ms cubic-bezier(.65,0,.45,1) forwards; }
-.success-check path { stroke: #c9a227; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 340ms cubic-bezier(.65,0,.45,1) 440ms forwards; }
+.success-check path { stroke: #111111; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 340ms cubic-bezier(.65,0,.45,1) 440ms forwards; }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
 /* Loading skeleton shimmer */
@@ -282,7 +284,6 @@ input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:
 @media (prefers-reduced-motion: reduce) { .chip-pop { animation: none; } }
 
 /* Cowry gold touches */
-.nav-active svg { color: var(--color-gold); }
 .gold-figure { background: linear-gradient(100deg, #e9cf77 0%, #c9a227 45%, #f0d98c 60%, #c9a227 80%); background-size: 220% 100%;
   -webkit-background-clip: text; background-clip: text; color: transparent; animation: gold-sheen 5s ease-in-out 1.2s infinite; }
 @keyframes gold-sheen { 0%, 70%, 100% { background-position: 100% 0; } 85% { background-position: 0 0; } }
@@ -293,10 +294,9 @@ input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:
 @keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 a.text-burgundy, button.text-burgundy { transition: color 160ms ease; }
 @media (hover: hover) { a.text-burgundy:hover, button.text-burgundy:hover { color: var(--color-gold-deep); } }
-main thead tr { box-shadow: inset 0 -2px 0 rgb(201 162 39 / .55); }
+main thead tr { box-shadow: inset 0 -1px 0 rgb(0 0 0 / .12); }
 .product-card { position: relative; }
-@media (hover: hover) { .product-card:hover { box-shadow: 0 30px 50px -30px rgb(0 0 0 / 0.55), 0 0 0 1.5px rgb(201 162 39 / .55); } }
-::-webkit-scrollbar-thumb { background: rgb(201 162 39 / .45); border-radius: 99px; }
+@media (hover: hover) { .product-card:hover { box-shadow: 0 30px 50px -30px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(0 0 0 / .12); } }
 @media (prefers-reduced-motion: reduce) { .page-bar { animation: none; } }
 
 /* Page finder */
@@ -307,3 +307,6 @@ main thead tr { box-shadow: inset 0 -2px 0 rgb(201 162 39 / .55); }
 .finder-out { opacity: 0; transform: translateY(16px); transition: opacity 160ms ease, transform 160ms ease; }
 .finder-tile { animation: pop-in 340ms cubic-bezier(.2,.8,.2,1.15) both; }
 @media (prefers-reduced-motion: reduce) { .finder-panel, .finder-tile, .finder-fade { animation: none; } }
+.menu-slide { animation: menu-slide 260ms cubic-bezier(.2,.9,.25,1) both; }
+@keyframes menu-slide { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .menu-slide { animation: none; } }
