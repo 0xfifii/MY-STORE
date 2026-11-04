@@ -461,8 +461,9 @@ export function WhenPicker({ label, value, touched, canBackdate, onChange }: {
 }) {
   const now = nowLocalInput();
   const today = now.slice(0, 10);
+  // "Yesterday" means the end of yesterday (23:59), so everything received during that day is counted.
   const yesterdayAt = (() => {
-    const d = new Date(); d.setDate(d.getDate() - 1); d.setSeconds(0, 0);
+    const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(23, 59, 0, 0);
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
   })();
   const isYesterday = touched && value.slice(0, 10) === yesterdayAt.slice(0, 10);

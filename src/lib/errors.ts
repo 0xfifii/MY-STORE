@@ -50,7 +50,7 @@ export function errorResponse(e: unknown) {
   const m = msg.match(/^([A-Z_]+):?\s*(.*)$/);
   if (m && FRIENDLY[m[1]]) {
     const def = FRIENDLY[m[1]];
-    const body: Record<string, unknown> = { error: def.message ?? capitalise(m[2] || m[1]), code: m[1] };
+    const body: Record<string, unknown> = { error: withHint(def.message ?? capitalise(m[2] || m[1])), code: m[1] };
     if (m[1] === "INSUFFICIENT_STOCK" && err.detail) body.available = err.detail;
     return NextResponse.json(body, { status: def.status });
   }
@@ -74,7 +74,14 @@ export function friendlyDbError(e: unknown): { code: string; status: number; mes
   if (e instanceof AppError) return { code: e.code, status: e.status, message: e.message };
   const m = ((e as { message?: string })?.message ?? "").match(/^([A-Z_]+):?\s*(.*)$/);
   if (!m || !FRIENDLY[m[1]]) return null;
-  return { code: m[1], status: FRIENDLY[m[1]].status, message: FRIENDLY[m[1]].message ?? capitalise(m[2] || m[1]) };
+  return { code: m[1], status: FRIENDLY[m[1]].status, message: withHint(FRIENDLY[m[1]].message ?? capitalise(m[2] || m[1])) };
+}
+
+/** Backdated stock-outs: say how to fix it, not just what went wrong. */
+function withHint(msg: string) {
+  return /at that date and time/.test(msg)
+    ? `${msg.replace(/\.$/, "")}. Pick a later time on that day (after the stock was received), or record the stock in for that day first.`
+    : msg;
 }
 
 function capitalise(s: string) {
