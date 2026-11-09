@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Download } from "@/components/hand-icons";
+import { MovementPicker } from "@/components/movement-picker";
 import { Panel, PageHeader, StatusBadge } from "@/components/ui/primitives";
 import { ReportControls } from "@/components/report-controls";
 import { PieChart } from "@/components/pie-chart";
@@ -334,6 +335,7 @@ function MovementQuick() {
         <a className={btn} href={link("preset=this_month&period_type=month")}>This month <Download className="size-4 transition group-hover:translate-y-0.5" /></a>
         <a className={btn} href={link("preset=last_month&period_type=month")}>Last month <Download className="size-4 transition group-hover:translate-y-0.5" /></a>
       </div>
+      <MovementPicker />
     </section>
   );
 }
