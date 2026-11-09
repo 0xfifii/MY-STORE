@@ -61,14 +61,14 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
           {businesses.map((b) => {
             const st = statusOf(b);
             return (
-              <li key={b.id} className="product-card rounded-[28px] bg-white p-5 ring-1 ring-black/5 shadow-[0_18px_40px_-30px_rgb(0_0_0/0.7)]">
+              <li key={b.id} className="product-card rounded-[28px] bg-paper p-5 ring-1 ring-black/5 shadow-[0_18px_40px_-30px_rgb(0_0_0/0.7)]">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-[19px] font-bold tracking-[-0.02em]">{b.name}{b.id === activeStoreId && <span className="ml-2 rounded-md bg-black/5 px-1.5 py-0.5 align-middle text-[11px] font-semibold">viewing</span>}</p>
                     <p className="mt-0.5 truncate text-[13px] text-[#111111]/55">{b.owners ?? "No owner yet"}</p>
                   </div>
                   <span className={clsx("shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-bold",
-                    st.tone === "dark" ? "bg-[#111111] text-white" : st.tone === "warn" ? "bg-white text-[#111111] ring-2 ring-[#111111]" : "bg-black/5 text-[#111111]")}>
+                    st.tone === "dark" ? "bg-[#111111] text-white" : st.tone === "warn" ? "bg-paper text-[#111111] ring-2 ring-[#111111]" : "bg-black/5 text-[#111111]")}>
                     {st.label}
                   </span>
                 </div>
@@ -98,7 +98,7 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
       </section>
 
       {payments.length > 0 && (
-        <section className="rounded-[28px] bg-white p-5 ring-1 ring-black/5">
+        <section className="rounded-[28px] bg-paper p-5 ring-1 ring-black/5">
           <h2 className="font-semibold">Recent payments</h2>
           <ul className="mt-3 divide-y divide-black/5 text-sm">
             {payments.map((p) => (
@@ -152,7 +152,7 @@ function PaystackCard({ paystack, webhookUrl }: { paystack: { mode: string; endi
       </div>
       <form onSubmit={save} className="mt-4 flex flex-col gap-2 sm:flex-row">
         <Input type="password" value={key} onChange={(e) => setKey(e.target.value.trim())} placeholder={paystack ? "Paste a new key to replace it" : "sk_test_… or sk_live_…"}
-          className="bg-white text-[#111111]" aria-label="Paystack secret key" autoComplete="off" />
+          className="bg-paper text-[#111111]" aria-label="Paystack secret key" autoComplete="off" />
         <Button type="submit" variant="secondary" loading={busy} disabled={!key}>Save key</Button>
       </form>
       {err && <p role="alert" className="mt-2 text-sm text-red-300">{err}</p>}

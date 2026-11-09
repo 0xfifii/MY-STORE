@@ -109,8 +109,8 @@ export async function OverviewTab({ period, sym, tz, mode, by, unit, link, canMa
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <a href={`/api/audit/export?month=${month}&format=pdf`} className="inline-flex h-11 items-center gap-2 rounded-full bg-burgundy px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-burgundy-hover active:scale-95"><FileText className="size-4" /> Download PDF</a>
-          <a href={`/api/audit/export?month=${month}&format=xlsx`} className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold ring-1 ring-white transition hover:bg-rose active:scale-95"><FileSpreadsheet className="size-4" /> Download Excel</a>
-          {canMail && <Link href="/mail" className="inline-flex h-11 items-center gap-2 rounded-full bg-white/70 px-5 text-sm font-semibold ring-1 ring-white transition hover:bg-white active:scale-95"><Mail className="size-4" /> Email it</Link>}
+          <a href={`/api/audit/export?month=${month}&format=xlsx`} className="inline-flex h-11 items-center gap-2 rounded-full bg-paper px-5 text-sm font-semibold ring-1 ring-white transition hover:bg-rose active:scale-95"><FileSpreadsheet className="size-4" /> Download Excel</a>
+          {canMail && <Link href="/mail" className="inline-flex h-11 items-center gap-2 rounded-full bg-white/70 px-5 text-sm font-semibold ring-1 ring-white transition hover:bg-paper active:scale-95"><Mail className="size-4" /> Email it</Link>}
         </div>
       </Panel>
     </div>

@@ -50,7 +50,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
         description="Every valuable, accounted for. Tap In or Out on any card."
         actions={
           <>
-            <a href="/api/reports/export?kind=balance&preset=today&format=xlsx" className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold shadow-sm ring-1 ring-black/10 transition hover:-translate-y-px hover:shadow-md">
+            <a href="/api/reports/export?kind=balance&preset=today&format=xlsx" className="inline-flex h-10 items-center gap-2 rounded-full bg-paper px-5 text-sm font-semibold shadow-sm ring-1 ring-black/10 transition hover:-translate-y-px hover:shadow-md">
               <Download className="size-4" /> Balance sheet
             </a>
             {can(user, "item.write") && <LinkButton href="/items/bulk" variant="secondary"><Plus className="size-4" /> Add many</LinkButton>}
@@ -82,17 +82,17 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
             const level = min > 0 ? Math.min(100, (qty / (min * 3)) * 100) : qty > 0 ? 100 : 0;
             const status = it.status === "out" ? "Out of stock" : it.status === "low" ? "Running low" : "In stock";
             return (
-              <li key={it.id} className="product-card group relative flex flex-col rounded-[28px] bg-white p-3 shadow-[0_18px_40px_-30px_rgb(0_0_0/0.7)] ring-1 ring-black/5">
+              <li key={it.id} className="product-card group relative flex flex-col rounded-[28px] bg-paper p-3 shadow-[0_18px_40px_-30px_rgb(0_0_0/0.7)] ring-1 ring-black/5">
                 {/* Photo, or black tile with the item's initials */}
                 <Link href={`/items/${it.id}`} className="relative block aspect-[16/11] overflow-hidden rounded-[22px]" aria-label={`Open ${it.name}`}>
                   {it.has_photo
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={`/api/items/${it.id}/photo?v=${it.photo_v}`} alt="" loading="lazy" className="size-full object-cover grayscale transition duration-500 group-hover:scale-[1.04] group-hover:grayscale-0" />
                     : <PhotoPlaceholder name={it.name} className="size-full transition duration-500 group-hover:scale-[1.04]" />}
-                  <span className={`absolute left-3 top-3 rounded-lg px-2.5 py-1 text-[11px] font-bold shadow-sm ${it.status === "out" ? "bg-white text-[#111111]" : it.status === "low" ? "bg-[#111111] text-white ring-1 ring-white/60" : "bg-white/90 text-[#111111]"}`}>
+                  <span className={`absolute left-3 top-3 rounded-lg px-2.5 py-1 text-[11px] font-bold shadow-sm ${it.status === "out" ? "bg-paper text-[#111111]" : it.status === "low" ? "bg-[#111111] text-white ring-1 ring-white/60" : "bg-white/90 text-[#111111]"}`}>
                     {status}
                   </span>
-                  <span className="absolute bottom-3 right-3 rounded-lg bg-white px-2.5 py-1 text-[12px] font-bold text-[#111111] shadow-sm tabular-nums">
+                  <span className="absolute bottom-3 right-3 rounded-lg bg-paper px-2.5 py-1 text-[12px] font-bold text-[#111111] shadow-sm tabular-nums">
                     {formatMoney(it.stock_value, sym)}
                   </span>
                 </Link>

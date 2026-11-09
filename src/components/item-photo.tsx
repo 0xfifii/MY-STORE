@@ -43,7 +43,7 @@ export function PhotoPlaceholder({ name, className = "" }: { name: string; class
   // "Rice (50kg bag)" -> "R", "Table water 75cl" -> "TW": letters only, ignoring sizes in brackets.
   const initials = name.replace(/\(.*?\)/g, " ").replace(/[^\p{L} ]/gu, " ").split(/\s+/).filter((w) => w.length > 1).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   return (
-    <div className={`relative flex items-center justify-center overflow-hidden bg-[#f3f3f3] text-[#111111] ${className}`}>
+    <div className={`relative flex items-center justify-center overflow-hidden bg-[#eae3d4] text-[#111111] ${className}`}>
       <div aria-hidden className="absolute -right-10 -top-10 size-40 rounded-full border border-black/[0.06]" />
       <div aria-hidden className="absolute -bottom-14 -left-8 size-44 rounded-full border border-black/[0.06]" />
       <Cowry tone="black" className="absolute right-3 top-3 size-8 opacity-90" />
@@ -85,12 +85,12 @@ export function ItemPhotoEditor({ itemId, name, hasPhoto, v, editable }: { itemI
           <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
           <div className="absolute inset-x-3 bottom-3 flex gap-2">
             <button type="button" onClick={() => input.current?.click()} disabled={busy}
-              className="flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-[#111111] shadow-lg transition hover:scale-[1.03] active:scale-95">
+              className="flex h-10 items-center gap-2 rounded-xl bg-paper px-4 text-sm font-semibold text-[#111111] shadow-lg transition hover:scale-[1.03] active:scale-95">
               {busy ? <Spinner className="size-4" /> : null}{hasPhoto ? "Change photo" : "Add a photo"}
             </button>
             {hasPhoto && (
               <button type="button" onClick={remove} disabled={busy} aria-label="Remove photo"
-                className="flex size-10 items-center justify-center rounded-xl bg-white/90 text-[#111111] shadow-lg transition hover:bg-white active:scale-95">
+                className="flex size-10 items-center justify-center rounded-xl bg-white/90 text-[#111111] shadow-lg transition hover:bg-paper active:scale-95">
                 <Trash2 className="size-4" />
               </button>
             )}

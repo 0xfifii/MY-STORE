@@ -17,7 +17,7 @@ export default async function LowStockPage({ searchParams }: { searchParams: Pro
   const data = await listItems({ status, sort: "quantity", dir: "asc", pageSize: 100 });
   const pill = (v: string, label: string) => (
     <Link href={v === "attention" ? "/low-stock" : `/low-stock?status=${v}`}
-      className={`rounded-full px-3 py-1.5 text-sm font-semibold ${status === v ? "bg-burgundy text-white" : "bg-white text-muted ring-1 ring-line hover:text-burgundy"}`}>
+      className={`rounded-full px-3 py-1.5 text-sm font-semibold ${status === v ? "bg-burgundy text-white" : "bg-paper text-muted ring-1 ring-line hover:text-burgundy"}`}>
       {label}
     </Link>
   );
@@ -28,7 +28,7 @@ export default async function LowStockPage({ searchParams }: { searchParams: Pro
         title="Low Stock"
         description="Items at or below their minimum level, with items that have run out first."
         actions={
-          <a href="/api/reports/export?kind=balance&preset=today&format=pdf" className="inline-flex h-10 items-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-white">
+          <a href="/api/reports/export?kind=balance&preset=today&format=pdf" className="inline-flex h-10 items-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-paper">
             <Download className="size-4" /> Balance report
           </a>
         }

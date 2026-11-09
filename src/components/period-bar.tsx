@@ -21,7 +21,7 @@ export function PeriodBar({ kind, label, prev, next, from, to }: { kind: string;
         {KINDS.map(([k, l]) => (
           <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => go({ p: k === "month" ? null : k, d: null, ...(k === "custom" ? { from, to } : { from: null, to: null }) })}
             className={clsx("shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 active:scale-95",
-              kind === k ? "bg-night text-white shadow-sm" : "text-muted hover:bg-white hover:text-ink")}>
+              kind === k ? "bg-night text-white shadow-sm" : "text-muted hover:bg-paper hover:text-ink")}>
             {l}
           </button>
         ))}
@@ -35,12 +35,12 @@ export function PeriodBar({ kind, label, prev, next, from, to }: { kind: string;
       ) : (
         <div className="flex items-center justify-between gap-2">
           <button type="button" disabled={!prev} onClick={() => prev && go({ d: prev })} aria-label="Previous period"
-            className="h-10 rounded-full bg-white/80 px-4 text-sm font-semibold ring-1 ring-white transition hover:bg-white hover:text-burgundy active:scale-95 disabled:opacity-30">
+            className="h-10 rounded-full bg-white/80 px-4 text-sm font-semibold ring-1 ring-white transition hover:bg-paper hover:text-burgundy active:scale-95 disabled:opacity-30">
             Previous
           </button>
           <p className="min-w-40 text-center text-sm font-semibold" data-testid="period-label">{label}</p>
           <button type="button" disabled={!next} onClick={() => next && go({ d: next })} aria-label="Next period"
-            className="h-10 rounded-full bg-white/80 px-4 text-sm font-semibold ring-1 ring-white transition hover:bg-white hover:text-burgundy active:scale-95 disabled:opacity-30">
+            className="h-10 rounded-full bg-white/80 px-4 text-sm font-semibold ring-1 ring-white transition hover:bg-paper hover:text-burgundy active:scale-95 disabled:opacity-30">
             Next
           </button>
         </div>

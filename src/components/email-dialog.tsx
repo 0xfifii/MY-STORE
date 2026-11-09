@@ -54,7 +54,7 @@ export function ReceiptActions({ txnId, txnNo, canEmail, size = "md" }: { txnId:
       </a>
       {canEmail && (
         <button type="button" onClick={() => setOpen(true)}
-          className={`inline-flex items-center justify-center gap-2 rounded-full bg-white/85 font-semibold ring-1 ring-white hover:bg-white ${size === "sm" ? "h-9 px-4 text-sm" : "h-11 px-5 text-sm"}`}>
+          className={`inline-flex items-center justify-center gap-2 rounded-full bg-white/85 font-semibold ring-1 ring-white hover:bg-paper ${size === "sm" ? "h-9 px-4 text-sm" : "h-11 px-5 text-sm"}`}>
           <Send className="size-4" /> Email receipt
         </button>
       )}
@@ -83,7 +83,7 @@ export function ResendButton({ id, recipients, failed }: { id: string; recipient
   return (
     <>
       <button type="button" onClick={() => { setTo(recipients.join(", ")); setErr(null); setOpen(true); }}
-        className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition active:scale-95 ${failed ? "bg-burgundy text-white hover:bg-burgundy-hover" : "bg-white/80 ring-1 ring-white hover:bg-white"}`}>
+        className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition active:scale-95 ${failed ? "bg-burgundy text-white hover:bg-burgundy-hover" : "bg-white/80 ring-1 ring-white hover:bg-paper"}`}>
         <Send className="size-3.5" /> Resend
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Resend email" busy={busy}

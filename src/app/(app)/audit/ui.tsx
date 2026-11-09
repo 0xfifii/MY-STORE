@@ -24,7 +24,7 @@ export function StatCard({ label, value, sub, href, tone = "plain", icon }: { la
       className={`group relative block overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-br p-4 shadow-[0_10px_30px_-18px_rgb(0_0_0/0.45)] ring-1 ring-white/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-16px_rgb(0_0_0/0.5)] active:scale-[0.98] ${TONES[tone]}`}>
       <div className="flex items-start justify-between gap-2">
         <p className={`text-xs font-medium ${dark ? "text-white/75" : "text-muted"}`}>{label}</p>
-        {icon && <span className={`flex size-8 items-center justify-center rounded-full ${dark ? "bg-white/15" : "bg-white shadow-sm"}`}>{icon}</span>}
+        {icon && <span className={`flex size-8 items-center justify-center rounded-full ${dark ? "bg-white/15" : "bg-paper shadow-sm"}`}>{icon}</span>}
       </div>
       <p className="mt-1.5 truncate text-xl font-semibold tracking-tight sm:text-2xl">{value}</p>
       {sub && <p className={`mt-0.5 truncate text-xs ${dark ? "text-white/75" : "text-muted"}`}>{sub}</p>}
@@ -39,7 +39,7 @@ export function Seg({ options, value, href }: { options: [string, string][]; val
     <div className="flex max-w-full gap-1 overflow-x-auto rounded-full bg-white/70 p-1 ring-1 ring-white">
       {options.map(([k, l]) => (
         <Link key={k} href={href(k)} scroll={false} aria-current={value === k ? "true" : undefined}
-          className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all duration-200 active:scale-95 ${value === k ? "bg-night text-white shadow-sm" : "text-muted hover:bg-white hover:text-ink"}`}>
+          className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all duration-200 active:scale-95 ${value === k ? "bg-night text-white shadow-sm" : "text-muted hover:bg-paper hover:text-ink"}`}>
           {l}
         </Link>
       ))}
@@ -54,7 +54,7 @@ export function Empty({ children }: { children: React.ReactNode }) {
 export function ShareBar({ pct, color = "bg-burgundy" }: { pct: number; color?: string }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-white"><div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, pct)}%` }} /></div>
+      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-paper"><div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, pct)}%` }} /></div>
       <span className="text-xs text-muted">{pct.toFixed(pct < 1 ? 1 : 0)}%</span>
     </div>
   );

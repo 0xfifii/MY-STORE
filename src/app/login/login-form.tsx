@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { AtSign, KeyRound, Loader2 } from "@/components/hand-icons";
 
 const pill =
-  "flex h-14 items-center gap-3 rounded-full bg-white/70 pl-2 pr-2 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-white focus-within:bg-white focus-within:ring-burgundy/25";
-const knob = "flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-ink shadow-sm";
+  "flex h-14 items-center gap-3 rounded-full bg-white/70 pl-2 pr-2 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-white focus-within:bg-paper focus-within:ring-burgundy/25";
+const knob = "flex size-10 shrink-0 items-center justify-center rounded-full bg-paper text-ink shadow-sm";
 
 export function LoginForm({ next, initialError = null, initialEmail = "" }: { next: string; initialError?: string | null; initialEmail?: string }) {
   const [email, setEmail] = useState(initialEmail);
@@ -56,7 +56,7 @@ export function LoginForm({ next, initialError = null, initialEmail = "" }: { ne
         <span className="sr-only">Password</span>
         <input id="password" name="password" ref={passRef} autoFocus={!!initialEmail} type={show ? "text" : "password"} autoComplete="current-password" placeholder="password" value={password}
           onChange={(e) => setPassword(e.target.value)} className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-ink/60" />
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { setShow(!show); passRef.current?.focus(); }} className="h-9 shrink-0 rounded-full bg-white px-4 text-xs font-semibold shadow-sm">
+        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { setShow(!show); passRef.current?.focus(); }} className="h-9 shrink-0 rounded-full bg-paper px-4 text-xs font-semibold shadow-sm">
           {show ? "Hide" : "Show"}
         </button>
       </label>

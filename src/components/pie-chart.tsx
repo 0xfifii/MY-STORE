@@ -72,7 +72,7 @@ export function PieChart({ slices, centerLabel, centerValue, size = 200, emptyTe
           );
           return (
             <li key={s.label} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
-              className={`rounded-2xl px-2.5 py-1.5 transition-all duration-150 ${hover === i ? "bg-white shadow-sm" : ""} ${s.href ? "hover:translate-x-0.5" : ""}`}>
+              className={`rounded-2xl px-2.5 py-1.5 transition-all duration-150 ${hover === i ? "bg-paper shadow-sm" : ""} ${s.href ? "hover:translate-x-0.5" : ""}`}>
               {s.href ? <Link href={s.href} className="flex items-start gap-2.5">{body}</Link> : <div className="flex items-start gap-2.5">{body}</div>}
             </li>
           );

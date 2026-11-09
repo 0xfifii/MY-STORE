@@ -51,7 +51,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
         <div className="flex gap-4 text-sm sm:text-right">
           <div><p className="text-xs text-muted">Balance now</p><p className="font-semibold">{formatQty(item.quantity)} {u}</p></div>
           <div><p className="text-xs text-muted">Average cost now</p><p className="font-semibold">{cost(item.avg_cost)}</p></div>
-          <Link href={`/items/${item.id}`} className="self-end rounded-full bg-white/80 px-4 py-2 text-xs font-semibold ring-1 ring-white transition hover:bg-white">Open item</Link>
+          <Link href={`/items/${item.id}`} className="self-end rounded-full bg-white/80 px-4 py-2 text-xs font-semibold ring-1 ring-white transition hover:bg-paper">Open item</Link>
         </div>
       </div>
 

@@ -141,10 +141,10 @@ export function ReportControls({
         <a href={`/api/reports/export?${exportQuery}&format=pdf`} className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-burgundy px-4 text-sm font-semibold text-white hover:bg-burgundy-hover">
           <FileText className="size-4" /> PDF
         </a>
-        <a href={`/api/reports/export?${exportQuery}&format=xlsx`} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-white">
+        <a href={`/api/reports/export?${exportQuery}&format=xlsx`} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-paper">
           <FileSpreadsheet className="size-4" /> Excel (.xlsx)
         </a>
-        <a href={`/api/reports/export?${exportQuery}&format=csv`} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-white">
+        <a href={`/api/reports/export?${exportQuery}&format=csv`} className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white/80 px-5 text-sm font-semibold shadow-sm ring-1 ring-white hover:bg-paper">
           <Sheet className="size-4" /> CSV
         </a>
         {app.can("report.generate") && (

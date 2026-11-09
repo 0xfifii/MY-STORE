@@ -275,7 +275,7 @@ function PermissionsModal({ user, categories, onClose }: { user: U; categories: 
                   const on = cats.has(c.id);
                   return (
                     <button key={c.id} type="button" onClick={() => setCats((p) => { const n = new Set(p); if (on) n.delete(c.id); else n.add(c.id); return n; })}
-                      className={`rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 ${on ? "bg-night text-white ring-night" : "bg-white text-ink ring-line"}`}>
+                      className={`rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 ${on ? "bg-night text-white ring-night" : "bg-paper text-ink ring-line"}`}>
                       {c.name}
                     </button>
                   );

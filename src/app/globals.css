@@ -13,20 +13,20 @@
   --color-burgundy: #111111;   /* brand black */
   --color-burgundy-hover: #2b2b2b;
   --color-glow: #555555;
-  --color-rose: #f2f2f2;
-  --color-rose-strong: #e6e6e6;
+  --color-rose: #ece5d6;
+  --color-rose-strong: #e3dbca;
   --color-ink: #111111;
   --color-night: #111111;
-  --color-muted: #6b6b6b;
-  --color-line: #e6e6e6;
-  --color-paper: #ffffff;
+  --color-muted: #6b665c;
+  --color-line: #e3dbca;
+  --color-paper: #fbf8f2;   /* cards and panels: a lighter step of the cream */
   --color-white: #ffffff;
-  --color-canvas: #fafafa;
-  --color-kraft: #ebebeb;
+  --color-canvas: #f3eee3;  /* main colour */
+  --color-kraft: #e8e0cf;
   --color-ok: #1a1a1a;
-  --color-ok-bg: #ececec;
+  --color-ok-bg: #e9e2d3;
   --color-warn: #4d4d4d;
-  --color-warn-bg: #f0f0f0;
+  --color-warn-bg: #ede6d8;
   --color-bad: #b42318;
   --color-bad-bg: #fbe9e7;
 
@@ -35,13 +35,13 @@
   --color-gold-bg: #f7efd6;
   --color-gold-deep: #8a6a10;
   --color-sky: #6b6b6b;
-  --color-sky-bg: #f0f0f0;
+  --color-sky-bg: #ede6d8;
   --color-mint: #9a9a9a;
-  --color-mint-bg: #f0f0f0;
+  --color-mint-bg: #ede6d8;
   --color-plum: #3d3d3d;
-  --color-plum-bg: #f0f0f0;
+  --color-plum-bg: #ede6d8;
   --color-coral: #7a7a7a;
-  --color-coral-bg: #f0f0f0;
+  --color-coral-bg: #ede6d8;
 
   --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -74,22 +74,22 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(40rem 30rem at 90% -10%, rgb(255 255 255 / 0.9), transparent 70%),
+    radial-gradient(40rem 30rem at 90% -10%, rgb(251 248 242 / 0.9), transparent 70%),
     radial-gradient(32rem 26rem at -10% 110%, rgb(0 0 0 / 0.04), transparent 70%),
     var(--color-canvas);
 }
 
 /* Frosted glass surface */
 .glass {
-  background: rgb(255 255 255 / 0.72);
-  border: 1px solid rgb(255 255 255 / 0.85);
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -18px rgb(0 0 0 / 0.28);
+  background: rgb(251 248 242 / 0.72);
+  border: 1px solid rgb(251 248 242 / 0.85);
+  box-shadow: 0 1px 0 rgb(251 248 242 / 0.6) inset, 0 12px 32px -18px rgb(0 0 0 / 0.28);
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
 }
 .glass-strong {
-  background: rgb(255 255 255 / 0.88);
-  border: 1px solid rgb(255 255 255 / 0.9);
+  background: rgb(251 248 242 / 0.88);
+  border: 1px solid rgb(251 248 242 / 0.9);
   box-shadow: 0 16px 40px -20px rgb(0 0 0 / 0.3);
   backdrop-filter: blur(22px) saturate(1.2);
   -webkit-backdrop-filter: blur(22px) saturate(1.2);
@@ -161,13 +161,13 @@ select::-ms-expand { display: none; }
 /* Cards and glass panels respond to the pointer. */
 .lift { transition: transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease; }
 @media (hover: hover) {
-  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 22px 40px -22px rgb(0 0 0 / 0.45); }
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(251 248 242 / 0.6) inset, 0 22px 40px -22px rgb(0 0 0 / 0.45); }
 }
 .lift:active { transform: translateY(0) scale(0.99); }
 
 /* Table rows highlight under the pointer. */
 tbody tr { transition: background-color 150ms ease; }
-@media (hover: hover) { tbody tr:hover { background-color: rgb(255 255 255 / 0.55); } }
+@media (hover: hover) { tbody tr:hover { background-color: rgb(251 248 242 / 0.55); } }
 
 /* Shine across primary buttons on hover. */
 .btn-shine { position: relative; overflow: hidden; isolation: isolate; }
@@ -310,3 +310,7 @@ main thead tr { box-shadow: inset 0 -1px 0 rgb(0 0 0 / .12); }
 .menu-slide { animation: menu-slide 260ms cubic-bezier(.2,.9,.25,1) both; }
 @keyframes menu-slide { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .menu-slide { animation: none; } }
+
+/* Two-colour palette: cream #F3EEE3 and black #111111. Light text on dark surfaces is cream, not pure white. */
+.text-white { color: #f3eee3; }
+::selection { background: rgb(17 17 17 / 0.14); }

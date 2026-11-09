@@ -119,7 +119,7 @@ export function ItemPicker({
 
   const chip = (on: boolean) => clsx(
     "shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition duration-200 active:scale-95",
-    on ? "chip-pop bg-[#111111] text-white shadow-[0_8px_16px_-10px_rgb(0_0_0/0.8)]" : "bg-white text-[#111111]/70 ring-1 ring-black/10 hover:text-[#111111] hover:ring-black/25",
+    on ? "chip-pop bg-[#111111] text-white shadow-[0_8px_16px_-10px_rgb(0_0_0/0.8)]" : "bg-paper text-[#111111]/70 ring-1 ring-black/10 hover:text-[#111111] hover:ring-black/25",
   );
 
   return (
@@ -144,7 +144,7 @@ export function ItemPicker({
           role="combobox"
           aria-expanded={open}
           aria-controls="item-picker-list"
-          className="h-14 w-full rounded-[20px] border-2 border-transparent bg-white pl-14 pr-24 text-[16px] font-medium text-[#111111] shadow-[0_12px_30px_-22px_rgb(0_0_0/0.7)] ring-1 ring-black/5 transition placeholder:font-normal placeholder:text-[#111111]/40 focus:border-[#111111] focus:outline-none"
+          className="h-14 w-full rounded-[20px] border-2 border-transparent bg-paper pl-14 pr-24 text-[16px] font-medium text-[#111111] shadow-[0_12px_30px_-22px_rgb(0_0_0/0.7)] ring-1 ring-black/5 transition placeholder:font-normal placeholder:text-[#111111]/40 focus:border-[#111111] focus:outline-none"
         />
         {loading && <Spinner className={`absolute top-1/2 size-5 -translate-y-1/2 ${q ? "right-[5.5rem]" : "right-4"}`} />}
         {q && (
@@ -173,7 +173,7 @@ export function ItemPicker({
             <div className="mt-3 flex flex-wrap items-center gap-1.5" data-testid="recent-searches">
               <span className="mr-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#111111]/45"><Clock className="size-3.5" /> Recent</span>
               {recent.list.map((t) => (
-                <span key={t} className="group/chip flex items-center rounded-full bg-white text-[13px] font-semibold text-[#111111] ring-1 ring-black/10">
+                <span key={t} className="group/chip flex items-center rounded-full bg-paper text-[13px] font-semibold text-[#111111] ring-1 ring-black/10">
                   <button type="button" onClick={() => { setQ(t); box.current?.focus(); }} className="py-1 pl-3 pr-1">{t}</button>
                   <button type="button" onClick={() => recent.remove(t)} aria-label={`Remove ${t}`} className="mr-1 rounded-full p-0.5 opacity-60 hover:bg-black/10 hover:opacity-100">
                     <X className="size-3" />
@@ -203,7 +203,7 @@ export function ItemPicker({
                     onMouseEnter={() => setActive(i)}
                     className={clsx(
                       "group/row flex w-full items-center gap-3 rounded-[20px] p-2 pr-3 text-left transition duration-200 active:scale-[.98]",
-                      on ? "bg-white ring-2 ring-[#111111] shadow-[0_14px_28px_-18px_rgb(0_0_0/0.6)]" : "bg-white ring-1 ring-black/5",
+                      on ? "bg-paper ring-2 ring-[#111111] shadow-[0_14px_28px_-18px_rgb(0_0_0/0.6)]" : "bg-paper ring-1 ring-black/5",
                     )}
                   >
                     <Thumb it={it} />
@@ -228,7 +228,7 @@ export function ItemPicker({
               );
             })}
             {!loading && !results.length && (
-              <li className="rounded-[20px] bg-white px-4 py-7 text-center text-sm text-[#111111]/60 ring-1 ring-black/5">
+              <li className="rounded-[20px] bg-paper px-4 py-7 text-center text-sm text-[#111111]/60 ring-1 ring-black/5">
                 {q ? <>Nothing matches “<b className="text-[#111111]">{q}</b>”{category ? " in this category" : ""}.</> : "No items yet."}
                 {addNewHref && (
                   <div className="mt-3">

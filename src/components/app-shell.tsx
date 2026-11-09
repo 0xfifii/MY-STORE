@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <ActivityProvider>
     <div className="min-h-dvh lg:pl-[17.5rem]">
       {/* Desktop sidebar: a floating white panel */}
-      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-white text-[#111111] shadow-[0_20px_50px_-30px_rgb(0_0_0/0.35)] ring-1 ring-black/[0.06] lg:flex">
+      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-paper text-[#111111] shadow-[0_20px_50px_-30px_rgb(0_0_0/0.35)] ring-1 ring-black/[0.06] lg:flex">
         <div className="relative flex h-full flex-col">{nav}</div>
       </aside>
 
@@ -101,7 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {drawer && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="finder-fade absolute inset-0 bg-black/30 backdrop-blur-[3px]" onClick={() => setDrawer(false)} />
-          <aside className="menu-slide absolute inset-y-2 right-2 flex w-[19rem] max-w-[88vw] flex-col overflow-hidden rounded-[28px] bg-white text-[#111111] shadow-[0_30px_70px_-30px_rgb(0_0_0/0.5)]">
+          <aside className="menu-slide absolute inset-y-2 right-2 flex w-[19rem] max-w-[88vw] flex-col overflow-hidden rounded-[28px] bg-paper text-[#111111] shadow-[0_30px_70px_-30px_rgb(0_0_0/0.5)]">
             <button onClick={() => setDrawer(false)} className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full bg-black/[0.05] transition hover:rotate-90 hover:bg-[#111111] hover:text-white active:scale-90" aria-label="Close menu">
               <X className="size-4" />
             </button>

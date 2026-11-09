@@ -84,7 +84,7 @@ export default async function StockCountPage({ searchParams }: { searchParams: P
                     <td className="px-4 py-2.5 text-right">{formatQty(c.counted_qty)} {c.unit}</td>
                     <td className={`px-4 py-2.5 text-right font-semibold ${d < 0 ? "text-bad" : d > 0 ? "text-sky-700" : "text-ok"}`}>{d > 0 ? "+" : ""}{formatQty(c.difference)}</td>
                     <td className="px-4 py-2.5 text-right">{m(c.value_difference)}</td>
-                    <td className="px-4 py-2.5"><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.status === "approved" ? "bg-ok-bg text-ok" : "bg-white text-muted ring-1 ring-line"}`}>{c.status === "approved" ? "Approved" : "Rejected"}</span></td>
+                    <td className="px-4 py-2.5"><span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.status === "approved" ? "bg-ok-bg text-ok" : "bg-paper text-muted ring-1 ring-line"}`}>{c.status === "approved" ? "Approved" : "Rejected"}</span></td>
                     <td className="px-4 py-2.5 text-xs">{c.decided_by ?? "-"}{c.decided_at ? <span className="block text-muted">{formatDateTime(c.decided_at, s.timezone)}</span> : null}{c.decision_note ? <span className="block text-muted">{c.decision_note}</span> : null}</td>
                     <td className="px-4 py-2.5 text-xs">{c.txn_no ?? "-"}</td>
                   </tr>

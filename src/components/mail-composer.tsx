@@ -70,7 +70,7 @@ export function MailComposer({ contacts, canAudit, thisMonth, ready }: { contact
         <div className="flex flex-wrap gap-1.5">
           {([["none", "None"], ["report", "Stock report"], ...(canAudit ? [["audit", "Monthly audit report"]] : [])] as [Attach, string][]).map(([k, l]) => (
             <button key={k} type="button" onClick={() => setAttach(k)} aria-pressed={attach === k}
-              className={clsx("rounded-full px-4 py-2 text-sm font-semibold ring-1 transition active:scale-95", attach === k ? "bg-night text-white ring-night" : "bg-white/75 ring-white hover:bg-white")}>
+              className={clsx("rounded-full px-4 py-2 text-sm font-semibold ring-1 transition active:scale-95", attach === k ? "bg-night text-white ring-night" : "bg-white/75 ring-white hover:bg-paper")}>
               {l}
             </button>
           ))}
@@ -92,7 +92,7 @@ export function MailComposer({ contacts, canAudit, thisMonth, ready }: { contact
               <div className="flex gap-1.5">
                 {(["pdf", "xlsx", ...(attach === "report" ? ["csv"] : [])] as ("pdf" | "xlsx" | "csv")[]).map((f) => (
                   <button key={f} type="button" onClick={() => setFormat(f)} aria-pressed={format === f}
-                    className={clsx("inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-semibold ring-1 transition", format === f ? "bg-burgundy text-white ring-burgundy" : "bg-white ring-white hover:bg-rose")}>
+                    className={clsx("inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-semibold ring-1 transition", format === f ? "bg-burgundy text-white ring-burgundy" : "bg-paper ring-white hover:bg-rose")}>
                     {f === "pdf" ? <FileText className="size-4" /> : <FileSpreadsheet className="size-4" />}{f === "xlsx" ? "Excel" : f.toUpperCase()}
                   </button>
                 ))}

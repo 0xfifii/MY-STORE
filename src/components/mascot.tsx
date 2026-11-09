@@ -20,8 +20,8 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
       <g className="velvy-eyes" fill={ink}>
         <ellipse cx="48" cy="78" rx="4.6" ry="5.4" />
         <ellipse cx="72" cy="78" rx="4.6" ry="5.4" />
-        <circle cx="49.6" cy="76.2" r="1.5" fill="#ffffff" />
-        <circle cx="73.6" cy="76.2" r="1.5" fill="#ffffff" />
+        <circle cx="49.6" cy="76.2" r="1.5" fill="#fbf8f2" />
+        <circle cx="73.6" cy="76.2" r="1.5" fill="#fbf8f2" />
       </g>
     );
   const brows = mood === "worried" ? (
@@ -44,15 +44,15 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
         {/* left arm */}
         <g className={mood === "worried" ? "velvy-fidget" : ""}>
           <path d="M19 92c-8-2-12 4-12 10" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
-          <circle cx="7" cy="104" r="4" fill="#ffffff" stroke={ink} strokeWidth="3" />
+          <circle cx="7" cy="104" r="4" fill="#fbf8f2" stroke={ink} strokeWidth="3" />
         </g>
         {/* right arm (waves) */}
         <g className={mood === "wave" || mood === "excited" ? "velvy-wave" : ""} style={{ transformOrigin: "100px 90px" }}>
           <path d={mood === "wave" || mood === "excited" ? "M101 90c8-4 12-12 12-20" : "M101 92c8-2 12 4 12 10"} fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
-          <circle cx={113} cy={mood === "wave" || mood === "excited" ? 67 : 104} r="4" fill="#ffffff" stroke={ink} strokeWidth="3" />
+          <circle cx={113} cy={mood === "wave" || mood === "excited" ? 67 : 104} r="4" fill="#fbf8f2" stroke={ink} strokeWidth="3" />
         </g>
         {/* cowry shell body: an egg-shaped shell with small notches at each end */}
-        <path d="M60 28C88 28 100 58 100 84s-15 50-40 50-40-24-40-50S32 28 60 28z" fill="#ffffff" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
+        <path d="M60 28C88 28 100 58 100 84s-15 50-40 50-40-24-40-50S32 28 60 28z" fill="#fbf8f2" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
         <path d="M56 30l4 5 4-5M56 132l4-5 4 5" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         {/* gold speckles on the shell's back */}
         <g fill="#c9a227">

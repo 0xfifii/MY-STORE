@@ -124,7 +124,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         <div className="flex w-max gap-1 rounded-full bg-white/60 p-1 ring-1 ring-white">
           {TABS.map(([k, l]) => (
             <Link key={k} href={tabHref(k)} scroll={false} aria-current={tab === k ? "page" : undefined}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#111111] to-[#000000] text-white shadow-md" : "text-muted hover:bg-white hover:text-ink"}`}>
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#111111] to-[#000000] text-white shadow-md" : "text-muted hover:bg-paper hover:text-ink"}`}>
               {l}
             </Link>
           ))}
@@ -327,7 +327,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
                         <Td>{x.href ? <Link href={x.href} className="font-semibold hover:text-burgundy">{x.label}</Link> : <span className="font-semibold">{x.label}</span>}</Td>
                         {spendBy === "item" && <Td right>{formatQty(x.qty ?? "0")} {x.unit}</Td>}
                         <Td right>{m(x.value)}</Td>
-                        <Td><div className="flex items-center gap-2"><div className="h-1.5 w-24 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-[#6b6b6b]" style={{ width: `${pct}%` }} /></div><span className="text-xs text-muted">{pct.toFixed(pct < 1 ? 1 : 0)}%</span></div></Td>
+                        <Td><div className="flex items-center gap-2"><div className="h-1.5 w-24 overflow-hidden rounded-full bg-paper"><div className="h-full rounded-full bg-[#6b6b6b]" style={{ width: `${pct}%` }} /></div><span className="text-xs text-muted">{pct.toFixed(pct < 1 ? 1 : 0)}%</span></div></Td>
                         <Td right>{x.count}</Td>
                       </tr>
                     );
@@ -375,7 +375,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
                     <Td right>{m(x.value)}</Td>
                     <Td>
                       <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-burgundy" style={{ width: `${pct}%` }} /></div>
+                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-paper"><div className="h-full rounded-full bg-burgundy" style={{ width: `${pct}%` }} /></div>
                         <span className="text-xs text-muted">{pct.toFixed(pct < 1 ? 1 : 0)}%</span>
                       </div>
                     </Td>
@@ -428,7 +428,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
                   return (
                     <li key={x.reason}>
                       <div className="flex justify-between text-sm"><span className="font-medium">{reasonLabel(x.reason)}</span><span className="text-muted">{x.takes}× · {m(x.value)}</span></div>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-night" style={{ width: `${pct}%` }} /></div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-paper"><div className="h-full rounded-full bg-night" style={{ width: `${pct}%` }} /></div>
                     </li>
                   );
                 })}
@@ -490,7 +490,7 @@ async function ChangesTab({ r, userId, area, page, tz }: { r: { from: string; to
       <ul className="divide-y divide-white/80">
         {rows.map((e) => (
           <li key={e.id} className="flex gap-3 px-5 py-3 text-sm sm:px-6">
-            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-burgundy shadow-sm">
+            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-paper text-xs font-bold text-burgundy shadow-sm">
               {(e.user_name ?? "S").slice(0, 1).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">

@@ -55,7 +55,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <a href="/api/reports/export?preset=today&format=pdf" className="inline-flex h-10 items-center gap-2 rounded-full bg-night px-5 text-sm font-semibold text-white hover:bg-claret">
               <Download className="size-4" /> Today&apos;s report
             </a>
-            <a href="/api/reports/export?preset=today&format=pdf&kind=movement" className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#111111] ring-1 ring-black/10 transition hover:bg-black/[0.04]">
+            <a href="/api/reports/export?preset=today&format=pdf&kind=movement" className="inline-flex h-10 items-center gap-2 rounded-full bg-paper px-5 text-sm font-semibold text-[#111111] ring-1 ring-black/10 transition hover:bg-black/[0.04]">
               <Download className="size-4" /> Today&apos;s movement
             </a>
           </>
@@ -175,7 +175,7 @@ const TONE = {
   /** solid black card, white text */
   burgundy: "bg-[radial-gradient(120%_120%_at_0%_0%,#2a2a2a_0%,#111111_45%,#000000_100%)] text-white shadow-[0_22px_40px_-22px_rgb(0_0_0/0.9)]",
   /** white card, black text */
-  black: "bg-white text-[#111111] ring-1 ring-black/5 shadow-[0_18px_36px_-26px_rgb(0_0_0/0.6)]",
+  black: "bg-paper text-[#111111] ring-1 ring-black/5 shadow-[0_18px_36px_-26px_rgb(0_0_0/0.6)]",
 };
 
 function Stat({ label, value, sub, tone, href, icon }: { label: string; value: React.ReactNode; sub: string; tone: keyof typeof TONE; href: string; icon: React.ReactNode }) {
@@ -185,7 +185,7 @@ function Stat({ label, value, sub, tone, href, icon }: { label: string; value: R
       <div className={`pointer-events-none absolute -right-8 -top-10 size-28 rounded-full ${dark ? "bg-white/10" : "bg-black/[0.04]"}`} aria-hidden />
       <div className="relative flex items-start justify-between gap-2">
         <dt className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-white/60" : "text-[#111111]/50"}`}>{label}</dt>
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110 ${dark ? "bg-white text-[#111111]" : "bg-[#111111] text-white"}`}>{icon}</span>
+        <span className={`flex size-9 shrink-0 items-center justify-center rounded-full shadow-sm transition-transform duration-200 group-hover:rotate-6 group-hover:scale-110 ${dark ? "bg-paper text-[#111111]" : "bg-[#111111] text-white"}`}>{icon}</span>
       </div>
       <dd className="relative mt-3 break-words text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular-nums sm:text-[28px]">{value}</dd>
       <dd className={`relative text-xs ${dark ? "text-white/60" : "text-[#111111]/50"}`}>{sub}</dd>

@@ -26,7 +26,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const owner = me.role === "owner";
   const ended = b.locked;
   return (
-    <div className="min-h-dvh bg-[#f4f4f4] px-4 py-8">
+    <div className="min-h-dvh bg-canvas px-4 py-8">
       <div className="mx-auto max-w-xl">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-lg font-bold"><Cowry className="size-8" /> ÌṢÚRA</span>
@@ -49,7 +49,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
         {error && <p role="alert" className="mt-4 rounded-2xl bg-bad-bg px-4 py-3 text-sm text-bad">{error}</p>}
 
-        <section className="mt-4 rounded-[28px] bg-white p-6 ring-1 ring-black/5">
+        <section className="mt-4 rounded-[28px] bg-paper p-6 ring-1 ring-black/5">
           {monthly <= 0 ? (
             <p className="text-sm text-[#111111]/70">No price is set for this subscription yet. Contact ÌṢÚRA to renew.</p>
           ) : !owner ? (
@@ -62,7 +62,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
         </section>
 
         {payments.length > 0 && (
-          <section className="mt-4 rounded-[28px] bg-white p-6 ring-1 ring-black/5">
+          <section className="mt-4 rounded-[28px] bg-paper p-6 ring-1 ring-black/5">
             <h2 className="font-semibold">Payments</h2>
             <ul className="mt-3 divide-y divide-black/5 text-sm">
               {payments.map((p) => (

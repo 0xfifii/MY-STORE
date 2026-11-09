@@ -126,7 +126,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                       <Td><span className="font-semibold">{c.category}</span></Td><Td right>{c.items}</Td><Td right>{m(c.opening_value)}</Td>
                       <Td right><span className="text-ok">{m(c.in_value)}</span></Td><Td right><span className="text-burgundy">{m(c.out_value)}</span></Td>
                       <Td right><strong>{m(c.closing_value)}</strong></Td>
-                      <Td><span className="flex items-center gap-2"><span className="h-1.5 w-20 overflow-hidden rounded-full bg-white"><span className="block h-full rounded-full bg-burgundy" style={{ width: `${share}%` }} /></span><span className="text-xs text-muted">{share.toFixed(0)}%</span></span></Td>
+                      <Td><span className="flex items-center gap-2"><span className="h-1.5 w-20 overflow-hidden rounded-full bg-paper"><span className="block h-full rounded-full bg-burgundy" style={{ width: `${share}%` }} /></span><span className="text-xs text-muted">{share.toFixed(0)}%</span></span></Td>
                     </tr>
                   );
                 })}
@@ -325,7 +325,7 @@ function MovementQuick() {
   const link = (q: string) => `/api/reports/export?format=pdf&kind=movement&${q}`;
   const btn = "group flex items-center justify-between gap-3 rounded-2xl bg-[#111111] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2b2b2b] hover:shadow-[0_12px_22px_-12px_rgb(0_0_0/0.7)] active:scale-[.98]";
   return (
-    <section className="mb-4 rounded-[var(--radius-card)] bg-white p-5 ring-1 ring-black/[0.06] shadow-[0_18px_36px_-28px_rgb(0_0_0/0.5)]" data-testid="movement-quick">
+    <section className="mb-4 rounded-[var(--radius-card)] bg-paper p-5 ring-1 ring-black/[0.06] shadow-[0_18px_36px_-28px_rgb(0_0_0/0.5)]" data-testid="movement-quick">
       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#111111]/50">Stock movement report</p>
       <p className="mt-1 max-w-xl text-sm text-[#111111]/70">A separate PDF with only the items that moved (stock in or stock out), each with its quantity and value, and the total. Items that didn&apos;t move are left out.</p>
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">

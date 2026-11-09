@@ -40,7 +40,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             role={t.kind === "error" ? "alert" : "status"}
-            className={`animate-toast pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border bg-white px-4 py-3 shadow-lg ${
+            className={`animate-toast pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border bg-paper px-4 py-3 shadow-lg ${
               t.kind === "error" ? "border-bad/30" : t.kind === "notice" ? "border-burgundy/25 bg-paper" : "border-ok/30"
             }`}
           >

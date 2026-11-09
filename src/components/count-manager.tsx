@@ -100,7 +100,7 @@ export function CountDecision({ id, countNo, summary }: { id: string; countNo: s
     <>
       <div className="flex gap-1.5">
         <button type="button" onClick={() => setMode("approve")} className="inline-flex h-8 items-center gap-1 rounded-full bg-ok px-3 text-xs font-semibold text-white transition hover:brightness-110 active:scale-95"><Check className="size-3.5" /> Approve</button>
-        <button type="button" onClick={() => setMode("reject")} className="inline-flex h-8 items-center gap-1 rounded-full bg-white px-3 text-xs font-semibold text-muted ring-1 ring-line transition hover:text-bad active:scale-95"><X className="size-3.5" /> Reject</button>
+        <button type="button" onClick={() => setMode("reject")} className="inline-flex h-8 items-center gap-1 rounded-full bg-paper px-3 text-xs font-semibold text-muted ring-1 ring-line transition hover:text-bad active:scale-95"><X className="size-3.5" /> Reject</button>
       </div>
       <Modal open={mode !== null} onClose={() => setMode(null)} title={mode === "approve" ? `Approve ${countNo}?` : `Reject ${countNo}?`} busy={busy}
         footer={<><Button variant="secondary" onClick={() => setMode(null)}>Cancel</Button><Button variant={mode === "approve" ? "primary" : "danger"} onClick={go} loading={busy}>{mode === "approve" ? "Approve and adjust" : "Reject count"}</Button></>}>

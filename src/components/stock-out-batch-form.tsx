@@ -171,7 +171,7 @@ export function StockOutBatchForm() {
         <SuccessCheck className="mb-3 size-14" />
         <p className="font-display text-xl font-bold">Stock out recorded</p>
         <p className="mt-1 text-sm text-muted">{saved.txns.length} item{saved.txns.length === 1 ? "" : "s"} taken out by {worker?.name}.</p>
-        <ul className="mt-4 divide-y divide-black/5 overflow-hidden rounded-2xl bg-white ring-1 ring-black/5">
+        <ul className="mt-4 divide-y divide-black/5 overflow-hidden rounded-2xl bg-paper ring-1 ring-black/5">
           {saved.txns.map((t) => {
             const it = byId.get(t.item_id);
             return (
@@ -260,7 +260,7 @@ export function StockOutBatchForm() {
           const failed = error?.line !== undefined && filled[error.line]?.key === l.key;
           return (
             <div key={l.key} data-testid="batch-line"
-              className={clsx("pop-in rounded-2xl bg-white p-3 ring-1 transition", problem || failed ? "ring-bad/50" : "ring-black/5")}>
+              className={clsx("pop-in rounded-2xl bg-paper p-3 ring-1 transition", problem || failed ? "ring-bad/50" : "ring-black/5")}>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase tracking-wide text-muted">Item {i + 1}</span>
                 <button type="button" onClick={() => removeLine(l.key)} aria-label={`Remove item ${i + 1}`}

@@ -241,7 +241,7 @@ export async function StockOutTab({ r, period, sym, sort, link }: { r: R; period
                         </div>
                       </Td>
                       <Td right>{x.turnover ? `${x.turnover}%` : "-"}</Td>
-                      <Td><div className="flex flex-wrap gap-1">{x.reasons.map((y) => <span key={y.reason} className="rounded-full bg-white px-2 py-0.5 text-[11px] ring-1 ring-line">{reasonLabel(y.reason)} {y.count}×</span>)}</div></Td>
+                      <Td><div className="flex flex-wrap gap-1">{x.reasons.map((y) => <span key={y.reason} className="rounded-full bg-paper px-2 py-0.5 text-[11px] ring-1 ring-line">{reasonLabel(y.reason)} {y.count}×</span>)}</div></Td>
                     </tr>
                   );
                 })}
@@ -255,7 +255,7 @@ export async function StockOutTab({ r, period, sym, sort, link }: { r: R; period
               {reasons.map((x) => (
                 <li key={x.reason}>
                   <div className="flex justify-between text-sm"><span className="font-medium">{reasonLabel(x.reason)}</span><span className="text-muted">{x.count}× · <strong className="text-ink">{m(x.value)}</strong></span></div>
-                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-gradient-to-r from-[#111111] to-[#444444]" style={{ width: `${(Number(x.value) / (reasonTotal || 1)) * 100}%` }} /></div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-paper"><div className="h-full rounded-full bg-gradient-to-r from-[#111111] to-[#444444]" style={{ width: `${(Number(x.value) / (reasonTotal || 1)) * 100}%` }} /></div>
                 </li>
               ))}
             </ul>

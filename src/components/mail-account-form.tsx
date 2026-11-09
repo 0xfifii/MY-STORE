@@ -97,7 +97,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
       <div className="mb-4 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Email service">
         {([["brevo_api", "Brevo API key (most reliable)"], ["gmail", "Gmail"], ["brevo", "Brevo SMTP"], ["other", "Other"]] as [Provider, string][]).map(([k, l]) => (
           <button key={k} type="button" role="radio" aria-checked={provider === k} onClick={() => pick(k)}
-            className={clsx("rounded-full px-4 py-2 text-sm font-semibold ring-1 transition active:scale-95", provider === k ? "bg-burgundy text-white ring-burgundy" : "bg-white/80 ring-kraft hover:bg-white")}>
+            className={clsx("rounded-full px-4 py-2 text-sm font-semibold ring-1 transition active:scale-95", provider === k ? "bg-burgundy text-white ring-burgundy" : "bg-white/80 ring-kraft hover:bg-paper")}>
             {l}
           </button>
         ))}

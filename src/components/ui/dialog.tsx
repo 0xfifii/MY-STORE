@@ -48,7 +48,7 @@ export function Modal({
       <div
         ref={panel}
         className={clsx(
-          "animate-sheet relative flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl",
+          "animate-sheet relative flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-paper shadow-2xl sm:rounded-3xl",
           wide ? "sm:max-w-2xl" : "sm:max-w-lg",
         )}
       >

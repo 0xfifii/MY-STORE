@@ -11,7 +11,7 @@ type Size = "sm" | "md" | "lg";
 const variantClass: Record<Variant, string> = {
   primary: "btn-shine bg-night text-white shadow-[0_8px_18px_-10px_rgb(0_0_0/0.7)] hover:bg-[#2b2b2b] hover:shadow-[0_12px_24px_-10px_rgb(0_0_0/0.7)] disabled:bg-night/40 disabled:shadow-none",
   accent: "btn-shine bg-[#111111] text-white shadow-[0_10px_22px_-12px_rgb(0_0_0/0.8)] hover:bg-[#2b2b2b] disabled:opacity-50",
-  secondary: "bg-white/80 text-ink border border-white shadow-sm hover:bg-white hover:border-black/15 disabled:opacity-60",
+  secondary: "bg-white/80 text-ink border border-white shadow-sm hover:bg-paper hover:border-black/15 disabled:opacity-60",
   ghost: "text-burgundy hover:bg-rose/70 disabled:opacity-50",
   danger: "bg-bad text-white hover:bg-bad/90 disabled:opacity-60",
   "outline-danger": "border border-bad/30 text-bad bg-white/80 hover:bg-bad-bg disabled:opacity-60",
@@ -74,7 +74,7 @@ export function Field({
 }
 
 export const inputClass =
-  "h-12 w-full rounded-2xl border border-white bg-white/75 px-4 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] placeholder:text-muted/70 focus:border-burgundy/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy/10 disabled:bg-canvas disabled:text-muted";
+  "h-12 w-full rounded-2xl border border-white bg-white/75 px-4 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] placeholder:text-muted/70 focus:border-burgundy/40 focus:bg-paper focus:outline-none focus:ring-4 focus:ring-burgundy/10 disabled:bg-canvas disabled:text-muted";
 
 /** Base input classes, minus the full width and default height when the caller sets its own (so `w-24` actually wins). */
 function fieldClass(extra: string, className?: string) {

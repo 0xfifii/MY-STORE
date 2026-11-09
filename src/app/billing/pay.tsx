@@ -27,7 +27,7 @@ export function PayButton({ monthly }: { monthly: number }) {
       <div className="mt-4 grid grid-cols-4 gap-2" role="radiogroup" aria-label="How many months">
         {OPTIONS.map((m) => (
           <button key={m} type="button" role="radio" aria-checked={months === m} onClick={() => setMonths(m)}
-            className={clsx("rounded-2xl px-2 py-3 text-center text-sm font-semibold ring-1 transition active:scale-95", months === m ? "bg-[#111111] text-white ring-[#111111]" : "bg-white ring-black/10 hover:ring-black/30")}>
+            className={clsx("rounded-2xl px-2 py-3 text-center text-sm font-semibold ring-1 transition active:scale-95", months === m ? "bg-[#111111] text-white ring-[#111111]" : "bg-paper ring-black/10 hover:ring-black/30")}>
             {m} month{m === 1 ? "" : "s"}
           </button>
         ))}

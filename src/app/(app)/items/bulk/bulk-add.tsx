@@ -61,7 +61,7 @@ export function BulkAdd({ categories, units, canNewCategory }: { categories: { i
 
   if (result) {
     return (
-      <section className="rounded-[28px] bg-white p-6 ring-1 ring-black/5" data-testid="bulk-result">
+      <section className="rounded-[28px] bg-paper p-6 ring-1 ring-black/5" data-testid="bulk-result">
         <h2 className="text-[19px] font-bold">{result.created.length} item{result.created.length === 1 ? "" : "s"} added</h2>
         <ul className="mt-3 flex flex-wrap gap-1.5">
           {result.created.map((c) => <li key={c.id}><Link href={`/items/${c.id}`} className="inline-block rounded-lg bg-black/5 px-2.5 py-1 text-sm font-semibold hover:bg-black/10">{c.name}</Link></li>)}
@@ -83,7 +83,7 @@ export function BulkAdd({ categories, units, canNewCategory }: { categories: { i
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[28px] bg-white p-6 ring-1 ring-black/5">
+      <section className="rounded-[28px] bg-paper p-6 ring-1 ring-black/5">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Category for all of them" htmlFor="b-cat" required>
             <Select id="b-cat" value={cat} onChange={(e) => setCat(e.target.value)}>
@@ -113,7 +113,7 @@ export function BulkAdd({ categories, units, canNewCategory }: { categories: { i
       </section>
 
       {rows.length > 0 && (
-        <section className="rounded-[28px] bg-white p-6 ring-1 ring-black/5" data-testid="bulk-preview">
+        <section className="rounded-[28px] bg-paper p-6 ring-1 ring-black/5" data-testid="bulk-preview">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="font-semibold">Preview · {kept.length} item{kept.length === 1 ? "" : "s"}{unit ? ` · ${total} ${unit.symbol}` : ""}</h2>
             <p className="text-xs text-[#111111]/50">Opening stock is recorded now; prices start at 0.</p>

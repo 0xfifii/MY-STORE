@@ -44,9 +44,9 @@ export function AuthFrame({
             <div className="mt-8 flex items-center justify-between">
               <div className="flex items-center gap-1.5" aria-hidden>
                 <span className="size-1.5 rounded-full bg-white/30" /><span className="size-1.5 rounded-full bg-white/30" />
-                <span className="h-1.5 w-5 rounded-full bg-white" /><span className="size-1.5 rounded-full bg-white/30" />
+                <span className="h-1.5 w-5 rounded-full bg-paper" /><span className="size-1.5 rounded-full bg-white/30" />
               </div>
-              <span className="flex size-12 items-center justify-center rounded-full bg-white text-[#111111]" aria-hidden>
+              <span className="flex size-12 items-center justify-center rounded-full bg-paper text-[#111111]" aria-hidden>
                 <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
               </span>
             </div>
