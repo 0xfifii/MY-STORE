@@ -1229,6 +1229,25 @@ describe("24b. Several items for one worker", () => {
   });
 });
 
+describe("24d. Several items received at once", () => {
+  it("records each line with its own cost, all or nothing", async () => {
+    const a = await createItem("Batch In Oil", "L", { opening_quantity: "2", opening_unit_cost: "1000" });
+    const b = await createItem("Batch In Salt", "kg");
+    const line = (item_id: string, quantity: string, unit: string, unit_cost: string) => ({ item_id, quantity, unit_id: units[unit], unit_cost, request_id: randomUUID() });
+    const r = await staff.post("/api/stock/in/batch", { supplier_name: "Mile 12 market", reference: "INV-77", lines: [line(a, "3", "L", "1200"), line(b, "10", "kg", "300")] });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    expect(r.data.txns).toHaveLength(2);
+    expect(Number((await item(a)).quantity)).toBe(5);
+    expect(Number((await item(b)).quantity)).toBe(10);
+    expect(Number((await item(b)).price)).toBe(300);
+    const bad = await owner.post("/api/stock/in/batch", { lines: [line(a, "1", "L", "1200"), line(b, "1", "kg", "abc")] });
+    expect(bad.status).toBe(400);
+    expect(Number((await item(a)).quantity)).toBe(5);
+    expect((await viewer.post("/api/stock/in/batch", { lines: [line(a, "1", "L", "1")] })).status).toBe(403);
+    expect((await owner.get("/stock-in?mode=many")).status).toBe(200);
+  });
+});
+
 describe("24c. Movement report (only items that moved)", () => {
   it("lists items with stock in or out in the period and leaves the rest out", async () => {
     const { rows } = await db.query("SELECT (now() AT TIME ZONE 'Africa/Lagos')::date::text t");

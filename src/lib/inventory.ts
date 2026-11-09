@@ -5,7 +5,7 @@ import { query, queryOne, withTransaction } from "./db";
 import { audit } from "./audit";
 import { AppError, friendlyDbError } from "./errors";
 import { can, type Role } from "./permissions";
-import type { itemCreateSchema, itemUpdateSchema, stockInSchema, stockOutBatchSchema, stockOutSchema } from "./validation";
+import type { itemCreateSchema, itemUpdateSchema, stockInBatchSchema, stockInSchema, stockOutBatchSchema, stockOutSchema } from "./validation";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -495,6 +495,39 @@ export async function recordStockIn(input: z.infer<typeof stockInSchema>, userId
     // The latest purchase price becomes the item's price.
     await client.query("UPDATE items i SET price = t.unit_cost FROM stock_transactions t WHERE t.id = $1::bigint AND i.id = t.item_id", [rows[0].id]);
     return rows[0] as { id: string; txn_no: string };
+  });
+}
+
+/** Records several stock-ins in one transaction (all or nothing); a failing line is named by number and item. */
+export async function recordStockInBatch(input: z.infer<typeof stockInBatchSchema>, userId: string) {
+  return withTransaction(async (client) => {
+    if (input.supplier_id) {
+      const sp = await client.query("SELECT 1 FROM suppliers WHERE id = $1", [input.supplier_id]);
+      if (!sp.rowCount) throw new AppError("INVALID_SUPPLIER", "Supplier not found.");
+    }
+    const ids = [...new Set(input.lines.map((l) => l.item_id))];
+    const names = new Map(
+      (await client.query<{ id: string; name: string }>("SELECT id::text, name FROM items WHERE id = ANY($1::uuid[])", [ids])).rows.map((r) => [r.id, r.name]),
+    );
+    const out: { id: string; txn_no: string; item_id: string }[] = [];
+    for (const [i, l] of input.lines.entries()) {
+      const name = names.get(l.item_id);
+      if (!name) throw new AppError("ITEM_NOT_FOUND", `Line ${i + 1}: item not found.`, 404, { line: i });
+      try {
+        const { rows } = await client.query(
+          "SELECT id::text, txn_no FROM stock_in($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
+          [l.item_id, l.quantity, l.unit_id, l.unit_cost, input.supplier_id, input.supplier_id ? null : input.supplier_name,
+           input.reference, l.notes, input.occurred_at, userId, l.request_id],
+        );
+        await client.query("UPDATE items i SET price = t.unit_cost FROM stock_transactions t WHERE t.id = $1::bigint AND i.id = t.item_id", [rows[0].id]);
+        out.push({ ...(rows[0] as { id: string; txn_no: string }), item_id: l.item_id });
+      } catch (e) {
+        const f = friendlyDbError(e);
+        if (!f) throw e;
+        throw new AppError(f.code, `Line ${i + 1}, ${name}: ${f.message}`, f.status, { line: i });
+      }
+    }
+    return out;
   });
 }
 

@@ -133,6 +133,30 @@ export const stockOutBatchSchema = z.object({
     .max(MAX_BATCH_LINES, `You can record up to ${MAX_BATCH_LINES} items at a time`),
 });
 
+/** Several items received at once (up to 20 lines), each with its own quantity, unit and cost. */
+export const stockInBatchSchema = z.object({
+  supplier_id: optInt,
+  supplier_name: optText(200),
+  reference: optText(120),
+  occurred_at: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || !Number.isNaN(Date.parse(v)), { message: "Invalid date" }),
+  lines: z
+    .array(z.object({
+      item_id: uuid,
+      quantity: positiveQty,
+      unit_id: z.coerce.number().int().positive(),
+      unit_cost: moneyString,
+      notes: optText(1000),
+      request_id: uuid,
+    }))
+    .min(1, "Add at least one item")
+    .max(MAX_BATCH_LINES, `You can record up to ${MAX_BATCH_LINES} items at a time`),
+});
+
 export const reverseSchema = z.object({
   reason: z.string().trim().min(3, "Explain why this is being corrected").max(500),
   request_id: uuid,
