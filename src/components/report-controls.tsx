@@ -12,6 +12,7 @@ import { api } from "@/lib/client";
 const PRESETS = [
   { v: "today", l: "Today" },
   { v: "yesterday", l: "Yesterday" },
+  { v: "day", l: "Pick a day" },
   { v: "week", l: "Weekly" },
   { v: "month", l: "Monthly" },
   { v: "custom", l: "Date range" },
@@ -47,6 +48,7 @@ export function ReportControls({
 
   const choosePreset = (v: string) => {
     if (v === "custom") update({ preset: null, from: resolved.from, to: resolved.to, month: null });
+    else if (v === "day") update({ preset: "day", from: resolved.to, to: resolved.to, month: null, week: null });
     else if (v === "month") update({ preset: "month", month: resolved.from.slice(0, 7), from: null, to: null, week: null });
     else if (v === "week") update({ preset: "week", week: resolved.from, from: null, to: null, month: null });
     else update({ preset: v, from: null, to: null, month: null });
@@ -100,6 +102,13 @@ export function ReportControls({
             <span className="mb-1 block font-medium">Month</span>
             <input type="month" value={sp.get("month") ?? resolved.from.slice(0, 7)} onChange={(e) => update({ month: e.target.value })}
               className="h-11 w-full rounded-xl border border-burgundy/15 bg-paper px-3" />
+          </label>
+        )}
+        {preset === "day" && (
+          <label className="text-sm">
+            <span className="mb-1 block font-medium">Day</span>
+            <input type="date" value={sp.get("from") ?? resolved.from} onChange={(e) => e.target.value && update({ from: e.target.value, to: e.target.value })}
+              aria-label="Day" className="h-11 w-full rounded-xl border border-burgundy/15 bg-paper px-3" />
           </label>
         )}
         {preset === "custom" && (

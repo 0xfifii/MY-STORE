@@ -33,7 +33,10 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
     <div>
       <PageHeader title="Reports" description="Daily, weekly or monthly. Pick a period and filters, then view or download."
         actions={<Link href="/reports/history" className="text-sm font-semibold text-burgundy hover:underline">Report History</Link>} />
-      <MovementQuick />
+      <div className="mb-4 grid gap-4 lg:grid-cols-2">
+        <QuickReports kind="movement" />
+        <QuickReports kind="full" />
+      </div>
       <ReportControls
         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
         items={items}
@@ -321,21 +324,25 @@ const Td = ({ children, right, wide }: { children?: React.ReactNode; right?: boo
   <td className={`px-4 py-2.5 align-top ${right ? "whitespace-nowrap text-right" : ""} ${wide ? "min-w-44" : ""}`}>{children}</td>
 );
 
-/** Separate stock-movement PDFs (only items that moved), one tap each. */
-function MovementQuick() {
-  const link = (q: string) => `/api/reports/export?format=pdf&kind=movement&${q}`;
+/** One-tap PDFs plus a day / month / range picker, for the movement report or the full report. */
+function QuickReports({ kind }: { kind: "movement" | "full" }) {
+  const link = (q: string) => `/api/reports/export?format=pdf&kind=${kind}&${q}`;
   const btn = "group flex items-center justify-between gap-3 rounded-2xl bg-[#111111] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2b2b2b] hover:shadow-[0_12px_22px_-12px_rgb(0_0_0/0.7)] active:scale-[.98]";
   return (
-    <section className="mb-4 rounded-[var(--radius-card)] bg-paper p-5 ring-1 ring-black/[0.06] shadow-[0_18px_36px_-28px_rgb(0_0_0/0.5)]" data-testid="movement-quick">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#111111]/50">Stock movement report</p>
-      <p className="mt-1 max-w-xl text-sm text-[#111111]/70">A separate PDF with only the items that moved (stock in or stock out), each with its quantity and value, and the total. Items that didn&apos;t move are left out.</p>
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <section className="rounded-[var(--radius-card)] bg-paper p-5 ring-1 ring-black/[0.06] shadow-[0_18px_36px_-28px_rgb(0_0_0/0.5)]" data-testid={kind === "movement" ? "movement-quick" : "full-quick"}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#111111]/50">{kind === "movement" ? "Stock movement report" : "Full report"}</p>
+      <p className="mt-1 max-w-xl text-sm text-[#111111]/70">
+        {kind === "movement"
+          ? <>Only the items that moved (stock in or stock out), each with its quantity and value, and the total. Items that didn&apos;t move are left out.</>
+          : <>Every item: opening stock, stock in, stock out, corrections and closing balance, with stock value, low stock and who took what.</>}
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-2">
         <a className={btn} href={link("preset=today")}>Today <Download className="size-4 transition group-hover:translate-y-0.5" /></a>
         <a className={btn} href={link("preset=yesterday")}>Yesterday <Download className="size-4 transition group-hover:translate-y-0.5" /></a>
         <a className={btn} href={link("preset=this_month&period_type=month")}>This month <Download className="size-4 transition group-hover:translate-y-0.5" /></a>
         <a className={btn} href={link("preset=last_month&period_type=month")}>Last month <Download className="size-4 transition group-hover:translate-y-0.5" /></a>
       </div>
-      <MovementPicker />
+      <MovementPicker kind={kind} />
     </section>
   );
 }
