@@ -28,8 +28,9 @@ function statusOf(b: B) {
   return { label: `Paid until ${day(b.paid_until)}`, tone: "light" };
 }
 
-export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webhookUrl }: {
+export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webhookUrl, signup }: {
   businesses: B[]; payments: P[]; activeStoreId: number; paystack: { mode: string; ending: string } | null; webhookUrl: string;
+  signup: { allow: boolean; trialDays: number; priceKobo: number };
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -51,6 +52,7 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
   return (
     <div className="space-y-6">
       <PaystackCard paystack={paystack} webhookUrl={webhookUrl} />
+      <SignupCard signup={signup} />
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">
@@ -278,5 +280,46 @@ function NewOwner({ b, onClose, onLink }: { b: B; onClose: () => void; onLink: (
       <label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-0.5 size-4 accent-black" checked={demote} onChange={(e) => setDemote(e.target.checked)} /> Make the current owner(s) staff when they accept{b.owners ? ` (${b.owners})` : ""}</label>
       {err && <p role="alert" className="mt-3 text-sm text-bad">{err}</p>}
     </Modal>
+  );
+}
+
+/** Who can create an account themselves, how long the free trial is, and what they pay after. */
+function SignupCard({ signup }: { signup: { allow: boolean; trialDays: number; priceKobo: number } }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [f, setF] = useState({ allow: signup.allow, trial: String(signup.trialDays), price: String(signup.priceKobo / 100) });
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api("/api/isura/settings", { method: "PATCH", json: { allow_signup: f.allow, trial_days: f.trial || "0", price_naira: f.price || "0" } });
+      toast.success("Sign-up settings saved");
+      router.refresh();
+    } catch (e) { toast.error("Couldn't save", (e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <section className="rounded-[var(--radius-card)] bg-paper p-5 ring-1 ring-black/[0.06]" data-testid="signup-settings">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[19px] font-bold">New accounts</h2>
+          <p className="mt-1 max-w-xl text-sm text-muted">
+            Anyone can create an account for their company at <strong className="text-ink">/signup</strong>. It becomes its own business here, with them as the owner.
+          </p>
+        </div>
+        <button type="button" role="switch" aria-checked={f.allow} onClick={() => setF({ ...f, allow: !f.allow })}
+          className={clsx("flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold transition", f.allow ? "bg-[#111111] text-white" : "bg-rose text-ink ring-1 ring-black/10")}>
+          <span className={clsx("size-2.5 rounded-full", f.allow ? "bg-gold" : "bg-[#111111]/30")} /> {f.allow ? "Sign-ups open" : "Sign-ups closed"}
+        </button>
+      </div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <Field label="Free trial (days)" htmlFor="su-trial" hint="0 means they must pay straight away.">
+          <Input id="su-trial" inputMode="numeric" value={f.trial} onChange={(e) => setF({ ...f, trial: e.target.value.replace(/\D/g, "") })} />
+        </Field>
+        <Field label="Price per month after the trial (₦)" htmlFor="su-price" hint="What new businesses pay through Paystack.">
+          <Input id="su-price" inputMode="decimal" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value.replace(/[^\d.]/g, "") })} />
+        </Field>
+      </div>
+      <div className="mt-4 flex justify-end"><Button onClick={save} loading={busy}>Save</Button></div>
+    </section>
   );
 }

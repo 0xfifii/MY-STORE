@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { AtSign, KeyRound, Loader2 } from "@/components/hand-icons";
 
@@ -7,7 +8,7 @@ const pill =
   "flex h-14 items-center gap-3 rounded-full bg-white/70 pl-2 pr-2 shadow-[inset_0_1px_2px_rgb(0_0_0/0.06)] ring-1 ring-white focus-within:bg-paper focus-within:ring-burgundy/25";
 const knob = "flex size-10 shrink-0 items-center justify-center rounded-full bg-paper text-ink shadow-sm";
 
-export function LoginForm({ next, initialError = null, initialEmail = "" }: { next: string; initialError?: string | null; initialEmail?: string }) {
+export function LoginForm({ next, initialError = null, initialEmail = "", allowSignup = false }: { next: string; initialError?: string | null; initialEmail?: string; allowSignup?: boolean }) {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -65,7 +66,7 @@ export function LoginForm({ next, initialError = null, initialEmail = "" }: { ne
 
       <div className="flex items-end justify-between gap-4 pt-4">
         <p className="max-w-[15rem] text-xs leading-relaxed text-muted">
-          For staff of this store only. Forgot your password? Ask the store owner to reset it under Users.
+          Forgot your password? Ask your account owner to reset it under Users.
         </p>
         <button type="submit" disabled={busy} aria-label="Sign in"
           className="flex h-14 min-w-36 items-center justify-center gap-2 rounded-full bg-night px-8 text-sm font-semibold text-white transition-colors hover:bg-claret disabled:opacity-60">
@@ -73,6 +74,11 @@ export function LoginForm({ next, initialError = null, initialEmail = "" }: { ne
           Sign in
         </button>
       </div>
+      {allowSignup && (
+        <p className="pt-2 text-sm text-muted">
+          New to ÌṢÚRA? <Link href="/signup" className="font-semibold text-ink underline-offset-2 hover:underline" data-testid="signup-link">Create an account for your company</Link>
+        </p>
+      )}
     </form>
   );
 }

@@ -1436,3 +1436,32 @@ describe("26. Adding many items at once", () => {
     expect((await owner.get("/items/bulk")).status).toBe(200);
   });
 });
+
+describe("99. Create an account (company sign-up)", () => {
+  it("creates a separate business with the company name and its owner", async () => {
+    const anon = new Session();
+    expect((await anon.get("/signup")).status).toBe(200);
+    const r = await anon.post("/api/auth/signup", { company_name: "Lagos Grill House", name: "Tolu Ade", email: "tolu@grill.test", password: "grill-pass-123" });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    const { rows: [u] } = await db.query(
+      `SELECT u.name, u.role, u.store_id, s.name AS store, s.created_via, s.paid_until > now() + interval '13 days' AS trial, st.store_name
+         FROM users u JOIN stores s ON s.id = u.store_id JOIN settings st ON st.store_id = s.id WHERE lower(u.email) = 'tolu@grill.test'`);
+    expect(u).toMatchObject({ name: "Tolu Ade", role: "owner", store: "Lagos Grill House", store_name: "Lagos Grill House", created_via: "signup", trial: true });
+    expect(u.store_id).not.toBe(1);
+    // Signed in straight away, in their own empty business.
+    const items = await anon.get("/api/items");
+    expect(items.status).toBe(200);
+    expect(items.data.rows).toHaveLength(0);
+    // Same email again is refused; a company name is required.
+    expect((await new Session().post("/api/auth/signup", { company_name: "Another", name: "X", email: "TOLU@grill.test", password: "grill-pass-123" })).status).toBe(409);
+    expect((await new Session().post("/api/auth/signup", { company_name: "", name: "X", email: "x@y.test", password: "grill-pass-123" })).status).toBe(400);
+  });
+
+  it("can be closed by the ÌṢÚRA admin", async () => {
+    expect((await owner.patch("/api/isura/settings", { allow_signup: false, trial_days: 7, price_naira: 15000 })).status).toBe(200);
+    const r = await new Session().post("/api/auth/signup", { company_name: "Closed Co", name: "Y", email: "y@closed.test", password: "closed-pass-123" });
+    expect(r.status).toBe(403);
+    expect((await staff.patch("/api/isura/settings", { allow_signup: true, trial_days: 7, price_naira: 0 })).status).toBe(403);
+    expect((await owner.patch("/api/isura/settings", { allow_signup: true, trial_days: 14, price_naira: 0 })).status).toBe(200);
+  });
+});

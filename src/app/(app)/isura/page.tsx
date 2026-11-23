@@ -4,6 +4,7 @@ import { listBusinesses, paystackKey } from "@/lib/businesses";
 import { publicBaseUrl } from "@/lib/mailer";
 import { query, queryOne, withStore } from "@/lib/db";
 import { IsuraAdmin } from "./admin";
+import { signupSettings } from "@/lib/signup";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ÌṢÚRA admin" };
@@ -35,6 +36,7 @@ export default async function IsuraAdminPage() {
         activeStoreId={me.store_id}
         paystack={key ? { mode: key.startsWith("sk_live_") ? "live" : "test", ending: key.slice(-4) } : null}
         webhookUrl={`${publicBaseUrl()}/api/paystack/webhook`}
+        signup={await signupSettings()}
       />
     </div>
   );
