@@ -53,6 +53,7 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
     <div className="space-y-6">
       <PaystackCard paystack={paystack} webhookUrl={webhookUrl} />
       <SignupCard signup={signup} />
+      <AccountFinder />
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">
@@ -320,6 +321,74 @@ function SignupCard({ signup }: { signup: { allow: boolean; trialDays: number; p
         </Field>
       </div>
       <div className="mt-4 flex justify-end"><Button onClick={save} loading={busy}>Save</Button></div>
+    </section>
+  );
+}
+
+type Acc = { id: string; name: string; email: string; role: string; is_platform_admin: boolean; is_active: boolean; store_id: number; store_name: string; created_via: string; items: number; txns: number; users: number };
+
+/** Look up an account by email; if it sits inside another business, give it its own empty one. */
+function AccountFinder() {
+  const router = useRouter();
+  const toast = useToast();
+  const [email, setEmail] = useState("");
+  const [acc, setAcc] = useState<Acc | null | undefined>(undefined);
+  const [company, setCompany] = useState("");
+  const [busy, setBusy] = useState(false);
+  const find = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setBusy(true);
+    try {
+      const d = await api<{ account: Acc | null }>(`/api/isura/accounts?email=${encodeURIComponent(email.trim())}`);
+      setAcc(d.account);
+    } catch (err) { toast.error("Couldn't look that up", (err as Error).message); } finally { setBusy(false); }
+  };
+  const move = async () => {
+    if (!acc) return;
+    setBusy(true);
+    try {
+      await api("/api/isura/accounts/own-business", { method: "POST", json: { email: acc.email, company_name: company } });
+      toast.success(`${acc.name} now has their own empty business`, `“${company}”. They'll see it next time they open ÌṢÚRA.`);
+      setCompany("");
+      await find();
+      router.refresh();
+    } catch (err) { toast.error("Couldn't do that", (err as Error).message); } finally { setBusy(false); }
+  };
+  const ownedAlone = acc && acc.users === 1 && acc.role === "owner";
+  return (
+    <section className="rounded-[var(--radius-card)] bg-paper p-5 ring-1 ring-black/[0.06]" data-testid="account-finder">
+      <h2 className="text-[19px] font-bold">Find an account</h2>
+      <p className="mt-1 max-w-xl text-sm text-muted">See which business an email belongs to. If it&apos;s inside someone else&apos;s business, you can give it its own empty one.</p>
+      <form onSubmit={find} className="mt-4 flex gap-2">
+        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" aria-label="Account email" className="flex-1" />
+        <Button type="submit" loading={busy && acc === undefined}>Find</Button>
+      </form>
+      {acc === null && <p className="mt-3 text-sm text-muted">No account with that email.</p>}
+      {acc && (
+        <div className="mt-4 rounded-2xl bg-canvas/70 p-4 text-sm ring-1 ring-black/[0.05]">
+          <p className="font-semibold">{acc.name} <span className="font-normal text-muted">· {acc.email}</span></p>
+          <p className="mt-1">
+            {acc.is_platform_admin ? "Your ÌṢÚRA admin account" : acc.role === "owner" ? "Owner" : acc.role === "staff" ? "Staff" : "Viewer"} of{" "}
+            <strong>{acc.store_name}</strong> (business #{acc.store_id}) · {acc.items} item{acc.items === 1 ? "" : "s"}, {acc.txns} stock record{acc.txns === 1 ? "" : "s"}, {acc.users} user{acc.users === 1 ? "" : "s"}
+          </p>
+          {acc.is_platform_admin ? null : ownedAlone && acc.items === 0 ? (
+            <p className="mt-2 font-semibold">This account already has its own empty business. Nothing to do.</p>
+          ) : (
+            <div className="mt-3">
+              <p className="text-muted">
+                {ownedAlone
+                  ? "This account has its own business with some items in it. To start completely fresh, give it a new empty business (the old one stays in your list; you can pause it)."
+                  : `This account is a member of ${acc.store_name}, so it sees that business's data. Give it its own empty business:`}
+              </p>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Their company name" aria-label="Company name" className="flex-1" />
+                <Button onClick={move} loading={busy} disabled={company.trim().length < 2}>Give them their own business</Button>
+              </div>
+              <p className="mt-2 text-xs text-muted">They become the owner of the new business, with a free trial. {acc.store_name} itself doesn&apos;t change; they&apos;re just no longer a member.</p>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

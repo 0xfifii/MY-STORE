@@ -1466,3 +1466,28 @@ describe("99. Create an account (company sign-up)", () => {
     expect((await owner.patch("/api/isura/settings", { allow_signup: true, trial_days: 14, price_naira: 0 })).status).toBe(200);
   });
 });
+
+describe("99b. Give an account its own business", () => {
+  it("moves a member of one business into a new, empty business of their own", async () => {
+    // A staff member of business 1 (sees its data)…
+    const add = await owner.post("/api/users", { name: "Dayo Ala", email: "dayo@own.test", password: "dayo-pass-123", role: "staff" });
+    expect(add.status, JSON.stringify(add.data)).toBe(201);
+    const dayo = new Session();
+    await dayo.post("/api/auth/login", { email: "dayo@own.test", password: "dayo-pass-123" });
+    expect((await dayo.get("/api/items")).data.rows.length).toBeGreaterThan(0);
+    const found = await owner.get("/api/isura/accounts?email=dayo@own.test");
+    expect(found.data.account).toMatchObject({ name: "Dayo Ala", role: "staff", store_id: 1 });
+    expect((await staff.get("/api/isura/accounts?email=dayo@own.test")).status).toBe(403);
+    // …gets their own business: an empty sheet.
+    const r = await owner.post("/api/isura/accounts/own-business", { email: "dayo@own.test", company_name: "Dayo Foods" });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    await new Promise((res) => setTimeout(res, 50));
+    const items = await dayo.get("/api/items");
+    expect(items.status).toBe(200);
+    expect(items.data.rows).toHaveLength(0);
+    expect((await owner.get("/api/isura/accounts?email=dayo@own.test")).data.account).toMatchObject({ role: "owner", store_name: "Dayo Foods", items: 0, users: 1 });
+    // The ÌṢÚRA admin's own account can't be moved.
+    const { rows: [admin] } = await db.query("SELECT email FROM users WHERE is_platform_admin LIMIT 1");
+    expect((await owner.post("/api/isura/accounts/own-business", { email: admin.email, company_name: "Nope" })).status).toBe(400);
+  });
+});
