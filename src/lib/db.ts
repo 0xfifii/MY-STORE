@@ -62,9 +62,70 @@ export async function currentStoreId(): Promise<number | null> {
   return sessionStoreId();
 }
 
+/*
+ * Row-level security only protects a business's data if the database login can't skip it. Some hosted
+ * databases (Neon among them) give the main login BYPASSRLS, which would let every business see every
+ * other business's rows. So at start-up we check, and if the login can skip the rules we create a
+ * restricted role (isura_rls, NOBYPASSRLS) and run every query as that role. If that isn't possible we
+ * refuse to serve business data at all rather than mix businesses up.
+ */
+export const RESTRICTED_ROLE = "isura_rls";
+type Isolation = { mode: "native" | "restricted_role" | "unsafe"; detail?: string };
+declare global {
+  var __isuraIsolation: Isolation | undefined;
+}
+export function isolationStatus(): Isolation | undefined {
+  return globalThis.__isuraIsolation;
+}
+
+async function prepareIsolation(client: PoolClient): Promise<Isolation> {
+  const me = await client.query<{ bypass: boolean }>("SELECT (rolsuper OR rolbypassrls) AS bypass FROM pg_roles WHERE rolname = current_user");
+  if (!me.rows[0]?.bypass) return { mode: "native" };
+  try {
+    await client.query("SAVEPOINT isura_role");
+    await client.query(`DO $r$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${RESTRICTED_ROLE}') THEN
+        CREATE ROLE ${RESTRICTED_ROLE} NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
+      END IF;
+      -- Postgres 16+ needs "SET TRUE" to be allowed to switch to the role; older versions allow any member.
+      IF current_setting('server_version_num')::int >= 160000 THEN
+        IF NOT pg_has_role(current_user, '${RESTRICTED_ROLE}', 'SET') THEN
+          EXECUTE format('GRANT ${RESTRICTED_ROLE} TO %I WITH SET TRUE', current_user);
+        END IF;
+      ELSIF NOT pg_has_role(current_user, '${RESTRICTED_ROLE}', 'MEMBER') THEN
+        EXECUTE format('GRANT ${RESTRICTED_ROLE} TO %I', current_user);
+      END IF;
+    END $r$`);
+    // Same table, sequence and function rights as the app itself (re-applied on every start-up, so new tables are covered).
+    await client.query(`GRANT USAGE ON SCHEMA public TO ${RESTRICTED_ROLE};
+      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${RESTRICTED_ROLE};
+      GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO ${RESTRICTED_ROLE};
+      GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO ${RESTRICTED_ROLE};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${RESTRICTED_ROLE};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO ${RESTRICTED_ROLE};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO ${RESTRICTED_ROLE};`);
+    // Prove it: as the restricted role, row-level security must apply.
+    await client.query(`SET LOCAL ROLE ${RESTRICTED_ROLE}`);
+    const check = await client.query<{ bypass: boolean }>("SELECT (rolsuper OR rolbypassrls) AS bypass FROM pg_roles WHERE rolname = current_user");
+    await client.query("RESET ROLE");
+    if (check.rows[0]?.bypass !== false) throw new Error("restricted role still bypasses row-level security");
+    await client.query("RELEASE SAVEPOINT isura_role");
+    return { mode: "restricted_role" };
+  } catch (e) {
+    await client.query("ROLLBACK TO SAVEPOINT isura_role").catch(() => {});
+    console.error("[db] CANNOT ISOLATE BUSINESSES:", (e as Error).message);
+    return { mode: "unsafe", detail: (e as Error).message };
+  }
+}
+
 async function setStore(client: PoolClient, storeId: number | null) {
+  const iso = globalThis.__isuraIsolation;
+  if (iso?.mode === "unsafe") {
+    throw new Error("The database login can see every business's data and ÌṢÚRA couldn't restrict it, so business data is switched off. " + (iso.detail ?? ""));
+  }
+  const role = iso?.mode === "restricted_role" ? `SET LOCAL ROLE ${RESTRICTED_ROLE}; ` : "";
   // storeId is always an integer we produced ourselves, never user text.
-  await client.query(`BEGIN; SELECT set_config('isura.store_id', '${storeId === null ? "" : Math.trunc(storeId)}', true)`);
+  await client.query(`BEGIN; ${role}SELECT set_config('isura.store_id', '${storeId === null ? "" : Math.trunc(storeId)}', true)`);
 }
 
 declare global {
@@ -120,6 +181,8 @@ async function migrate() {
       }
       await client.query("INSERT INTO schema_migrations (name) VALUES ($1) ON CONFLICT DO NOTHING", [m.name]);
     }
+    globalThis.__isuraIsolation = await prepareIsolation(client);
+    console.log(`[db] business isolation: ${globalThis.__isuraIsolation.mode}`);
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK").catch(() => {});
@@ -152,8 +215,8 @@ export function pool(): Pool {
 
 export async function query<T extends QueryResultRow = QueryResultRow>(text: string, params: unknown[] = []) {
   const storeId = await currentStoreId();
-  // No business: one plain round trip (business data is invisible anyway).
-  if (storeId === null) return (await (await db()).query<T>(text, params)).rows;
+  // No business and a login that can't skip the rules: one plain round trip (business data is invisible anyway).
+  if (storeId === null && (await db(), globalThis.__isuraIsolation?.mode === "native")) return (await rawPool().query<T>(text, params)).rows;
   const client = await (await db()).connect();
   try {
     await setStore(client, storeId);

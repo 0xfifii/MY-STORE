@@ -1448,6 +1448,7 @@ describe("99. Create an account (company sign-up)", () => {
          FROM users u JOIN stores s ON s.id = u.store_id JOIN settings st ON st.store_id = s.id WHERE lower(u.email) = 'tolu@grill.test'`);
     expect(u).toMatchObject({ name: "Tolu Ade", role: "owner", store: "Lagos Grill House", store_name: "Lagos Grill House", created_via: "signup", trial: true });
     expect(u.store_id).not.toBe(1);
+    expect((await new Session().get("/api/health")).data.business_isolation).toBe("restricted_role");
     // Signed in straight away, in their own empty business.
     const items = await anon.get("/api/items");
     expect(items.status).toBe(200);

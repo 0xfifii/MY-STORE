@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { queryOne } from "@/lib/db";
+import { isolationStatus, queryOne } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +24,9 @@ export async function GET() {
     }, { status: 503 });
   }
   try {
-    await queryOne("SELECT 1 FROM settings LIMIT 1");
-    return NextResponse.json({ ok: true, database: "up" });
+    await queryOne("SELECT 1 FROM stores LIMIT 1");
+    // How businesses are kept apart: "native" (the login can't skip the rules) or "restricted_role".
+    return NextResponse.json({ ok: true, database: "up", business_isolation: isolationStatus()?.mode ?? "unknown" });
   } catch (e) {
     const msg = (e as Error).message ?? "";
     const problem = /password authentication|authentication failed/i.test(msg)
