@@ -28,7 +28,7 @@ export const PUT = handle(async (req) => {
   await query(
     `UPDATE settings SET smtp_host = nullif($1,''), smtp_port = $2, smtp_user = nullif($3,''),
             smtp_pass = CASE WHEN $4::text IS NULL OR $4 = '' THEN smtp_pass ELSE $4 END,
-            smtp_from = nullif($5,''), welcome_email_enabled = $6, updated_at = now() WHERE id = 1`,
+            smtp_from = nullif($5,''), welcome_email_enabled = $6, updated_at = now() WHERE store_id = current_store()`,
     [b.smtp_host, b.smtp_port, b.smtp_user, b.smtp_pass ? b.smtp_pass.replace(/\s+/g, "") : null, b.smtp_from, b.welcome_email_enabled],
   );
   await audit(user.id, "settings.email", "settings", 1, {
@@ -40,7 +40,7 @@ export const PUT = handle(async (req) => {
 
 export const DELETE = handle(async () => {
   const user = await requireApiUser("settings.write");
-  await query("UPDATE settings SET smtp_host=NULL, smtp_port=NULL, smtp_user=NULL, smtp_pass=NULL, smtp_from=NULL WHERE id = 1");
+  await query("UPDATE settings SET smtp_host=NULL, smtp_port=NULL, smtp_user=NULL, smtp_pass=NULL, smtp_from=NULL WHERE store_id = current_store()");
   await audit(user.id, "settings.email", "settings", 1, { removed: true });
   return ok();
 });

@@ -192,10 +192,13 @@ function SidebarNav({ pathname }: { pathname: string }) {
       {group("Setup", SETUP)}
       <div className="mt-auto rounded-3xl bg-black/[0.04] px-4 py-3">
         <p className="truncate text-sm font-semibold">{app.user.name}</p>
-        <p className="truncate text-xs text-[#111111]/50">{ROLE_LABELS[app.user.role]}</p>
-        <button onClick={logout} disabled={busy} className="mt-3 flex items-center gap-2 text-sm font-medium text-[#111111]/70 hover:text-[#111111]">
-          <LogOut className="size-4" /> Sign out
-        </button>
+        <p className="truncate text-xs text-[#111111]/50">{ROLE_LABELS[app.user.role]} · {app.storeName}</p>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <Link href="/profile" className="text-sm font-semibold text-[#111111] underline-offset-2 hover:underline" data-testid="edit-profile">Edit profile</Link>
+          <button onClick={logout} disabled={busy} className="flex items-center gap-2 text-sm font-medium text-[#111111]/70 hover:text-[#111111]">
+            <LogOut className="size-4" /> Sign out
+          </button>
+        </div>
       </div>
     </div>
   );

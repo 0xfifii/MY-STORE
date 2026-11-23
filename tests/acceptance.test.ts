@@ -1491,3 +1491,28 @@ describe("99b. Give an account its own business", () => {
     expect((await owner.post("/api/isura/accounts/own-business", { email: admin.email, company_name: "Nope" })).status).toBe(400);
   });
 });
+
+describe("99c. Edit profile and company name", () => {
+  it("a new business owner renames themselves and their company; other businesses are untouched", async () => {
+    const o = new Session();
+    expect((await o.post("/api/auth/signup", { company_name: "Odunayo Alasoluyi", name: "Odunayo", email: "odunayo@profile.test", password: "profile-pass-1" })).status).toBe(201);
+    expect((await o.get("/profile")).status).toBe(200);
+    const r = await o.patch("/api/profile", { name: "Odunayo A.", company_name: "Palmbite Social Cafe" });
+    expect(r.status, JSON.stringify(r.data)).toBe(200);
+    const { rows: [x] } = await db.query(
+      `SELECT u.name, s.name AS store, st.store_name FROM users u JOIN stores s ON s.id = u.store_id JOIN settings st ON st.store_id = s.id WHERE u.email = 'odunayo@profile.test'`);
+    expect(x).toEqual({ name: "Odunayo A.", store: "Palmbite Social Cafe", store_name: "Palmbite Social Cafe" });
+    const { rows: [one] } = await db.query("SELECT store_name FROM settings WHERE store_id = 1");
+    expect(one.store_name).not.toBe("Palmbite Social Cafe");
+    // Store Settings now saves to this business too (it used to only update business #1).
+    const cur = (await o.get("/api/settings")).data.settings;
+    expect((await o.patch("/api/settings", { ...cur, store_name: "Palmbite Social Cafe Ltd" })).status).toBe(200);
+    expect((await db.query("SELECT store_name FROM settings WHERE store_id = (SELECT store_id FROM users WHERE email = 'odunayo@profile.test')")).rows[0].store_name).toBe("Palmbite Social Cafe Ltd");
+    expect((await db.query("SELECT store_name FROM settings WHERE store_id = 1")).rows[0].store_name).toBe(one.store_name);
+    // Password change needs the current password.
+    expect((await o.patch("/api/profile", { name: "Odunayo A.", current_password: "wrong-one-xx", new_password: "profile-pass-2" })).status).toBe(400);
+    expect((await o.patch("/api/profile", { name: "Odunayo A.", current_password: "profile-pass-1", new_password: "profile-pass-2" })).status).toBe(200);
+    // Staff can rename themselves but not the company.
+    expect((await staff.patch("/api/profile", { name: "Sam Staff", company_name: "Hijack" })).status).toBe(403);
+  });
+});
