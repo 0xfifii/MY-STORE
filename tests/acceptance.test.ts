@@ -1611,3 +1611,60 @@ describe("99d. Transfer between accounts", () => {
     expect((await pb.get("/api/transfers")).data.targets).toEqual([]);
   });
 });
+
+describe("99e. Linked accounts (switch between businesses)", () => {
+  const a = new Session();
+  const b = new Session();
+  const c = new Session();
+
+  it("links another account only with its password, then lists it", async () => {
+    expect((await a.post("/api/auth/signup", { company_name: "Spring Eatery", name: "Fiyin", email: "fiyin@spring.test", password: "spring-pass-1" })).status).toBe(201);
+    expect((await b.post("/api/auth/signup", { company_name: "Bite Cafe", name: "Odunayo", email: "odun@bite.test", password: "bite-pass-12" })).status).toBe(201);
+    expect((await a.get("/api/account-links")).data.accounts).toEqual([]);
+    expect((await a.post("/api/account-links", { email: "odun@bite.test", password: "wrong-pass" })).status).toBe(401);
+    expect((await a.post("/api/account-links", { email: "fiyin@spring.test", password: "spring-pass-1" })).status).toBe(400);
+    const r = await a.post("/api/account-links", { email: "ODUN@bite.test", password: "bite-pass-12" });
+    expect(r.status, JSON.stringify(r.data)).toBe(200);
+    expect(r.data.accounts).toMatchObject([{ business: "Bite Cafe", email: "odun@bite.test", locked: false }]);
+    expect((await a.post("/api/account-links", { email: "odun@bite.test", password: "bite-pass-12" })).status).toBe(409);
+    // It works both ways.
+    expect((await b.get("/api/account-links")).data.accounts).toMatchObject([{ business: "Spring Eatery" }]);
+  });
+
+  it("switches to the linked account without its password, and each keeps its own data", async () => {
+    const other = (await a.get("/api/account-links")).data.accounts[0];
+    const r = await a.post("/api/account-links/switch", { user_id: other.id });
+    expect(r.status, JSON.stringify(r.data)).toBe(200);
+    expect(r.data).toMatchObject({ business: "Bite Cafe" });
+    const prof = await a.get("/api/items");
+    expect(prof.status).toBe(200);
+    expect(prof.data.rows).toEqual([]);
+    const { rows: [u] } = await db.query("SELECT u.email FROM sessions s JOIN users u ON u.id = s.user_id ORDER BY s.id DESC LIMIT 1");
+    expect(u.email).toBe("odun@bite.test");
+    // And back again.
+    const back = (await a.get("/api/account-links")).data.accounts[0];
+    expect(back.business).toBe("Spring Eatery");
+    expect((await a.post("/api/account-links/switch", { user_id: back.id })).status).toBe(200);
+    expect((await a.get("/api/account-links")).data.accounts[0].business).toBe("Bite Cafe");
+  });
+
+  it("can't switch to an account that isn't linked", async () => {
+    expect((await c.post("/api/auth/signup", { company_name: "Stranger Co", name: "S", email: "s@stranger.test", password: "stranger-pass-1" })).status).toBe(201);
+    const stranger = (await db.query("SELECT id FROM users WHERE email = 's@stranger.test'")).rows[0].id;
+    expect((await a.post("/api/account-links/switch", { user_id: stranger })).status).toBe(404);
+    expect((await a.post("/api/account-links/switch", { user_id: "not-a-uuid" })).status).toBe(400);
+    expect((await new Session().get("/api/account-links")).status).toBe(401);
+  });
+
+  it("links join into groups, and unlinking one keeps the rest together", async () => {
+    // Bite Cafe links Stranger Co: now all three can switch to each other.
+    expect((await b.post("/api/account-links", { email: "s@stranger.test", password: "stranger-pass-1" })).status).toBe(200);
+    expect((await a.get("/api/account-links")).data.accounts.map((x: { business: string }) => x.business).sort()).toEqual(["Bite Cafe", "Stranger Co"]);
+    // Spring unlinks Bite Cafe (the middle one): Spring and Stranger stay linked.
+    const bite = (await a.get("/api/account-links")).data.accounts.find((x: { business: string }) => x.business === "Bite Cafe");
+    const r = await a.req("DELETE", "/api/account-links", { user_id: bite.id });
+    expect(r.status).toBe(200);
+    expect(r.data.accounts.map((x: { business: string }) => x.business)).toEqual(["Stranger Co"]);
+    expect((await b.get("/api/account-links")).data.accounts).toEqual([]);
+  });
+});
