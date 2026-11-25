@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, ArchiveRestore,
-  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck, X, Send,
+  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck, X, Send, RefreshCcw,
 } from "@/components/hand-icons";
 import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
 import { BusinessBanner } from "./business-banner";
@@ -194,6 +194,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
       <div className="mt-auto rounded-3xl bg-black/[0.04] px-4 py-3">
         <p className="truncate text-sm font-semibold">{app.user.name}</p>
         <p className="truncate text-xs text-[#111111]/50">{ROLE_LABELS[app.user.role]} · {app.storeName}</p>
+        <AccountSwitcher />
         <div className="mt-3 flex items-center justify-between gap-2">
           <Link href="/profile" className="text-sm font-semibold text-[#111111] underline-offset-2 hover:underline" data-testid="edit-profile">Edit profile</Link>
           <button onClick={logout} disabled={busy} className="flex items-center gap-2 text-sm font-medium text-[#111111]/70 hover:text-[#111111]">
@@ -201,6 +202,52 @@ function SidebarNav({ pathname }: { pathname: string }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Quick switch to the other businesses' accounts this person has linked (from Edit profile). */
+function AccountSwitcher() {
+  const app = useApp();
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  if (!app.linked.length) return null;
+  const go = async (id: string) => {
+    setBusy(id);
+    setError(null);
+    try {
+      await api("/api/account-links/switch", { method: "POST", json: { user_id: id } });
+      router.replace("/dashboard");
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(null);
+    }
+  };
+  return (
+    <div className="mt-3 border-t border-black/10 pt-2" data-testid="account-switcher">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#111111]/40">Switch account</p>
+      <ul className="mt-1 space-y-0.5">
+        {app.linked.map((a) => (
+          <li key={a.id}>
+            <button
+              type="button"
+              onClick={() => go(a.id)}
+              disabled={busy !== null}
+              className="flex w-full items-center gap-2 rounded-full px-2 py-1.5 text-left text-sm hover:bg-black/[0.05] disabled:opacity-60"
+              data-testid="switch-account"
+            >
+              <RefreshCcw className="size-4 shrink-0 text-[#111111]/50" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{a.business}</span>
+                <span className="block truncate text-xs text-[#111111]/50">{busy === a.id ? "Switching…" : a.name}{a.locked ? " · paused" : ""}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
     </div>
   );
 }

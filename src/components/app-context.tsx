@@ -10,6 +10,8 @@ export type AppCtx = {
     is_platform_admin: boolean; store_id: number; home_store_id: number; store_name: string; paid_until: string | null;
   };
   storeName: string;
+  /** Other accounts this person has linked (other businesses), for the account switcher. */
+  linked: { id: string; name: string; business: string; locked: boolean }[];
   currencySymbol: string;
   currencyCode: string;
   timezone: string;
