@@ -277,7 +277,7 @@ export async function skuExists(sku: string, excludeId?: string) {
 // Writes
 // ---------------------------------------------------------------------------
 /** Next free ITM-00001 style code in this business (each business numbers its own items). */
-async function nextSku(client: PoolClient) {
+export async function nextSku(client: PoolClient) {
   // Serialise code generation within the business so two new items can't get the same code.
   await client.query("SELECT pg_advisory_xact_lock(727300, current_store())");
   const { rows } = await client.query<{ n: number }>(

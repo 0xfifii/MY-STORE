@@ -14,6 +14,8 @@ type B = {
   id: number; name: string; status: "active" | "paused"; paid_until: string | null; price_kobo: string; billing_email: string | null;
   notes: string | null; locked: boolean; days_left: number | null; items: number; users: number; owners: string | null; last: string | null;
   pending: { email: string; role: string; expires_at: string }[];
+  /** Businesses this one can send stock to and receive from. */
+  linked: number[];
 };
 type P = { store_id: number; reference: string; amount_kobo: string; months: number; method: string; paid_at: string };
 
@@ -34,7 +36,7 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
 }) {
   const router = useRouter();
   const toast = useToast();
-  const [modal, setModal] = useState<null | { kind: "new" } | { kind: "pay" | "edit" | "owner"; b: B }>(null);
+  const [modal, setModal] = useState<null | { kind: "new" } | { kind: "pay" | "edit" | "owner" | "links"; b: B }>(null);
   const [link, setLink] = useState<{ url: string; email: string; note: string } | null>(null);
 
   const open = async (b: B) => {
@@ -88,6 +90,11 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
                   <Button size="sm" variant="secondary" onClick={() => setModal({ kind: "pay", b })}>Record payment</Button>
                   <Button size="sm" variant="secondary" onClick={() => setModal({ kind: "owner", b })}>Hand to new owner</Button>
                   <Button size="sm" variant="secondary" onClick={() => setModal({ kind: "edit", b })}>Price &amp; dates</Button>
+                  {businesses.length > 1 && (
+                    <Button size="sm" variant="secondary" onClick={() => setModal({ kind: "links", b })} data-testid="transfer-links">
+                      Transfers{b.linked.length ? ` (${b.linked.length})` : ""}
+                    </Button>
+                  )}
                   {b.id !== 1 && (
                     <Button size="sm" variant={b.status === "paused" ? "primary" : "outline-danger"} onClick={() => togglePause(b)}>
                       {b.status === "paused" ? "Resume" : "Pause"}
@@ -118,6 +125,7 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
       {modal?.kind === "pay" && <RecordPayment b={modal.b} onClose={() => setModal(null)} />}
       {modal?.kind === "edit" && <EditBusiness b={modal.b} onClose={() => setModal(null)} />}
       {modal?.kind === "owner" && <NewOwner b={modal.b} onClose={() => setModal(null)} onLink={setLink} />}
+      {modal?.kind === "links" && <TransferLinks b={modal.b} all={businesses} onClose={() => setModal(null)} />}
       {link && (
         <Modal open onClose={() => setLink(null)} title="Invitation ready" footer={<Button onClick={() => setLink(null)}>Done</Button>}>
           <p className="text-sm">{link.note}</p>
@@ -390,5 +398,44 @@ function AccountFinder() {
         </div>
       )}
     </section>
+  );
+}
+
+/** Which businesses this one can send stock to (and receive from). You can always transfer between any of them yourself. */
+function TransferLinks({ b, all, onClose }: { b: B; all: B[]; onClose: () => void }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [picked, setPicked] = useState<number[]>(b.linked);
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api("/api/isura/links", { method: "PUT", json: { store_id: b.id, linked: picked } });
+      toast.success("Transfer links saved");
+      router.refresh();
+      onClose();
+    } catch (e) {
+      toast.error("Couldn't save", (e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const others = all.filter((o) => o.id !== b.id);
+  return (
+    <Modal open onClose={onClose} title={`Transfers for ${b.name}`}
+      footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={save} loading={busy}>Save</Button></>}>
+      <p className="text-sm text-[#111111]/60">People in {b.name} with Stock Out permission can send items to the businesses you tick, and those businesses can send back. You can transfer between any businesses yourself.</p>
+      <ul className="mt-3 space-y-1.5">
+        {others.map((o) => (
+          <li key={o.id}>
+            <label className="flex items-center gap-3 rounded-2xl bg-black/[0.03] px-3 py-2.5 text-sm font-semibold">
+              <input type="checkbox" className="size-4 accent-[#111111]" checked={picked.includes(o.id)}
+                onChange={(e) => setPicked((p) => (e.target.checked ? [...p, o.id] : p.filter((x) => x !== o.id)))} />
+              {o.name}
+            </label>
+          </li>
+        ))}
+      </ul>
+    </Modal>
   );
 }

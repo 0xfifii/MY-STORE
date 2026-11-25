@@ -5,17 +5,19 @@ import { publicBaseUrl } from "@/lib/mailer";
 import { query, queryOne, withStore } from "@/lib/db";
 import { IsuraAdmin } from "./admin";
 import { signupSettings } from "@/lib/signup";
+import { listLinks } from "@/lib/transfers";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ÌṢÚRA admin" };
 
 export default async function IsuraAdminPage() {
   const me = await requirePlatformAdmin("page");
-  const [list, key, payments] = await Promise.all([
+  const [list, key, payments, links] = await Promise.all([
     listBusinesses(),
     paystackKey(),
     withStore(null, () => query<{ store_id: number; reference: string; amount_kobo: string; months: number; method: string; paid_at: string }>(
       "SELECT store_id, reference, amount_kobo::text, months, method, paid_at::text FROM payments WHERE status = 'success' ORDER BY paid_at DESC LIMIT 20")),
+    listLinks(),
   ]);
   const businesses = await Promise.all(list.map(async (b) => {
     const c = await withStore(b.id, () => queryOne<{ items: number; users: number; owners: string | null; last: string | null }>(
@@ -25,7 +27,8 @@ export default async function IsuraAdminPage() {
               (SELECT max(created_at)::text FROM stock_transactions) AS last`));
     const pending = await withStore(null, () => query<{ email: string; role: string; expires_at: string }>(
       "SELECT email, role, expires_at::text FROM store_invites WHERE store_id = $1 AND accepted_at IS NULL AND expires_at > now() ORDER BY created_at DESC LIMIT 3", [b.id]));
-    return { ...b, ...c!, pending };
+    const linked = links.flatMap((l) => (l.store_a === b.id ? [l.store_b] : l.store_b === b.id ? [l.store_a] : []));
+    return { ...b, ...c!, pending, linked };
   }));
   return (
     <div>

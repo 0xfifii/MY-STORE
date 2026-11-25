@@ -1516,3 +1516,98 @@ describe("99c. Edit profile and company name", () => {
     expect((await staff.patch("/api/profile", { name: "Sam Staff", company_name: "Hijack" })).status).toBe(403);
   });
 });
+
+describe("99d. Transfer between accounts", () => {
+  const pb = new Session();
+  let pbStore = 0;
+  let plate = "";
+  const line = (item_id: string, quantity: string, extra: Record<string, unknown> = {}) =>
+    ({ item_id, quantity, unit_id: units.pcs, request_id: randomUUID(), ...extra });
+  const pbItem = async (name: string) =>
+    (await db.query("SELECT id, quantity::text, stock_value::text, archived_at FROM items WHERE store_id = $1 AND name = $2", [pbStore, name])).rows[0];
+
+  it("only accounts you may send to are offered", async () => {
+    expect((await pb.post("/api/auth/signup", { company_name: "Palmbite Cafe", name: "Bite Owner", email: "owner@palmbite.test", password: "bite-pass-123" })).status).toBe(201);
+    pbStore = (await db.query("SELECT store_id FROM users WHERE email = 'owner@palmbite.test'")).rows[0].store_id;
+    plate = await createItem("Takeaway Plate", "pcs");
+    expect((await stockIn(owner, plate, "30", "pcs", "100")).status).toBe(201);
+    // The ÌṢÚRA admin can send to any business; a business owner only to linked ones.
+    expect((await owner.get("/api/transfers")).data.targets.map((t: { id: number }) => t.id)).toContain(pbStore);
+    expect((await pb.get("/api/transfers")).data.targets).toEqual([]);
+    expect((await pb.post("/api/transfers", { to_store: 1, request_id: randomUUID(), lines: [line(plate, "1")] })).status).toBe(403);
+    expect((await viewer.get("/api/transfers")).status).toBe(403);
+  });
+
+  it("sends 12: they leave this account and arrive in the other at the same cost, once", async () => {
+    const pv = await owner.post("/api/transfers/preview", { to_store: pbStore, item_ids: [plate] });
+    expect(pv.data.items[0].match).toBeNull();
+    const body = { to_store: pbStore, notes: "For the new branch", request_id: randomUUID(), lines: [line(plate, "12")] };
+    const r = await owner.post("/api/transfers", body);
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    expect(r.data.transfer).toMatchObject({ transfer_no: expect.stringMatching(/^TRF-\d{5}$/), to_name: "Palmbite Cafe" });
+    expect(r.data.transfer.lines[0]).toMatchObject({ name: "Takeaway Plate", quantity: "12.000000", created: true });
+    expect((await item(plate)).quantity).toBe("18.000000");
+    expect(await pbItem("Takeaway Plate")).toMatchObject({ quantity: "12.000000", stock_value: "1200.0000", archived_at: null });
+    // The other account sees it as its own item, received from us.
+    const theirs = (await pb.get("/api/items")).data.rows;
+    expect(theirs.map((i: { name: string }) => i.name)).toEqual(["Takeaway Plate"]);
+    const { rows: [inTxn] } = await db.query("SELECT supplier_name, reference FROM stock_transactions WHERE store_id = $1", [pbStore]);
+    expect(inTxn.supplier_name).toMatch(/^Transfer from /);
+    const { rows: [outTxn] } = await db.query("SELECT reason, recipient, reference FROM stock_transactions WHERE item_id = $1 AND direction = -1", [plate]);
+    expect(outTxn).toMatchObject({ reason: "transfer", recipient: "Palmbite Cafe", reference: r.data.transfer.transfer_no });
+    // Sending the same request again changes nothing.
+    const again = await owner.post("/api/transfers", body);
+    expect(again.data.transfer.id).toBe(r.data.transfer.id);
+    expect((await item(plate)).quantity).toBe("18.000000");
+    expect((await pbItem("Takeaway Plate")).quantity).toBe("12.000000");
+  });
+
+  it("all or nothing: one bad line saves nothing on either side", async () => {
+    const r = await owner.post("/api/transfers", { to_store: pbStore, request_id: randomUUID(), lines: [line(plate, "5"), line(plate, "50")] });
+    expect(r.status).toBe(409);
+    expect(r.data.error).toContain("Line 2, Takeaway Plate");
+    expect((await item(plate)).quantity).toBe("18.000000");
+    expect((await pbItem("Takeaway Plate")).quantity).toBe("12.000000");
+    // Removing it from this account needs all of it to go.
+    const part = await owner.post("/api/transfers", { to_store: pbStore, request_id: randomUUID(), lines: [line(plate, "3", { remove_here: true })] });
+    expect(part.status).toBe(409);
+    expect((await item(plate)).quantity).toBe("18.000000");
+  });
+
+  it("sends all of it and removes it here; it adds to the item already there", async () => {
+    const pv = await owner.post("/api/transfers/preview", { to_store: pbStore, item_ids: [plate] });
+    expect(pv.data.items[0].match).toMatchObject({ name: "Takeaway Plate", quantity: "12.000000" });
+    const r = await owner.post("/api/transfers", { to_store: pbStore, request_id: randomUUID(), lines: [line(plate, "18", { remove_here: true })] });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    expect(r.data.transfer.lines[0]).toMatchObject({ created: false, archived: true });
+    const mine = await item(plate);
+    expect(mine.quantity).toBe("0.000000");
+    expect(mine.archived_at).not.toBeNull();
+    expect(await pbItem("Takeaway Plate")).toMatchObject({ quantity: "30.000000", stock_value: "3000.0000" });
+    expect((await db.query("SELECT count(*)::int n FROM items WHERE store_id = $1", [pbStore])).rows[0].n).toBe(1);
+  });
+
+  it("once linked by the admin, the other account can send back", async () => {
+    expect((await pb.req("PUT", "/api/isura/links", { store_id: pbStore, linked: [1] })).status).toBe(403);
+    expect((await owner.req("PUT", "/api/isura/links", { store_id: pbStore, linked: [1] })).status).toBe(200);
+    expect((await pb.get("/api/transfers")).data.targets.map((t: { id: number }) => t.id)).toEqual([1]);
+    const theirPlate = (await pbItem("Takeaway Plate")).id;
+    const r = await pb.post("/api/transfers", { to_store: 1, request_id: randomUUID(), lines: [line(theirPlate, "5")] });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    // Our archived plate comes back with the 5.
+    const mine = await item(plate);
+    expect(mine).toMatchObject({ quantity: "5.000000", archived_at: null });
+    expect((await pbItem("Takeaway Plate")).quantity).toBe("25.000000");
+    // Both sides list the transfers.
+    expect((await pb.get("/api/transfers")).data.transfers).toHaveLength(3);
+    expect((await owner.get("/api/transfers")).data.transfers.filter((t: { to_store: number; from_store: number }) => t.to_store === pbStore || t.from_store === pbStore)).toHaveLength(3);
+    // A third business sees none of them.
+    const other = new Session();
+    await other.post("/api/auth/signup", { company_name: "Nobody Co", name: "N", email: "n@nobody.test", password: "nobody-pass-1" });
+    expect((await other.get("/api/transfers")).data).toMatchObject({ targets: [], transfers: [] });
+    expect((await other.post("/api/transfers/preview", { to_store: pbStore, item_ids: [plate] })).status).toBe(403);
+    // Unlinking stops it again.
+    expect((await owner.req("PUT", "/api/isura/links", { store_id: pbStore, linked: [] })).status).toBe(200);
+    expect((await pb.get("/api/transfers")).data.targets).toEqual([]);
+  });
+});

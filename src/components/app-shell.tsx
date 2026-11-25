@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, ArchiveRestore,
-  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck, X,
+  HardHat, ChartPie, ClipboardCheck, Mail, Bell, ShieldCheck, X, Send,
 } from "@/components/hand-icons";
 import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
 import { BusinessBanner } from "./business-banner";
@@ -26,6 +26,7 @@ const MAIN: NavItem[] = [
   { href: "/inventory", label: "Inventory", icon: Boxes, match: ["/inventory", "/items"], hint: "Every item, price and photo", keywords: ["items", "products"] },
   { href: "/stock-in", label: "Stock In", icon: StockInIcon, perm: "stock.in", hint: "Record stock received", keywords: ["receive", "purchase"] },
   { href: "/stock-out", label: "Stock Out", icon: StockOutIcon, perm: "stock.out", hint: "Record stock used or taken", keywords: ["issue", "usage"] },
+  { href: "/transfers", label: "Transfer", icon: Send, perm: "stock.out", hint: "Send items to another account", keywords: ["move", "branch", "account"] },
   { href: "/transactions", label: "Transactions", icon: History, perm: "page.transactions", hint: "Every stock in and out", keywords: ["history", "ledger"] },
   { href: "/low-stock", label: "Low Stock", icon: AlertTriangle, perm: "page.low_stock", hint: "What needs restocking", keywords: ["out of stock", "reorder"] },
   { href: "/stock-count", label: "Stock Count", icon: ClipboardCheck, perm: "stock.count", hint: "Count shelves and fix differences" },
