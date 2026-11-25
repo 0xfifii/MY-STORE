@@ -1668,3 +1668,22 @@ describe("99e. Linked accounts (switch between businesses)", () => {
     expect((await b.get("/api/account-links")).data.accounts).toEqual([]);
   });
 });
+
+describe("99f. Palmspring and Palmbite linked", () => {
+  it("the one-time link joins the home business with the Palmbite account for transfers and switching", async () => {
+    const pbs = new Session();
+    expect((await pbs.post("/api/auth/signup", { company_name: "Palmbite Social Cafe", name: "Odunayo", email: "AlasoluyiOdunayo1204@gmail.com", password: "pb-pass-1234" })).status).toBe(201);
+    const { rows: [u] } = await db.query("SELECT id, store_id FROM users WHERE lower(email) = 'alasoluyiodunayo1204@gmail.com'");
+    const sql = readFileSync(join(__dirname, "..", "db", "migrations", "022_link_palmbite.sql"), "utf8");
+    await db.query(sql);
+    await db.query(sql); // running twice changes nothing
+    expect((await db.query("SELECT store_a, store_b FROM store_links WHERE $1 IN (store_a, store_b)", [u.store_id])).rows).toEqual([{ store_a: 1, store_b: u.store_id }]);
+    expect((await db.query("SELECT count(*)::int n FROM user_links WHERE $1 IN (user_a, user_b)", [u.id])).rows[0].n).toBe(1);
+    // Palmbite can now send stock to the home business, and both sign-ins see each other in Switch account.
+    expect((await pbs.get("/api/transfers")).data.targets.map((t: { id: number }) => t.id)).toEqual([1]);
+    expect((await owner.get("/api/transfers")).data.targets.map((t: { id: number }) => t.id)).toContain(u.store_id);
+    const theirs = await pbs.get("/api/account-links");
+    expect(theirs.status, JSON.stringify(theirs.data)).toBe(200);
+    expect(JSON.stringify(theirs.data)).toContain("owner@mystore.test");
+  });
+});
