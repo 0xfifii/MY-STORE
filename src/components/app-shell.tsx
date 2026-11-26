@@ -5,7 +5,7 @@ import { StockInIcon, StockOutIcon } from "@/components/icons";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import clsx from "clsx";
 import {
   LayoutDashboard, Boxes, FileBarChart, History, AlertTriangle, Tags, Truck, Users, Settings, Ruler, LogOut, Menu, ArchiveRestore,
@@ -14,7 +14,8 @@ import {
 import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
 import { BusinessBanner } from "./business-banner";
 import { useApp } from "./app-context";
-import { VelvetWordmark } from "./logo";
+import { PalmMark, VelvetWordmark } from "./logo";
+import { switchAccountAction } from "@/app/actions/switch-account";
 import { StockDialogProvider } from "./stock-dialog";
 import { api } from "@/lib/client";
 import { ROLE_LABELS, type Action } from "@/lib/permissions";
@@ -157,7 +158,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
     if (!visible.length) return null;
     return (
       <div className="mt-5">
-        <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">{label}</p>
+        <p className="font-nav px-3 pb-1.5 text-[12px] font-bold uppercase tracking-[0.12em] text-ink/45">{label}</p>
         <ul className="space-y-0.5">
           {visible.map((item) => {
             const active = isActive(pathname, item);
@@ -168,7 +169,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={clsx(
-                    "group flex items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200",
+                    "font-nav group flex items-center gap-3 rounded-full px-3.5 py-2 text-[16px] font-medium transition-all duration-200",
                     active ? "bg-burgundy text-white shadow-[0_10px_22px_-12px_rgb(0_0_0/0.7)]" : "text-ink/70 hover:translate-x-1 hover:bg-black/[0.05] hover:text-ink",
                   )}
                 >
@@ -209,22 +210,19 @@ function SidebarNav({ pathname }: { pathname: string }) {
 /** Quick switch to the other businesses' accounts this person has linked (from Edit profile). */
 function AccountSwitcher() {
   const app = useApp();
-  const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   if (!app.linked.length) return null;
-  const go = async (id: string) => {
+  const go = (id: string) => {
     setBusy(id);
     setError(null);
-    try {
-      await api("/api/account-links/switch", { method: "POST", json: { user_id: id } });
-      router.replace("/dashboard");
-      router.refresh();
-    } catch (e) {
-      setError((e as Error).message);
-      setBusy(null);
-    }
+    // One round trip: the server action swaps the session and sends back the new dashboard in the same response.
+    startTransition(async () => {
+      const r = await switchAccountAction(id).catch((e: Error) => ({ error: e.message }));
+      if (r && "error" in r) { setError(r.error); setBusy(null); }
+    });
   };
+  const switching = app.linked.find((a) => a.id === busy);
   return (
     <div className="mt-3 border-t border-black/10 pt-2" data-testid="account-switcher">
       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">Switch account</p>
@@ -248,6 +246,17 @@ function AccountSwitcher() {
         ))}
       </ul>
       {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
+      {switching && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-canvas/70 backdrop-blur-sm" role="status" aria-live="polite">
+          <div className="pop-in flex items-center gap-3 rounded-3xl bg-paper px-5 py-4 shadow-[0_20px_50px_-20px_rgb(0_0_0/0.45)] ring-1 ring-kraft">
+            <PalmMark className="velvy-bob size-10" />
+            <div>
+              <p className="text-sm font-semibold">Switching to {switching.business}</p>
+              <p className="text-xs text-muted">{switching.name}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

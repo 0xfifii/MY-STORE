@@ -3,7 +3,7 @@
   "short_name": "Palm Store",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#F4ECE1",
+  "background_color": "#FBF6EE",
   "theme_color": "#C4553A",
   "icons": [
     {

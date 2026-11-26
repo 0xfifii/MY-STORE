@@ -1,5 +1,5 @@
 /**
- * The Palm Store helper: a cheerful cowry shell (the brand mark) drawn in black line on white, with gold speckles.
+ * The Palm Store helper: a cheerful shopping bag (the brand mark) with a teal handle, drawn in terracotta line on cream.
  * Pure SVG + CSS animation (blink, bob, wave, jump), so it costs nothing to load and respects
  * reduced-motion settings.
  */
@@ -51,24 +51,19 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
           <path d={mood === "wave" || mood === "excited" ? "M101 90c8-4 12-12 12-20" : "M101 92c8-2 12 4 12 10"} fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
           <circle cx={113} cy={mood === "wave" || mood === "excited" ? 67 : 104} r="4" fill="#ffffff" stroke={ink} strokeWidth="3" />
         </g>
-        {/* cowry shell body: an egg-shaped shell with small notches at each end */}
-        <path d="M60 28C88 28 100 58 100 84s-15 50-40 50-40-24-40-50S32 28 60 28z" fill="#ffffff" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
-        <path d="M56 30l4 5 4-5M56 132l4-5 4 5" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-        {/* gold speckles on the shell's back */}
-        <g fill="#c9a227">
-          <circle cx="44" cy="50" r="2.6" opacity=".7" /><circle cx="58" cy="43" r="2" opacity=".55" /><circle cx="73" cy="49" r="2.8" opacity=".7" />
-          <circle cx="85" cy="62" r="1.9" opacity=".5" /><circle cx="33" cy="64" r="1.9" opacity=".5" /><circle cx="64" cy="55" r="1.5" opacity=".45" />
-        </g>
+        {/* teal handle */}
+        <path d="M44 54V41a16 16 0 0 1 32 0v13" fill="none" stroke="#006D77" strokeWidth="5" strokeLinecap="round" />
+        {/* shopping bag body */}
+        <path d="M27 50h66a4.5 4.5 0 0 1 4.5 4.2l4.6 72.8a6.5 6.5 0 0 1-6.5 7H23.4a6.5 6.5 0 0 1-6.5-7l4.6-72.8A4.5 4.5 0 0 1 27 50z"
+          fill="#FFFBF5" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
+        {/* folded top band and handle holes */}
+        <path d="M21.2 61h77.6" fill="none" stroke={ink} strokeWidth="3" strokeLinecap="round" opacity=".35" />
+        <circle cx="44" cy="56" r="2.6" fill={ink} /><circle cx="76" cy="56" r="2.6" fill={ink} />
         {/* soft shine */}
-        <path d="M36 52q6-12 18-16" fill="none" stroke={ink} strokeWidth="2" strokeLinecap="round" opacity=".18" />
-        {/* the cowry's toothed opening */}
-        <path d="M46 118q14 7 28 0" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" opacity=".7" />
-        <g stroke={ink} strokeWidth="1.5" strokeLinecap="round" opacity=".45">
-          <path d="M51 120.3v3M55.5 121.4v3M60 121.8v3M64.5 121.4v3M69 120.3v3" />
-        </g>
+        <path d="M27 70v40" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" opacity=".15" />
         {/* face */}
-        <ellipse cx="39" cy="90" rx="6" ry="3.6" fill="#e3c463" opacity="0.6" />
-        <ellipse cx="81" cy="90" rx="6" ry="3.6" fill="#e3c463" opacity="0.6" />
+        <ellipse cx="39" cy="90" rx="6" ry="3.6" fill="#F4A261" opacity="0.55" />
+        <ellipse cx="81" cy="90" rx="6" ry="3.6" fill="#F4A261" opacity="0.55" />
         {brows}
         {eyes}
         {mouth}

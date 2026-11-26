@@ -13,16 +13,16 @@
   --color-burgundy: #C4553A;   /* brand terracotta */
   --color-burgundy-hover: #A8452E;
   --color-glow: #F4A261;
-  --color-rose: #F1E4D4;       /* soft beige surface */
-  --color-rose-strong: #E9D7C2;
+  --color-rose: #F7EDE1;       /* soft beige surface */
+  --color-rose-strong: #F0E2D1;
   --color-ink: #2E1E16;        /* text: warm dark brown */
   --color-night: #C4553A;      /* dark surfaces and primary buttons: terracotta */
   --color-muted: #7A6556;
-  --color-line: #E6D5C1;
-  --color-paper: #FFFBF5;      /* cards and panels */
+  --color-line: #EEE1D1;
+  --color-paper: #FFFDF9;      /* cards and panels */
   --color-white: #ffffff;
-  --color-canvas: #F4ECE1;     /* cream beige, the main background */
-  --color-kraft: #EADBC8;
+  --color-canvas: #FBF6EE;     /* bright cream beige, the main background */
+  --color-kraft: #F0E4D5;
   --color-ok: #006D77;         /* the little bit of teal */
   --color-ok-bg: #DCEDEC;
   --color-warn: #9A4A1C;
@@ -100,6 +100,12 @@ body {
 .glow-orb {
   background: radial-gradient(circle at 40% 40%, #F4A261 0%, #C4553A 38%, rgb(196 85 58 / 0.35) 62%, transparent 72%);
   filter: blur(6px);
+}
+
+/* The sidebar menu is set in Times New Roman (with close serif stand-ins where it isn't installed, e.g. Android). */
+.font-nav {
+  font-family: "Times New Roman", Times, "Liberation Serif", "Tinos", "Noto Serif", Georgia, serif;
+  letter-spacing: 0;
 }
 
 .font-display {
