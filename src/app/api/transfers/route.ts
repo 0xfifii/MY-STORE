@@ -1,6 +1,7 @@
 import { handle, ok, readJson } from "@/lib/api";
 import { requireApiUser } from "@/lib/auth";
-import { assertCategoryAllowed, getItem } from "@/lib/inventory";
+import { assertCategoryAllowed, assertDateAllowed, getItem } from "@/lib/inventory";
+import { getSettings } from "@/lib/settings";
 import { listTransfers, recordTransfer, transferSchema, transferTargets } from "@/lib/transfers";
 
 /** Accounts you can send to, and the transfers this account has sent or received. */
@@ -14,6 +15,7 @@ export const GET = handle(async () => {
 export const POST = handle(async (req) => {
   const user = await requireApiUser("stock.out");
   const input = transferSchema.parse(await readJson(req));
+  await assertDateAllowed(user, input.occurred_at, (await getSettings()).timezone);
   const ids = [...new Set(input.lines.map((l) => l.item_id))];
   for (const id of ids) await assertCategoryAllowed(id, user.allowed_category_ids);
   const transfer = await recordTransfer(user, input);

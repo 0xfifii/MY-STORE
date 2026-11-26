@@ -1687,3 +1687,28 @@ describe("99f. Palmspring and Palmbite linked", () => {
     expect(JSON.stringify(theirs.data)).toContain("owner@mystore.test");
   });
 });
+
+describe("99g. Transfer on an earlier date", () => {
+  it("records both sides on the chosen day; a future date is refused", async () => {
+    const { rows: [pb] } = await db.query("SELECT store_id FROM users WHERE lower(email) = 'alasoluyiodunayo1204@gmail.com'");
+    const cup = await createItem("Paper Cup", "pcs");
+    // The cups arrived three days ago, so they can be sent two days ago.
+    expect((await stockIn(owner, cup, "40", "pcs", "50", { occurred_at: new Date(Date.now() - 3 * 86400_000).toISOString() })).status).toBe(201);
+    const day = new Date(Date.now() - 2 * 86400_000);
+    const line = { item_id: cup, quantity: "10", unit_id: units.pcs, request_id: randomUUID() };
+    const r = await owner.post("/api/transfers", { to_store: pb.store_id, request_id: randomUUID(), occurred_at: day.toISOString(), lines: [line] });
+    expect(r.status, JSON.stringify(r.data)).toBe(201);
+    expect(new Date(r.data.transfer.occurred_at).getTime()).toBe(day.getTime());
+    const { rows } = await db.query(
+      "SELECT store_id, direction, occurred_at FROM stock_transactions WHERE reference = $1 ORDER BY direction", [r.data.transfer.transfer_no]);
+    expect(rows.map((x: { direction: number }) => x.direction)).toEqual([-1, 1]);
+    for (const x of rows) expect(new Date(x.occurred_at).getTime()).toBe(day.getTime());
+    expect((await item(cup)).quantity).toBe("30.000000");
+
+    const future = new Date(Date.now() + 86400_000).toISOString();
+    const f = await owner.post("/api/transfers", { to_store: pb.store_id, request_id: randomUUID(), occurred_at: future,
+      lines: [{ ...line, request_id: randomUUID() }] });
+    expect(f.status).toBe(400);
+    expect((await item(cup)).quantity).toBe("30.000000");
+  });
+});

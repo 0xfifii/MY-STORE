@@ -26,6 +26,10 @@ export const transferSchema = z.object({
   to_store: z.coerce.number().int().positive({ message: "Choose the account to send to" }),
   notes: z.string().trim().max(500).optional().nullable().transform((v) => v || null),
   request_id: uuid,
+  /** When it happened; empty means now. An earlier day needs the backdate permission (checked by the route). */
+  occurred_at: z.string().optional().nullable().transform((v) => (v ? v : null))
+    .refine((v) => v === null || !Number.isNaN(Date.parse(v)), { message: "Invalid date" })
+    .refine((v) => v === null || Date.parse(v) <= Date.now() + 5 * 60000, { message: "The date can't be in the future." }),
   lines: z.array(z.object({
     item_id: uuid,
     quantity: positiveQty,
@@ -97,7 +101,7 @@ type SentLine = {
 export type TransferLine = Omit<SentLine, "src" | "remove_here"> & { to_item_id: string; in_txn: string; created: boolean; archived: boolean };
 export type Transfer = {
   id: string; transfer_no: string; from_store: number; to_store: number; from_name: string; to_name: string;
-  created_by_name: string | null; notes: string | null; lines: TransferLine[]; created_at: string;
+  created_by_name: string | null; notes: string | null; lines: TransferLine[]; created_at: string; occurred_at: string;
 };
 
 /** Sends the stock. Returns the saved transfer (the same one again if this request was already saved). */
@@ -111,14 +115,14 @@ export async function recordTransfer(user: SessionUser, input: TransferInput): P
   return withStore(from, () => withTransaction(async (c) => {
     // A double-click or a retry returns the transfer that was already saved.
     await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [input.request_id]);
-    const prev = await c.query<Transfer>(`SELECT id::text, transfer_no, from_store, to_store, from_name, to_name, created_by_name, notes, lines, created_at::text
+    const prev = await c.query<Transfer>(`SELECT id::text, transfer_no, from_store, to_store, from_name, to_name, created_by_name, notes, lines, created_at::text, occurred_at::text
                                             FROM stock_transfers WHERE request_id = $1`, [input.request_id]);
     if (prev.rowCount) return prev.rows[0];
 
     const head = await c.query<{ id: string; transfer_no: string }>(
-      `INSERT INTO stock_transfers (from_store, to_store, from_name, to_name, created_by, created_by_name, notes, request_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id::text, transfer_no`,
-      [from, to, fromName, toName, user.id, user.name, input.notes, input.request_id],
+      `INSERT INTO stock_transfers (from_store, to_store, from_name, to_name, created_by, created_by_name, notes, request_id, occurred_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8, coalesce($9::timestamptz, now())) RETURNING id::text, transfer_no`,
+      [from, to, fromName, toName, user.id, user.name, input.notes, input.request_id, input.occurred_at],
     );
     const { id, transfer_no } = head.rows[0];
 
@@ -136,8 +140,8 @@ export async function recordTransfer(user: SessionUser, input: TransferInput): P
       const src = s.rows[0];
       try {
         const out = await c.query<{ txn_no: string; quantity: string; unit_cost: string; total_value: string }>(
-          "SELECT txn_no, quantity::text, unit_cost::text, total_value::text FROM stock_out($1,$2,$3,'transfer',$4,$5,$6,$7,$8,NULL)",
-          [l.item_id, l.quantity, l.unit_id, toName, transfer_no, input.notes, user.id, l.request_id],
+          "SELECT txn_no, quantity::text, unit_cost::text, total_value::text FROM stock_out($1,$2,$3,'transfer',$4,$5,$6,$7,$8,$9)",
+          [l.item_id, l.quantity, l.unit_id, toName, transfer_no, input.notes, user.id, l.request_id, input.occurred_at],
         );
         const o = out.rows[0];
         if (l.remove_here) {
@@ -176,8 +180,8 @@ export async function recordTransfer(user: SessionUser, input: TransferInput): P
       }
       try {
         const inn = await c.query<{ txn_no: string }>(
-          "SELECT txn_no FROM stock_in($1,$2,$3,$4,NULL,$5,$6,$7,NULL,$8,$9)",
-          [itemId, s.quantity, unitId, s.unit_cost, `Transfer from ${fromName}`, transfer_no, input.notes, user.id, receivingRequestId(input.lines[i].request_id)],
+          "SELECT txn_no FROM stock_in($1,$2,$3,$4,NULL,$5,$6,$7,$8,$9,$10)",
+          [itemId, s.quantity, unitId, s.unit_cost, `Transfer from ${fromName}`, transfer_no, input.notes, input.occurred_at, user.id, receivingRequestId(input.lines[i].request_id)],
         );
         lines.push({ from_item_id: s.from_item_id, to_item_id: itemId, name: s.name, sku: s.sku, quantity: s.quantity, unit_symbol: s.unit_symbol,
           unit_cost: s.unit_cost, total_value: s.total_value, out_txn: s.out_txn, in_txn: inn.rows[0].txn_no, created, archived: s.remove_here });
@@ -197,7 +201,7 @@ export async function recordTransfer(user: SessionUser, input: TransferInput): P
     await audit(user.id, "stock.transfer_out", "transfer", id, { transfer_no, to: toName, lines: lines.length }, c);
     const done = await c.query<Transfer>(
       `UPDATE stock_transfers SET lines = $2 WHERE id = $1
-       RETURNING id::text, transfer_no, from_store, to_store, from_name, to_name, created_by_name, notes, lines, created_at::text`,
+       RETURNING id::text, transfer_no, from_store, to_store, from_name, to_name, created_by_name, notes, lines, created_at::text, occurred_at::text`,
       [id, JSON.stringify(lines)],
     );
     return done.rows[0];
@@ -243,8 +247,8 @@ async function createReceivingItem(c: PoolClient, s: SentLine, unitId: number, u
 /** Transfers this business sent or received, newest first. */
 export async function listTransfers(limit = 30) {
   return query<Transfer>(
-    `SELECT id::text, transfer_no, from_store, to_store, from_name, to_name, created_by_name, notes, lines, created_at::text
-       FROM stock_transfers ORDER BY created_at DESC LIMIT $1`, [limit]);
+    `SELECT id::text, transfer_no, from_store, to_store, from_name, to_name, created_by_name, notes, lines, created_at::text, occurred_at::text
+       FROM stock_transfers ORDER BY occurred_at DESC, id DESC LIMIT $1`, [limit]);
 }
 
 // ---------------------------------------------------------------------------------------------

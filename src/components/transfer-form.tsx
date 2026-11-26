@@ -10,6 +10,7 @@ import { Button, Field, Input, Select, Spinner, StatusBadge, buttonClass } from 
 import { useToast } from "./ui/toast";
 import { useApp } from "./app-context";
 import { SuccessCheck } from "./motion";
+import { WhenPicker, nowLocalInput } from "./stock-move-form";
 import { api, newRequestId } from "@/lib/client";
 import { add, cmp, isValidQty, mulFactor } from "@/lib/decimal";
 import { formatMoney, formatQty, type StockStatus } from "@/lib/format";
@@ -23,7 +24,7 @@ type Target = { id: number; name: string; locked: boolean };
 type Match = { item_id: string; match: { id: string; name: string; quantity: string; unit_symbol: string; archived: boolean } | null };
 export type TransferRow = {
   id: string; transfer_no: string; from_store: number; to_store: number; from_name: string; to_name: string; created_by_name: string | null;
-  notes: string | null; created_at: string;
+  notes: string | null; created_at: string; occurred_at?: string;
   lines: { name: string; quantity: string; unit_symbol: string; total_value: string; out_txn: string; in_txn: string; created: boolean; archived: boolean }[];
 };
 type Saved = { id: string; name: string; quantity: string; unit_symbol: string; status: StockStatus };
@@ -42,6 +43,11 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
 
   const [toStore, setToStore] = useState(targets.length === 1 ? String(targets[0].id) : "");
   const [notes, setNotes] = useState("");
+  const canBackdate = app.can("stock.backdate");
+  const [occurredAt, setOccurredAt] = useState(nowLocalInput);
+  const [dateTouched, setDateTouched] = useState(false);
+  const when = dateTouched && occurredAt ? new Date(occurredAt) : null;
+  const whenText = when ? when.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
   const [lines, setLines] = useState<Line[]>(() => [blankLine()]);
   const [step, setStep] = useState<"edit" | "confirm" | "done">("edit");
   const [touched, setTouched] = useState(false);
@@ -95,6 +101,7 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
   const problems: string[] = [];
   if (!toStore) problems.push("Choose the account to send to.");
   if (!filled.length) problems.push("Add at least one item.");
+  if (when && when.getTime() > Date.now() + 5 * 60000) problems.push("The date can't be in the future.");
   filled.forEach((l, i) => { const p = lineProblem(l); if (p) problems.push(`Line ${i + 1}, ${l.item!.name}: ${p}`); });
 
   const lineValue = (l: Line) => { const q = baseQty(l); return q && l.item ? Number(q) * Number(l.item.avg_cost) : 0; };
@@ -125,7 +132,7 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
       const res = await api<{ transfer: TransferRow; items: Saved[] }>("/api/transfers", {
         method: "POST",
         json: {
-          to_store: Number(toStore), notes, request_id: requestId,
+          to_store: Number(toStore), notes, request_id: requestId, occurred_at: when ? when.toISOString() : null,
           lines: filled.map((l) => ({ item_id: l.item!.id, quantity: l.qty.replace(/,/g, ""), unit_id: l.unitId, request_id: l.requestId, remove_here: l.removeHere })),
         },
       });
@@ -146,7 +153,7 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
   };
 
   const startOver = () => {
-    setLines([blankLine()]); setNotes(""); setTouched(false); setError(null); setSaved(null); setPreview(null);
+    setLines([blankLine()]); setNotes(""); setOccurredAt(nowLocalInput()); setDateTouched(false); setTouched(false); setError(null); setSaved(null); setPreview(null);
     setRequestId(newRequestId()); setStep("edit");
   };
 
@@ -168,7 +175,7 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
       <div data-testid="transfer-done">
         <SuccessCheck className="mb-3 size-14" />
         <p className="font-display text-xl font-bold">Sent to {saved.transfer.to_name}</p>
-        <p className="mt-1 text-sm text-muted">{saved.transfer.transfer_no} · taken out of this account and added to {saved.transfer.to_name}.</p>
+        <p className="mt-1 text-sm text-muted">{saved.transfer.transfer_no} · taken out of this account and added to {saved.transfer.to_name}{whenText ? `, dated ${whenText}` : ""}.</p>
         <ul className="mt-4 divide-y divide-black/5 overflow-hidden rounded-2xl bg-paper ring-1 ring-black/5">
           {saved.transfer.lines.map((t, i) => {
             const it = byId.get(filled[i]?.item?.id ?? "");
@@ -203,7 +210,7 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
       <div>
         <div className="rounded-3xl bg-rose p-5 ring-1 ring-burgundy/15">
           <p className="font-semibold">Send {filled.length} item{filled.length === 1 ? "" : "s"} to {target?.name}?</p>
-          <p className="mt-1 text-sm text-muted">They&apos;re taken out of this account and added to {target?.name} straight away.</p>
+          <p className="mt-1 text-sm text-muted">They&apos;re taken out of this account and added to {target?.name}{whenText ? `, dated ${whenText}` : " now"}.</p>
           <ol className="mt-3 divide-y divide-black/5 rounded-2xl bg-white/80 text-sm">
             {filled.map((l, i) => {
               const there = m.get(l.item!.id);
@@ -301,6 +308,13 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
         <Plus className="size-4" /> {lines.length >= MAX_LINES ? `Maximum of ${MAX_LINES} items reached` : `Add another item (${lines.length}/${MAX_LINES})`}
       </button>
 
+      {canBackdate && (
+        <div className="mt-5">
+          <WhenPicker label="When was it transferred?" value={occurredAt} touched={dateTouched} canBackdate
+            onChange={(v, t) => { setOccurredAt(v); setDateTouched(t); }} />
+        </div>
+      )}
+
       <Field label="Note" htmlFor="transfer-note" hint="Optional, e.g. why it's being moved" className="mt-5">
         <Input id="transfer-note" value={notes} onChange={(e) => setNotes(e.target.value)} />
       </Field>
@@ -327,7 +341,7 @@ export function TransferHistory({ rows, storeId }: { rows: TransferRow[]; storeI
           <li key={t.id} className="py-3 text-sm" data-testid="transfer-row">
             <div className="flex items-center justify-between gap-3">
               <p className="font-semibold">{out ? `Sent to ${t.to_name}` : `Received from ${t.from_name}`}</p>
-              <span className="shrink-0 text-xs text-muted">{t.transfer_no} · {new Date(t.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+              <span className="shrink-0 text-xs text-muted">{t.transfer_no} · {new Date(t.occurred_at ?? t.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
             </div>
             <p className="mt-0.5 text-muted">
               {t.lines.map((l) => `${l.name} × ${formatQty(l.quantity)} ${l.unit_symbol}`).join(", ")}
