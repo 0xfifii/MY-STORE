@@ -1712,3 +1712,18 @@ describe("99g. Transfer on an earlier date", () => {
     expect((await item(cup)).quantity).toBe("30.000000");
   });
 });
+
+describe("99h. Search forgives spelling mistakes", () => {
+  it("finds Mozzarella Cheese when typed mozarella or mozxarella, and keeps exact matches first", async () => {
+    const mozz = await createItem("Mozzarella Cheese", "kg");
+    const names = async (q: string) => (await owner.get(`/api/items?q=${encodeURIComponent(q)}&pageSize=10`)).data.rows.map((r: { id: string; name: string }) => r);
+    for (const typo of ["mozarella", "mozxarella", "Mozzarela", "mozzarella"]) {
+      const rows = await names(typo);
+      expect(rows[0]?.id, typo).toBe(mozz);
+    }
+    expect((await names("moz")).map((r: { id: string }) => r.id)).toContain(mozz);
+    expect((await names("rice")).map((r: { id: string }) => r.id)).not.toContain(mozz);
+    // Short searches stay exact: three letters don't pull in look-alikes.
+    expect((await names("xyz")).length).toBe(0);
+  });
+});

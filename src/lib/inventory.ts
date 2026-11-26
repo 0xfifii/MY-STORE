@@ -134,9 +134,14 @@ export async function listItems(p: ItemListParams) {
   const where: string[] = [];
   const params: unknown[] = [];
   if (!p.includeArchived) where.push("i.archived_at IS NULL");
-  if (p.q && p.q.trim()) {
-    params.push(`%${p.q.trim().toLowerCase()}%`);
-    where.push(`(lower(i.name) LIKE $${params.length} OR lower(i.sku) LIKE $${params.length})`);
+  const term = p.q?.trim().toLowerCase() ?? "";
+  let termIdx = 0;
+  if (term) {
+    // Exact text, or a close spelling ("mozarella" finds "Mozzarella Cheese") once there are 4+ letters.
+    params.push(`%${term}%`, term);
+    termIdx = params.length;
+    where.push(`(lower(i.name) LIKE $${termIdx - 1} OR lower(i.sku) LIKE $${termIdx - 1}
+                OR (length($${termIdx}) >= 4 AND word_similarity($${termIdx}, lower(i.name)) >= 0.45))`);
   }
   if (p.category) {
     params.push(p.category);
@@ -155,17 +160,14 @@ export async function listItems(p: ItemListParams) {
   const page = Math.max(p.page ?? 1, 1);
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
-  // Exact-code matches first when searching, so the right item is obvious.
+  // When searching: exact code first, then names containing the text, then the closest spellings.
   let order = `${sortCol} ${dir}, lower(i.name) ASC`;
-  if (p.q && p.q.trim()) {
-    params.push(p.q.trim().toLowerCase());
-    order = `(lower(i.sku) = $${params.length}) DESC, ${order}`;
+  if (term) {
+    order = `(lower(i.sku) = $${termIdx}) DESC, (lower(i.name) LIKE $${termIdx - 1} OR lower(i.sku) LIKE $${termIdx - 1}) DESC,
+             round(word_similarity($${termIdx}, lower(i.name))::numeric, 1) DESC, ${order}`;
   }
 
-  const countRow = await queryOne<{ n: number }>(
-    `SELECT count(*)::int AS n FROM items i ${whereSql}`,
-    params.slice(0, p.q && p.q.trim() ? params.length - 1 : params.length),
-  );
+  const countRow = await queryOne<{ n: number }>(`SELECT count(*)::int AS n FROM items i ${whereSql}`, params);
   params.push(pageSize, (page - 1) * pageSize);
   const rows = await query<ItemRow>(
     `${ITEM_SELECT} ${whereSql} ORDER BY ${order} LIMIT $${params.length - 1} OFFSET $${params.length}`,
