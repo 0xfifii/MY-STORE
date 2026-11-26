@@ -1,10 +1,10 @@
 {
-  "name": "ÌṢÚRA",
-  "short_name": "ÌṢÚRA",
+  "name": "Palm Store",
+  "short_name": "Palm Store",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#f3eee3",
-  "theme_color": "#111111",
+  "background_color": "#EDF6F9",
+  "theme_color": "#006D77",
   "icons": [
     {
       "src": "/icon.svg",

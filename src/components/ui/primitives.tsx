@@ -9,8 +9,8 @@ type Variant = "primary" | "accent" | "secondary" | "ghost" | "danger" | "outlin
 type Size = "sm" | "md" | "lg";
 
 const variantClass: Record<Variant, string> = {
-  primary: "btn-shine bg-night text-white shadow-[0_8px_18px_-10px_rgb(0_0_0/0.7)] hover:bg-[#2b2b2b] hover:shadow-[0_12px_24px_-10px_rgb(0_0_0/0.7)] disabled:bg-night/40 disabled:shadow-none",
-  accent: "btn-shine bg-[#111111] text-white shadow-[0_10px_22px_-12px_rgb(0_0_0/0.8)] hover:bg-[#2b2b2b] disabled:opacity-50",
+  primary: "btn-shine bg-night text-white shadow-[0_8px_18px_-10px_rgb(0_0_0/0.7)] hover:bg-burgundy-hover hover:shadow-[0_12px_24px_-10px_rgb(0_0_0/0.7)] disabled:bg-night/40 disabled:shadow-none",
+  accent: "btn-shine bg-burgundy text-white shadow-[0_10px_22px_-12px_rgb(0_0_0/0.8)] hover:bg-burgundy-hover disabled:opacity-50",
   secondary: "bg-white/80 text-ink border border-white shadow-sm hover:bg-paper hover:border-black/15 disabled:opacity-60",
   ghost: "text-burgundy hover:bg-rose/70 disabled:opacity-50",
   danger: "bg-bad text-white hover:bg-bad/90 disabled:opacity-60",
@@ -140,7 +140,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <span aria-hidden className="mb-2 block h-1 w-8 rounded-full bg-[#111111] page-bar" />
+        <span aria-hidden className="mb-2 block h-1 w-8 rounded-full bg-burgundy page-bar" />
         <h1 className="font-display text-[28px] font-extrabold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[36px]">{title}</h1>
         {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       </div>
@@ -156,7 +156,7 @@ export function Panel({ title, actions, children, className, bodyClass }: {
     <section className={clsx("glass rounded-[var(--radius-card)] transition-shadow duration-300", className)}>
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/70 px-5 py-4 sm:px-6">
-          {title && <h2 className="flex items-center gap-2 text-[17px] font-semibold tracking-[-0.01em] text-ink"><span aria-hidden className="size-1.5 shrink-0 rounded-full bg-[#111111]" />{title}</h2>}
+          {title && <h2 className="flex items-center gap-2 text-[17px] font-semibold tracking-[-0.01em] text-ink"><span aria-hidden className="size-1.5 shrink-0 rounded-full bg-burgundy" />{title}</h2>}
           {actions}
         </div>
       )}

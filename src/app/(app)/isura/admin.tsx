@@ -59,7 +59,7 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-[19px] font-bold tracking-[-0.01em]">Businesses <span className="font-medium text-[#111111]/40">{businesses.length}</span></h2>
+          <h2 className="text-[19px] font-bold tracking-[-0.01em]">Businesses <span className="font-medium text-ink/40">{businesses.length}</span></h2>
           <Button size="sm" onClick={() => setModal({ kind: "new" })}><Plus className="size-4" /> Add a business</Button>
         </div>
         <ul className="grid gap-4 lg:grid-cols-2" data-testid="businesses">
@@ -70,20 +70,20 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-[19px] font-bold tracking-[-0.02em]">{b.name}{b.id === activeStoreId && <span className="ml-2 rounded-md bg-black/5 px-1.5 py-0.5 align-middle text-[11px] font-semibold">viewing</span>}</p>
-                    <p className="mt-0.5 truncate text-[13px] text-[#111111]/55">{b.owners ?? "No owner yet"}</p>
+                    <p className="mt-0.5 truncate text-[13px] text-ink/55">{b.owners ?? "No owner yet"}</p>
                   </div>
                   <span className={clsx("shrink-0 rounded-lg px-2.5 py-1 text-[12px] font-bold",
-                    st.tone === "dark" ? "bg-[#111111] text-white" : st.tone === "warn" ? "bg-paper text-[#111111] ring-2 ring-[#111111]" : "bg-black/5 text-[#111111]")}>
+                    st.tone === "dark" ? "bg-burgundy text-white" : st.tone === "warn" ? "bg-paper text-ink ring-2 ring-burgundy" : "bg-black/5 text-ink")}>
                     {st.label}
                   </span>
                 </div>
                 <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                  <div className="rounded-2xl bg-black/[0.03] p-3"><dt className="text-[11px] text-[#111111]/50">Per month</dt><dd className="font-bold tabular-nums">{Number(b.price_kobo) ? naira(b.price_kobo) : "Free"}</dd></div>
-                  <div className="rounded-2xl bg-black/[0.03] p-3"><dt className="text-[11px] text-[#111111]/50">Items · users</dt><dd className="font-bold tabular-nums">{b.items} · {b.users}</dd></div>
-                  <div className="rounded-2xl bg-black/[0.03] p-3"><dt className="text-[11px] text-[#111111]/50">Last stock entry</dt><dd className="font-bold">{b.last ? day(b.last) : "None"}</dd></div>
+                  <div className="rounded-2xl bg-black/[0.03] p-3"><dt className="text-[11px] text-ink/50">Per month</dt><dd className="font-bold tabular-nums">{Number(b.price_kobo) ? naira(b.price_kobo) : "Free"}</dd></div>
+                  <div className="rounded-2xl bg-black/[0.03] p-3"><dt className="text-[11px] text-ink/50">Items · users</dt><dd className="font-bold tabular-nums">{b.items} · {b.users}</dd></div>
+                  <div className="rounded-2xl bg-black/[0.03] p-3"><dt className="text-[11px] text-ink/50">Last stock entry</dt><dd className="font-bold">{b.last ? day(b.last) : "None"}</dd></div>
                 </dl>
                 {b.pending.length > 0 && (
-                  <p className="mt-3 text-xs text-[#111111]/60">Invitation waiting: {b.pending.map((p) => `${p.email} (${p.role})`).join(", ")}</p>
+                  <p className="mt-3 text-xs text-ink/60">Invitation waiting: {b.pending.map((p) => `${p.email} (${p.role})`).join(", ")}</p>
                 )}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button size="sm" onClick={() => open(b)} disabled={b.id === activeStoreId}>Open</Button>
@@ -129,7 +129,7 @@ export function IsuraAdmin({ businesses, payments, activeStoreId, paystack, webh
       {link && (
         <Modal open onClose={() => setLink(null)} title="Invitation ready" footer={<Button onClick={() => setLink(null)}>Done</Button>}>
           <p className="text-sm">{link.note}</p>
-          <p className="mt-3 text-sm text-[#111111]/60">You can also send this link yourself (WhatsApp, SMS). It works for 7 days:</p>
+          <p className="mt-3 text-sm text-ink/60">You can also send this link yourself (WhatsApp, SMS). It works for 7 days:</p>
           <div className="mt-2 flex gap-2">
             <Input readOnly value={link.url} onFocus={(e) => e.target.select()} data-testid="invite-link" />
             <Button variant="secondary" onClick={() => { navigator.clipboard?.writeText(link.url); toast.success("Link copied"); }}>Copy</Button>
@@ -152,7 +152,7 @@ function PaystackCard({ paystack, webhookUrl }: { paystack: { mode: string; endi
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
   return (
-    <section className="rounded-[28px] bg-[#111111] p-6 text-white">
+    <section className="rounded-[28px] bg-burgundy p-6 text-white">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-[19px] font-bold">Paystack</h2>
@@ -163,7 +163,7 @@ function PaystackCard({ paystack, webhookUrl }: { paystack: { mode: string; endi
       </div>
       <form onSubmit={save} className="mt-4 flex flex-col gap-2 sm:flex-row">
         <Input type="password" value={key} onChange={(e) => setKey(e.target.value.trim())} placeholder={paystack ? "Paste a new key to replace it" : "sk_test_… or sk_live_…"}
-          className="bg-paper text-[#111111]" aria-label="Paystack secret key" autoComplete="off" />
+          className="bg-paper text-ink" aria-label="Paystack secret key" autoComplete="off" />
         <Button type="submit" variant="secondary" loading={busy} disabled={!key}>Save key</Button>
       </form>
       {err && <p role="alert" className="mt-2 text-sm text-red-300">{err}</p>}
@@ -226,7 +226,7 @@ function RecordPayment({ b, onClose }: { b: B; onClose: () => void }) {
   return (
     <Modal open onClose={onClose} busy={busy} title={`Record a payment · ${b.name}`}
       footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={save} loading={busy} disabled={!(Number(months) > 0)}>Add {months} month{months === "1" ? "" : "s"}</Button></>}>
-      <p className="text-sm text-[#111111]/60">For a bank transfer or cash paid to you directly, or a free extension (amount 0). The months are added on top of what&apos;s left, and a paused or ended account unlocks.</p>
+      <p className="text-sm text-ink/60">For a bank transfer or cash paid to you directly, or a free extension (amount 0). The months are added on top of what&apos;s left, and a paused or ended account unlocks.</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <Field label="Months" htmlFor="rp-m" required><Input id="rp-m" inputMode="numeric" value={months} onChange={(e) => setMonths(e.target.value.replace(/\D/g, ""))} /></Field>
         <Field label="Amount received (₦)" htmlFor="rp-a"><Input id="rp-a" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))} /></Field>
@@ -284,7 +284,7 @@ function NewOwner({ b, onClose, onLink }: { b: B; onClose: () => void; onLink: (
   return (
     <Modal open onClose={onClose} busy={busy} title={`Hand ${b.name} to a new owner`}
       footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={save} loading={busy} disabled={!email.includes("@")}>Send invitation</Button></>}>
-      <p className="text-sm text-[#111111]/60">They get an email with a link to set their password (or confirm it, if they already work there). When they accept, they become the owner. You stay the ÌṢÚRA admin above them.</p>
+      <p className="text-sm text-ink/60">They get an email with a link to set their password (or confirm it, if they already work there). When they accept, they become the owner. You stay the Palm Store admin above them.</p>
       <Field label="New owner's email" htmlFor="no-email" required className="mt-4"><Input id="no-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus /></Field>
       <label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-0.5 size-4 accent-black" checked={demote} onChange={(e) => setDemote(e.target.checked)} /> Make the current owner(s) staff when they accept{b.owners ? ` (${b.owners})` : ""}</label>
       {err && <p role="alert" className="mt-3 text-sm text-bad">{err}</p>}
@@ -316,8 +316,8 @@ function SignupCard({ signup }: { signup: { allow: boolean; trialDays: number; p
           </p>
         </div>
         <button type="button" role="switch" aria-checked={f.allow} onClick={() => setF({ ...f, allow: !f.allow })}
-          className={clsx("flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold transition", f.allow ? "bg-[#111111] text-white" : "bg-rose text-ink ring-1 ring-black/10")}>
-          <span className={clsx("size-2.5 rounded-full", f.allow ? "bg-gold" : "bg-[#111111]/30")} /> {f.allow ? "Sign-ups open" : "Sign-ups closed"}
+          className={clsx("flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold transition", f.allow ? "bg-burgundy text-white" : "bg-rose text-ink ring-1 ring-black/10")}>
+          <span className={clsx("size-2.5 rounded-full", f.allow ? "bg-gold" : "bg-burgundy/30")} /> {f.allow ? "Sign-ups open" : "Sign-ups closed"}
         </button>
       </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -356,7 +356,7 @@ function AccountFinder() {
     setBusy(true);
     try {
       await api("/api/isura/accounts/own-business", { method: "POST", json: { email: acc.email, company_name: company } });
-      toast.success(`${acc.name} now has their own empty business`, `“${company}”. They'll see it next time they open ÌṢÚRA.`);
+      toast.success(`${acc.name} now has their own empty business`, `“${company}”. They'll see it next time they open Palm Store.`);
       setCompany("");
       await find();
       router.refresh();
@@ -376,7 +376,7 @@ function AccountFinder() {
         <div className="mt-4 rounded-2xl bg-canvas/70 p-4 text-sm ring-1 ring-black/[0.05]">
           <p className="font-semibold">{acc.name} <span className="font-normal text-muted">· {acc.email}</span></p>
           <p className="mt-1">
-            {acc.is_platform_admin ? "Your ÌṢÚRA admin account" : acc.role === "owner" ? "Owner" : acc.role === "staff" ? "Staff" : "Viewer"} of{" "}
+            {acc.is_platform_admin ? "Your Palm Store admin account" : acc.role === "owner" ? "Owner" : acc.role === "staff" ? "Staff" : "Viewer"} of{" "}
             <strong>{acc.store_name}</strong> (business #{acc.store_id}) · {acc.items} item{acc.items === 1 ? "" : "s"}, {acc.txns} stock record{acc.txns === 1 ? "" : "s"}, {acc.users} user{acc.users === 1 ? "" : "s"}
           </p>
           {acc.is_platform_admin ? null : ownedAlone && acc.items === 0 ? (
@@ -424,12 +424,12 @@ function TransferLinks({ b, all, onClose }: { b: B; all: B[]; onClose: () => voi
   return (
     <Modal open onClose={onClose} title={`Transfers for ${b.name}`}
       footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={save} loading={busy}>Save</Button></>}>
-      <p className="text-sm text-[#111111]/60">People in {b.name} with Stock Out permission can send items to the businesses you tick, and those businesses can send back. You can transfer between any businesses yourself.</p>
+      <p className="text-sm text-ink/60">People in {b.name} with Stock Out permission can send items to the businesses you tick, and those businesses can send back. You can transfer between any businesses yourself.</p>
       <ul className="mt-3 space-y-1.5">
         {others.map((o) => (
           <li key={o.id}>
             <label className="flex items-center gap-3 rounded-2xl bg-black/[0.03] px-3 py-2.5 text-sm font-semibold">
-              <input type="checkbox" className="size-4 accent-[#111111]" checked={picked.includes(o.id)}
+              <input type="checkbox" className="size-4 accent-burgundy" checked={picked.includes(o.id)}
                 onChange={(e) => setPicked((p) => (e.target.checked ? [...p, o.id] : p.filter((x) => x !== o.id)))} />
               {o.name}
             </label>

@@ -29,11 +29,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
     <div className="min-h-dvh bg-canvas px-4 py-8">
       <div className="mx-auto max-w-xl">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2 text-lg font-bold"><Cowry className="size-8" /> ÌṢÚRA</span>
+          <span className="flex items-center gap-2 text-lg font-bold"><Cowry className="size-8" /> Palm Store</span>
           {ended ? <SignOutLink /> : <Link href="/dashboard" className="text-sm font-semibold underline">Back to the app</Link>}
         </div>
 
-        <section className="mt-6 overflow-hidden rounded-[28px] bg-[#111111] p-7 text-white">
+        <section className="mt-6 overflow-hidden rounded-[28px] bg-burgundy p-7 text-white">
           <p className="text-sm text-white/60">{b.name}</p>
           <h1 className="mt-1 text-[30px] font-bold leading-tight tracking-[-0.02em]" data-testid="billing-title">
             {b.status === "paused" ? "Your account is paused" : ended ? "Your subscription has ended" : "Your subscription"}
@@ -43,7 +43,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               ? "Everything is safe and nothing has been deleted. Renew to unlock the app straight away."
               : b.paid_until ? `Paid until ${fmtDate(b.paid_until)}${b.days_left !== null ? ` (${b.days_left} day${b.days_left === 1 ? "" : "s"} left)` : ""}.` : "No end date."}
           </p>
-          {b.status === "paused" && <p className="mt-2 text-sm text-white/60">ÌṢÚRA paused this account. Contact ÌṢÚRA if you think this is a mistake.</p>}
+          {b.status === "paused" && <p className="mt-2 text-sm text-white/60">Palm Store paused this account. Contact Palm Store if you think this is a mistake.</p>}
           <p className="mt-6 text-xs uppercase tracking-[0.16em] text-white/50">{TAGLINE}</p>
         </section>
 
@@ -51,11 +51,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
         <section className="mt-4 rounded-[28px] bg-paper p-6 ring-1 ring-black/5">
           {monthly <= 0 ? (
-            <p className="text-sm text-[#111111]/70">No price is set for this subscription yet. Contact ÌṢÚRA to renew.</p>
+            <p className="text-sm text-ink/70">No price is set for this subscription yet. Contact Palm Store to renew.</p>
           ) : !owner ? (
-            <p className="text-sm text-[#111111]/70">Only the business owner can renew. Ask them to sign in and pay; the app unlocks for everyone as soon as they do.</p>
+            <p className="text-sm text-ink/70">Only the business owner can renew. Ask them to sign in and pay; the app unlocks for everyone as soon as they do.</p>
           ) : !key ? (
-            <p className="text-sm text-[#111111]/70">Online payment isn&apos;t switched on yet. Contact ÌṢÚRA to renew.</p>
+            <p className="text-sm text-ink/70">Online payment isn&apos;t switched on yet. Contact Palm Store to renew.</p>
           ) : (
             <PayButton monthly={monthly} />
           )}
@@ -67,7 +67,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             <ul className="mt-3 divide-y divide-black/5 text-sm">
               {payments.map((p) => (
                 <li key={p.reference} className="flex items-center justify-between gap-3 py-2.5">
-                  <span>{new Date(p.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · {p.months} month{p.months === 1 ? "" : "s"}{p.method === "manual" ? " (recorded by ÌṢÚRA)" : ""}</span>
+                  <span>{new Date(p.paid_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · {p.months} month{p.months === 1 ? "" : "s"}{p.method === "manual" ? " (recorded by Palm Store)" : ""}</span>
                   <strong className="tabular-nums">{formatMoney(Number(p.amount_kobo) / 100, "₦")}</strong>
                 </li>
               ))}

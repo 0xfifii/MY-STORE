@@ -17,7 +17,7 @@ const schema = z.object({
 export const POST = handle(async (req) => {
   const input = schema.parse(await readJson(req));
   const hash = await hashPassword(input.password);
-  // First run: the person setting up becomes the ÌṢÚRA admin and the owner of business #1.
+  // First run: the person setting up becomes the Palm Store admin and the owner of business #1.
   const id = await withStore(null, () => withTransaction(async (c) => {
     await c.query("LOCK TABLE users IN EXCLUSIVE MODE");
     const n = await c.query("SELECT 1 FROM users LIMIT 1");

@@ -89,10 +89,10 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={`/api/items/${it.id}/photo?v=${it.photo_v}`} alt="" loading="lazy" className="size-full object-cover grayscale transition duration-500 group-hover:scale-[1.04] group-hover:grayscale-0" />
                     : <PhotoPlaceholder name={it.name} className="size-full transition duration-500 group-hover:scale-[1.04]" />}
-                  <span className={`absolute left-3 top-3 rounded-lg px-2.5 py-1 text-[11px] font-bold shadow-sm ${it.status === "out" ? "bg-paper text-[#111111]" : it.status === "low" ? "bg-[#111111] text-white ring-1 ring-white/60" : "bg-white/90 text-[#111111]"}`}>
+                  <span className={`absolute left-3 top-3 rounded-lg px-2.5 py-1 text-[11px] font-bold shadow-sm ${it.status === "out" ? "bg-paper text-ink" : it.status === "low" ? "bg-burgundy text-white ring-1 ring-white/60" : "bg-white/90 text-ink"}`}>
                     {status}
                   </span>
-                  <span className="absolute bottom-3 right-3 rounded-lg bg-paper px-2.5 py-1 text-[12px] font-bold text-[#111111] shadow-sm tabular-nums">
+                  <span className="absolute bottom-3 right-3 rounded-lg bg-paper px-2.5 py-1 text-[12px] font-bold text-ink shadow-sm tabular-nums">
                     {formatMoney(it.stock_value, sym)}
                   </span>
                 </Link>
@@ -100,20 +100,20 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                 {/* Name, category and the quantity on the right (like the distance pin in the reference) */}
                 <div className="flex items-start justify-between gap-3 px-1.5 pt-3.5">
                   <div className="min-w-0">
-                    <Link href={`/items/${it.id}`} className="block truncate text-[18px] font-bold leading-tight tracking-[-0.02em] text-[#111111] hover:underline">{it.name}</Link>
-                    <p className="mt-0.5 truncate text-[13px] text-[#111111]/55">{it.category_name ?? "Uncategorised"} · <span className="tabular-nums">{it.sku}</span></p>
+                    <Link href={`/items/${it.id}`} className="block truncate text-[18px] font-bold leading-tight tracking-[-0.02em] text-ink hover:underline">{it.name}</Link>
+                    <p className="mt-0.5 truncate text-[13px] text-ink/55">{it.category_name ?? "Uncategorised"} · <span className="tabular-nums">{it.sku}</span></p>
                   </div>
-                  <p className="flex shrink-0 items-center gap-1.5 pt-0.5 text-[15px] font-bold tabular-nums text-[#111111]" title={`${formatQty(it.quantity)} ${it.unit_symbol} in stock`}>
-                    <Boxes className="size-[18px]" />{formatQty(it.quantity)} <span className="text-[13px] font-semibold text-[#111111]/55">{it.unit_symbol}</span>
+                  <p className="flex shrink-0 items-center gap-1.5 pt-0.5 text-[15px] font-bold tabular-nums text-ink" title={`${formatQty(it.quantity)} ${it.unit_symbol} in stock`}>
+                    <Boxes className="size-[18px]" />{formatQty(it.quantity)} <span className="text-[13px] font-semibold text-ink/55">{it.unit_symbol}</span>
                   </p>
                 </div>
 
                 <div className="mx-1.5 mt-3" aria-hidden>
                   <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.07]">
-                    <div className={`h-full rounded-full transition-[width] duration-700 ease-out ${it.status === "out" ? "bg-bad" : it.status === "low" ? "bg-gold" : "bg-gradient-to-r from-[#111111] to-[#3a3a3a]"}`} style={{ width: `${level}%` }} />
+                    <div className={`h-full rounded-full transition-[width] duration-700 ease-out ${it.status === "out" ? "bg-bad" : it.status === "low" ? "bg-gold" : "bg-gradient-to-r from-burgundy to-[#3a3a3a]"}`} style={{ width: `${level}%` }} />
                   </div>
-                  <p className="mt-1.5 flex items-baseline justify-between text-[11px] font-medium text-[#111111]/50 tabular-nums">
-                    <span className="text-[13px] font-extrabold tracking-[-0.01em] text-[#111111]" data-testid="unit-cost">{formatUnitCost(it.avg_cost, sym)} <span className="font-semibold text-[#111111]/50">/ {it.unit_symbol}</span></span>
+                  <p className="mt-1.5 flex items-baseline justify-between text-[11px] font-medium text-ink/50 tabular-nums">
+                    <span className="text-[13px] font-extrabold tracking-[-0.01em] text-ink" data-testid="unit-cost">{formatUnitCost(it.avg_cost, sym)} <span className="font-semibold text-ink/50">/ {it.unit_symbol}</span></span>
                     <span>Min {formatQty(it.min_stock_level)} {it.unit_symbol}</span>
                   </p>
                 </div>
@@ -122,12 +122,12 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                   <StockButtons itemId={it.id} name={it.name} />
                   <div className="flex gap-1.5">
                     <ChangePriceButton itemId={it.id} label={`Change the price of ${it.name}`}
-                      className="flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-[#111111] ring-1 ring-black/15 transition hover:scale-110 hover:bg-[#111111] hover:text-white active:scale-95">
+                      className="flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-ink ring-1 ring-black/15 transition hover:scale-110 hover:bg-burgundy hover:text-white active:scale-95">
                       {sym}
                     </ChangePriceButton>
                     {can(user, "item.write") && (
                       <Link href={`/items/${it.id}/edit`} aria-label={`Edit ${it.name}`}
-                        className="flex size-8 items-center justify-center rounded-full text-[#111111] ring-1 ring-black/15 transition hover:scale-110 hover:bg-[#111111] hover:text-white active:scale-95">
+                        className="flex size-8 items-center justify-center rounded-full text-ink ring-1 ring-black/15 transition hover:scale-110 hover:bg-burgundy hover:text-white active:scale-95">
                         <Pencil className="size-3.5" />
                       </Link>
                     )}

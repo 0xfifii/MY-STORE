@@ -16,14 +16,14 @@ const schema = z.object({
 /**
  * Accept an invitation. New email: an account is created with the chosen password. Someone already in
  * this business: confirms with their password and gets the new role. As owner, previous owners become
- * staff (unless the invitation said otherwise). The ÌṢÚRA admin is never changed.
+ * staff (unless the invitation said otherwise). The Palm Store admin is never changed.
  */
 export const POST = handle(async (req) => withStore(null, async () => {
   const input = schema.parse(await readJson(req));
   const inv = await getInvite(input.token);
   if (!inv) throw new AppError("INVITE_INVALID", "This invitation link isn't valid.", 404);
   if (inv.accepted) throw new AppError("INVITE_USED", "This invitation has already been used. Sign in instead.", 409);
-  if (inv.expired) throw new AppError("INVITE_EXPIRED", "This invitation has expired. Ask ÌṢÚRA to send a new one.", 410);
+  if (inv.expired) throw new AppError("INVITE_EXPIRED", "This invitation has expired. Ask Palm Store to send a new one.", 410);
 
   const userId = await withTransaction(async (c) => {
     const lock = await c.query("SELECT 1 FROM store_invites WHERE token_hash = $1 AND accepted_at IS NULL FOR UPDATE", [hashToken(input.token)]);
@@ -34,7 +34,7 @@ export const POST = handle(async (req) => withStore(null, async () => {
     if (found.rowCount) {
       const u = found.rows[0];
       if (u.store_id !== inv.store_id && !u.is_platform_admin) {
-        throw new AppError("EMAIL_IN_OTHER_BUSINESS", "This email is already used by another business on ÌṢÚRA. Ask for the invitation to go to a different email.", 409);
+        throw new AppError("EMAIL_IN_OTHER_BUSINESS", "This email is already used by another business on Palm Store. Ask for the invitation to go to a different email.", 409);
       }
       if (!(await verifyPassword(input.password, u.password_hash))) throw new AppError("BAD_LOGIN", "That password is not right for this email.", 401);
       id = u.id;

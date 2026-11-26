@@ -1,12 +1,12 @@
 /**
- * The ÌṢÚRA helper: a cheerful cowry shell (the brand mark) drawn in black line on white, with gold speckles.
+ * The Palm Store helper: a cheerful cowry shell (the brand mark) drawn in black line on white, with gold speckles.
  * Pure SVG + CSS animation (blink, bob, wave, jump), so it costs nothing to load and respects
  * reduced-motion settings.
  */
 export type MascotMood = "happy" | "wave" | "excited" | "worried" | "sleepy" | "thinking";
 
 export function Mascot({ mood = "happy", className = "size-28", label }: { mood?: MascotMood; className?: string; label?: string }) {
-  const ink = "#111111";
+  const ink = "#006D77";
   const eyes =
     mood === "excited" ? (
       <g fill="none" stroke={ink} strokeWidth="3.6" strokeLinecap="round">
@@ -20,8 +20,8 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
       <g className="velvy-eyes" fill={ink}>
         <ellipse cx="48" cy="78" rx="4.6" ry="5.4" />
         <ellipse cx="72" cy="78" rx="4.6" ry="5.4" />
-        <circle cx="49.6" cy="76.2" r="1.5" fill="#fbf8f2" />
-        <circle cx="73.6" cy="76.2" r="1.5" fill="#fbf8f2" />
+        <circle cx="49.6" cy="76.2" r="1.5" fill="#ffffff" />
+        <circle cx="73.6" cy="76.2" r="1.5" fill="#ffffff" />
       </g>
     );
   const brows = mood === "worried" ? (
@@ -38,21 +38,21 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
   const anim = mood === "excited" ? "velvy-jump" : mood === "sleepy" ? "velvy-breathe" : "velvy-bob";
 
   return (
-    <svg viewBox="0 0 120 150" className={className} role="img" aria-label={label ?? "The ÌṢÚRA helper"}>
+    <svg viewBox="0 0 120 150" className={className} role="img" aria-label={label ?? "The Palm Store helper"}>
       <ellipse cx="60" cy="143" rx="34" ry="4.5" fill={ink} opacity="0.12" className="velvy-shadow" />
       <g className={anim}>
         {/* left arm */}
         <g className={mood === "worried" ? "velvy-fidget" : ""}>
           <path d="M19 92c-8-2-12 4-12 10" fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
-          <circle cx="7" cy="104" r="4" fill="#fbf8f2" stroke={ink} strokeWidth="3" />
+          <circle cx="7" cy="104" r="4" fill="#ffffff" stroke={ink} strokeWidth="3" />
         </g>
         {/* right arm (waves) */}
         <g className={mood === "wave" || mood === "excited" ? "velvy-wave" : ""} style={{ transformOrigin: "100px 90px" }}>
           <path d={mood === "wave" || mood === "excited" ? "M101 90c8-4 12-12 12-20" : "M101 92c8-2 12 4 12 10"} fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" />
-          <circle cx={113} cy={mood === "wave" || mood === "excited" ? 67 : 104} r="4" fill="#fbf8f2" stroke={ink} strokeWidth="3" />
+          <circle cx={113} cy={mood === "wave" || mood === "excited" ? 67 : 104} r="4" fill="#ffffff" stroke={ink} strokeWidth="3" />
         </g>
         {/* cowry shell body: an egg-shaped shell with small notches at each end */}
-        <path d="M60 28C88 28 100 58 100 84s-15 50-40 50-40-24-40-50S32 28 60 28z" fill="#fbf8f2" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
+        <path d="M60 28C88 28 100 58 100 84s-15 50-40 50-40-24-40-50S32 28 60 28z" fill="#ffffff" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
         <path d="M56 30l4 5 4-5M56 132l4-5 4 5" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         {/* gold speckles on the shell's back */}
         <g fill="#c9a227">
@@ -73,7 +73,7 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
         {eyes}
         {mouth}
         {mood === "sleepy" && (
-          <g fill={ink} fontFamily="'Inter Variable', sans-serif" fontWeight="700" className="velvy-zz">
+          <g fill={ink} fontFamily="'Plus Jakarta Sans Variable', sans-serif" fontWeight="700" className="velvy-zz">
             <text x="94" y="36" fontSize="12">z</text><text x="103" y="24" fontSize="9">z</text>
           </g>
         )}
@@ -82,7 +82,7 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
             <path d="M14 46l-6-4M12 58H5M104 34l6-5" />
           </g>
         )}
-        {mood === "thinking" && <text x="96" y="38" fontSize="20" fontWeight="700" fill={ink} fontFamily="'Inter Variable', sans-serif" className="velvy-zz">?</text>}
+        {mood === "thinking" && <text x="96" y="38" fontSize="20" fontWeight="700" fill={ink} fontFamily="'Plus Jakarta Sans Variable', sans-serif" className="velvy-zz">?</text>}
       </g>
     </svg>
   );

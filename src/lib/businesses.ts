@@ -80,12 +80,12 @@ export async function sendRenewalReminders() {
     const to = [...new Set([b.billing_email, ...owners.map((o) => o.email)].filter(Boolean) as string[])];
     if (!to.length) continue;
     const when = new Date(b.paid_until).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Lagos" });
-    const text = `Hello,\n\nYour ÌṢÚRA subscription for ${b.name} ends on ${when}.\n\nRenew now to keep recording stock without interruption` +
+    const text = `Hello,\n\nYour Palm Store subscription for ${b.name} ends on ${when}.\n\nRenew now to keep recording stock without interruption` +
       (Number(b.price_kobo) > 0 ? ` (${formatMoney(Number(b.price_kobo) / 100, "₦")} for ${b.interval_months} month${b.interval_months === 1 ? "" : "s"}).` : ".") +
       `\n\nWhen it ends, the account is paused until it's renewed. Nothing is deleted.`;
     try {
       await withStore(b.id, () => sendMail({
-        to, subject: `ÌṢÚRA: your subscription ends ${when}`, text,
+        to, subject: `Palm Store: your subscription ends ${when}`, text,
         html: emailHtml(b.name, "Your subscription ends soon", text, { label: "Renew now", href: `${publicBaseUrl()}/billing` }),
         kind: "message",
       }));
@@ -118,7 +118,7 @@ export async function runForAllBusinesses(now = new Date()) {
 // Creating businesses and handing them to an owner
 // ---------------------------------------------------------------------------------------------
 
-/** A new business with its own settings. paidUntil null = no end date (e.g. ÌṢÚRA's own). */
+/** A new business with its own settings. paidUntil null = no end date (e.g. Palm Store's own). */
 export async function createBusiness(b: { name: string; priceKobo: number; paidUntil: Date | null; billingEmail?: string | null; notes?: string | null }) {
   const id = await withStore(null, async () => {
     const row = await queryOne<{ id: number }>(
@@ -144,15 +144,15 @@ export async function createInvite(i: { storeId: number; email: string; role?: "
   return `${publicBaseUrl()}/invite/${token}`;
 }
 
-/** Emails the invitation (from ÌṢÚRA's account, or the business's own). Never throws; says what happened. */
+/** Emails the invitation (from Palm Store's account, or the business's own). Never throws; says what happened. */
 export async function emailInvite(storeId: number, email: string, link: string, role: string) {
   const b = await getBusiness(storeId);
-  const text = `Hello,\n\nYou've been invited to ${role === "owner" ? "take over as the owner of" : "join"} ${b?.name ?? "a business"} on ÌṢÚRA, the stock and inventory app.\n\n` +
+  const text = `Hello,\n\nYou've been invited to ${role === "owner" ? "take over as the owner of" : "join"} ${b?.name ?? "a business"} on Palm Store, the stock and inventory app.\n\n` +
     `Open the link below to accept and set your password. The link works for ${INVITE_DAYS} days.\n\n${link}`;
   try {
     await withStore(storeId, () => sendMail({
-      to: [email], subject: `ÌṢÚRA: you're invited to ${b?.name ?? "a business"}`, text,
-      html: emailHtml(b?.name ?? "ÌṢÚRA", role === "owner" ? "You're the new owner" : "You're invited", text, { label: "Accept invitation", href: link }),
+      to: [email], subject: `Palm Store: you're invited to ${b?.name ?? "a business"}`, text,
+      html: emailHtml(b?.name ?? "Palm Store", role === "owner" ? "You're the new owner" : "You're invited", text, { label: "Accept invitation", href: link }),
       kind: "message",
     }));
     return "sent" as const;
@@ -171,7 +171,7 @@ export async function paystackKey() {
 
 async function paystack<T>(path: string, init?: RequestInit): Promise<T> {
   const key = await paystackKey();
-  if (!key) throw new Error("Online payment isn't set up yet. Ask ÌṢÚRA to add the Paystack key.");
+  if (!key) throw new Error("Online payment isn't set up yet. Ask Palm Store to add the Paystack key.");
   const res = await fetch(`${process.env.PAYSTACK_API_URL ?? "https://api.paystack.co"}${path}`, {
     ...init,
     headers: { authorization: `Bearer ${key}`, "content-type": "application/json", ...(init?.headers ?? {}) },
@@ -187,7 +187,7 @@ export async function startCheckout(storeId: number, months: number, email: stri
   const b = await getBusiness(storeId);
   if (!b) throw new Error("Business not found");
   const amount = Number(b.price_kobo) * months;
-  if (amount <= 0) throw new Error("No price is set for this subscription yet. Ask ÌṢÚRA to set it.");
+  if (amount <= 0) throw new Error("No price is set for this subscription yet. Ask Palm Store to set it.");
   const reference = `isura-${storeId}-${_uuid().slice(0, 18)}`;
   await withStore(null, () => query(
     "INSERT INTO payments (store_id, reference, amount_kobo, months, status, method, created_by) VALUES ($1,$2,$3,$4,'pending','paystack',$5)",

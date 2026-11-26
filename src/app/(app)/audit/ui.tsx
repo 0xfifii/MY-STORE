@@ -8,7 +8,7 @@ export const Td = ({ children, right, className = "" }: { children?: React.React
 );
 
 const TONES: Record<string, string> = {
-  burgundy: "from-[#111111] to-[#000000] text-white",
+  burgundy: "from-burgundy to-burgundy text-white",
   blue: "from-[#6b6b6b] to-[#333333] text-white",
   rose: "from-[#f2f2f2] to-white text-ink",
   amber: "from-[#f2f2f2] to-white text-ink",

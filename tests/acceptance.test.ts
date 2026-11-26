@@ -1,5 +1,5 @@
 /**
- * End-to-end acceptance tests for ÌṢÚRA.
+ * End-to-end acceptance tests for Palm Store.
  * Runs against a live server + real PostgreSQL database (see README "Running the tests").
  *
  *   TEST_BASE_URL=http://localhost:3100 TEST_DATABASE_URL=postgres://... npm test
@@ -473,7 +473,7 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
     const f = join(dir, "r.pdf");
     writeFileSync(f, r.data);
     const text = execFileSync("pdftotext", ["-layout", f, "-"]).toString();
-    expect(text).toContain("ÌṢÚRA");
+    expect(text).toContain("ÌṢÚRA"); // the business name stored in this test database
     expect(text).toContain("Inventory Report");
     expect(text).toMatch(/Page 1 of \d+/);
     expect(text).toContain("Stock sheet");
@@ -514,7 +514,7 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
     const call = () => fetch(`${BASE}/api/cron/daily-report`, { headers: { authorization: `Bearer ${CRON}` } }).then((r) => r.json()).then((j) => j.businesses[0]);
     expect((await call()).status).toBe("disabled");
     const s = await owner.patch("/api/settings", {
-      store_name: "ÌṢÚRA", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos",
+      store_name: "Palm Store", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos",
       auto_report_enabled: true, auto_report_time: "00:00", auto_report_covers: "same_day",
       auto_report_formats: ["pdf", "xlsx", "csv"], email_enabled: true, email_recipients: ["owner@mystore.test"],
       auto_weekly_enabled: true, auto_monthly_enabled: true,
@@ -883,7 +883,7 @@ describe("18. Resending emails and welcome emails", () => {
 describe("19. Brevo API email (most reliable on Vercel)", () => {
   const BREVO_DIR = process.env.TEST_BREVO_DIR ?? "";
   const sent = () => (BREVO_DIR && existsSync(BREVO_DIR) ? readdirSync(BREVO_DIR).map((f) => JSON.parse(readFileSync(join(BREVO_DIR, f), "utf8"))) : []);
-  const save = (key: string, from = "ÌṢÚRA <store@velvet.test>") =>
+  const save = (key: string, from = "Palm Store <store@velvet.test>") =>
     owner.req("PUT", "/api/settings/email", { smtp_host: "api.brevo.com", smtp_port: 443, smtp_user: "", smtp_pass: key, smtp_from: from, welcome_email_enabled: true });
 
   it("a wrong API key is reported clearly by the connection check", async () => {
@@ -913,7 +913,7 @@ describe("19. Brevo API email (most reliable on Vercel)", () => {
     const u = await owner.post("/api/users", { name: "Brevo Person", email: "brevo.person@velvet.test", role: "staff", password: "brevo-pass-1", include_password: true });
     expect(u.data.welcome.status).toBe("sent");
     const mails = sent();
-    expect(mails.some((m) => m.to[0].email === "me@velvet.test" && m.sender.email === "store@velvet.test" && m.sender.name === "ÌṢÚRA")).toBe(true);
+    expect(mails.some((m) => m.to[0].email === "me@velvet.test" && m.sender.email === "store@velvet.test" && m.sender.name === "Palm Store")).toBe(true);
     const receipt = mails.find((m) => m.to[0].email === "chef@velvet.test");
     expect(receipt.attachment[0].name).toMatch(/^isura-receipt-TXN-\d+\.pdf$/);
     expect(Buffer.from(receipt.attachment[0].content, "base64").subarray(0, 4).toString()).toBe("%PDF");
@@ -1269,14 +1269,14 @@ describe("24c. Movement report (only items that moved)", () => {
   });
 });
 
-describe("25. Businesses, subscriptions and ownership (ÌṢÚRA)", () => {
+describe("25. Businesses, subscriptions and ownership (Palm Store)", () => {
   const MAILS = () => (MAIL_DIR && existsSync(MAIL_DIR) ? readdirSync(MAIL_DIR).filter((f) => f.endsWith(".eml")).map((f) => readFileSync(join(MAIL_DIR, f), "utf8")) : []);
   const palm = new Session();
   let palmId = 0;
   let homeItem = "";
   const tokenOf = (link: string) => link.split("/invite/")[1];
 
-  it("only the ÌṢÚRA admin can manage businesses", async () => {
+  it("only the Palm Store admin can manage businesses", async () => {
     expect((await staff.get("/api/isura/businesses")).status).toBe(403);
     const r = await owner.get("/api/isura/businesses");
     expect(r.status).toBe(200);
@@ -1361,17 +1361,17 @@ describe("25. Businesses, subscriptions and ownership (ÌṢÚRA)", () => {
     const csv = ((await palm.get("/api/reports/export?format=csv&preset=today")).data as Buffer).toString();
     expect(csv).toContain("Zobo drink");
     expect(csv).not.toContain("Coke 50cl");
-    // a business can't see or touch ÌṢÚRA's own custom units
+    // a business can't see or touch Palm Store's own custom units
     const homeCustom = (await db.query("SELECT id FROM units WHERE store_id = 1 LIMIT 1")).rows[0];
     if (homeCustom) expect((await palm.get("/api/units")).data.units.some((u: { id: number }) => u.id === homeCustom.id)).toBe(false);
   });
 
-  it("the ÌṢÚRA admin can open a business to help, then go back", async () => {
+  it("the Palm Store admin can open a business to help, then go back", async () => {
     expect((await owner.post("/api/isura/open", { store_id: palmId })).status).toBe(200);
     const rows = (await owner.get("/api/items")).data.rows;
     expect(rows.map((x: { name: string }) => x.name)).toEqual(["Zobo drink"]);
     const page = ((await owner.get("/dashboard")).data as Buffer).toString().replace(/<!-- -->/g, "");
-    expect(page).toContain("as the ÌṢÚRA admin");
+    expect(page).toContain("as the Palm Store admin");
     expect((await staff.post("/api/isura/open", { store_id: palmId })).status).toBe(403);
     expect((await owner.post("/api/isura/open", { store_id: 1 })).status).toBe(200);
     expect((await owner.get(`/api/items/${homeItem}`)).status).toBe(200);
@@ -1401,7 +1401,7 @@ describe("25. Businesses, subscriptions and ownership (ÌṢÚRA)", () => {
     const roles = Object.fromEntries((await mgr.get("/api/users")).data.users.map((u: { email: string; role: string }) => [u.email, u.role]));
     expect(roles).toEqual({ "ceo@palmspring.test": "staff", "manager@palmspring.test": "owner" });
     expect((await mgr.get("/api/items")).data.rows.length).toBe(1);
-    // the ÌṢÚRA admin is untouched
+    // the Palm Store admin is untouched
     expect((await db.query("SELECT is_platform_admin, role FROM users WHERE email = 'owner@mystore.test'")).rows[0]).toEqual({ is_platform_admin: true, role: "owner" });
   });
 
@@ -1458,7 +1458,7 @@ describe("99. Create an account (company sign-up)", () => {
     expect((await new Session().post("/api/auth/signup", { company_name: "", name: "X", email: "x@y.test", password: "grill-pass-123" })).status).toBe(400);
   });
 
-  it("can be closed by the ÌṢÚRA admin", async () => {
+  it("can be closed by the Palm Store admin", async () => {
     expect((await owner.patch("/api/isura/settings", { allow_signup: false, trial_days: 7, price_naira: 15000 })).status).toBe(200);
     const r = await new Session().post("/api/auth/signup", { company_name: "Closed Co", name: "Y", email: "y@closed.test", password: "closed-pass-123" });
     expect(r.status).toBe(403);
@@ -1486,7 +1486,7 @@ describe("99b. Give an account its own business", () => {
     expect(items.status).toBe(200);
     expect(items.data.rows).toHaveLength(0);
     expect((await owner.get("/api/isura/accounts?email=dayo@own.test")).data.account).toMatchObject({ role: "owner", store_name: "Dayo Foods", items: 0, users: 1 });
-    // The ÌṢÚRA admin's own account can't be moved.
+    // The Palm Store admin's own account can't be moved.
     const { rows: [admin] } = await db.query("SELECT email FROM users WHERE is_platform_admin LIMIT 1");
     expect((await owner.post("/api/isura/accounts/own-business", { email: admin.email, company_name: "Nope" })).status).toBe(400);
   });
@@ -1531,7 +1531,7 @@ describe("99d. Transfer between accounts", () => {
     pbStore = (await db.query("SELECT store_id FROM users WHERE email = 'owner@palmbite.test'")).rows[0].store_id;
     plate = await createItem("Takeaway Plate", "pcs");
     expect((await stockIn(owner, plate, "30", "pcs", "100")).status).toBe(201);
-    // The ÌṢÚRA admin can send to any business; a business owner only to linked ones.
+    // The Palm Store admin can send to any business; a business owner only to linked ones.
     expect((await owner.get("/api/transfers")).data.targets.map((t: { id: number }) => t.id)).toContain(pbStore);
     expect((await pb.get("/api/transfers")).data.targets).toEqual([]);
     expect((await pb.post("/api/transfers", { to_store: 1, request_id: randomUUID(), lines: [line(plate, "1")] })).status).toBe(403);

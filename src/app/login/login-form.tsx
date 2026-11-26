@@ -76,7 +76,7 @@ export function LoginForm({ next, initialError = null, initialEmail = "", allowS
       </div>
       {allowSignup && (
         <p className="pt-2 text-sm text-muted">
-          New to ÌṢÚRA? <Link href="/signup" className="font-semibold text-ink underline-offset-2 hover:underline" data-testid="signup-link">Create an account for your company</Link>
+          New to Palm Store? <Link href="/signup" className="font-semibold text-ink underline-offset-2 hover:underline" data-testid="signup-link">Create an account for your company</Link>
         </p>
       )}
     </form>

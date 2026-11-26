@@ -32,7 +32,7 @@ export type MailPayload = {
  * Store Settings. Returns null when neither is set.
  */
 export async function mailConfig(): Promise<MailConfig | null> {
-  // 1. this business's own account (Store Settings), 2. ÌṢÚRA's own account (its home business),
+  // 1. this business's own account (Store Settings), 2. Palm Store's own account (its home business),
   // 3. server SMTP_* variables.
   type Row = { smtp_host: string | null; smtp_port: number | null; smtp_user: string | null; smtp_pass: string | null; smtp_from: string | null };
   const fromRow = (s: Row | null, source: MailConfig["source"]): MailConfig | null => {
@@ -119,20 +119,20 @@ export function emailHtml(storeName: string, title: string, text: string, button
     .map((p) => `<p style="margin:0 0 14px;line-height:1.6;font-size:15px">${esc(p).replace(/\n/g, "<br>")}</p>`)
     .join("");
   const btn = button
-    ? `<p style="margin:24px 0 6px"><a href="${esc(button.href)}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:13px 26px;border-radius:14px;font-weight:700;font-size:15px">${esc(button.label)}</a></p>`
+    ? `<p style="margin:24px 0 6px"><a href="${esc(button.href)}" style="display:inline-block;background:#006D77;color:#ffffff;text-decoration:none;padding:13px 26px;border-radius:14px;font-weight:700;font-size:15px">${esc(button.label)}</a></p>`
     : "";
-  const logo = `<img src="${base}/email-logo.png?v=isura1" width="260" height="110" alt="ÌṢÚRA. Every Valuable, Accounted For." style="display:block;margin:0 auto;width:260px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;color:#111111;font-size:22px;font-weight:700">`;
+  const logo = `<img src="${base}/email-logo.png?v=palm1" width="260" height="110" alt="Palm Store. Every Valuable, Accounted For." style="display:block;margin:0 auto;width:260px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;color:#0F2A2E;font-size:22px;font-weight:700">`;
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
-<body style="margin:0;background:#f4f4f4;font-family:Inter,'Segoe UI',Arial,Helvetica,sans-serif;color:#111111">
+<body style="margin:0;background:#EDF6F9;font-family:Inter,'Segoe UI',Arial,Helvetica,sans-serif;color:#0F2A2E">
 <div style="display:none;max-height:0;overflow:hidden">${esc(title)} from ${esc(storeName)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:28px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EDF6F9;padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #ead8c6">
-<tr><td style="height:6px;background:#111111;font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td style="height:6px;background:#006D77;font-size:0;line-height:0">&nbsp;</td></tr>
 <tr><td align="center" style="padding:20px 26px 10px;background:#ffffff">${logo}</td></tr>
-<tr><td style="padding:0 26px"><div style="height:2px;background:#111111;opacity:.15;font-size:0;line-height:0">&nbsp;</div></td></tr>
+<tr><td style="padding:0 26px"><div style="height:2px;background:#006D77;opacity:.15;font-size:0;line-height:0">&nbsp;</div></td></tr>
 <tr><td style="padding:24px 26px 10px"><h1 style="margin:0 0 16px;font-size:21px;font-weight:700;color:#000000;letter-spacing:-0.2px">${esc(title)}</h1>${paras}${btn}</td></tr>
-<tr><td style="padding:16px 26px 22px;background:#111111;color:#ffffff;font-size:12px;line-height:1.5">
-<strong style="font-size:13px">${esc(storeName)}</strong><br>Sent from ÌṢÚRA, Every Valuable, Accounted For. If you weren't expecting this email you can ignore it.</td></tr>
+<tr><td style="padding:16px 26px 22px;background:#006D77;color:#ffffff;font-size:12px;line-height:1.5">
+<strong style="font-size:13px">${esc(storeName)}</strong><br>Sent from Palm Store, Every Valuable, Accounted For. If you weren't expecting this email you can ignore it.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -151,8 +151,8 @@ export async function sendMail(opts: {
   resendOf?: string | null;
 }) {
   const cfg0 = await mailConfig();
-  const store = (await queryOne<{ store_name: string }>("SELECT store_name FROM settings LIMIT 1").catch(() => null))?.store_name || "ÌṢÚRA";
-  // Every email carries the ÌṢÚRA look and a recognisable sender name.
+  const store = (await queryOne<{ store_name: string }>("SELECT store_name FROM settings LIMIT 1").catch(() => null))?.store_name || "Palm Store";
+  // Every email carries the Palm Store look and a recognisable sender name.
   if (!opts.html) opts = { ...opts, html: emailHtml(store, opts.subject.replace(new RegExp(`^${store.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:\\s*`), ""), opts.text) };
   const cfg = cfg0 && !/</.test(cfg0.from) ? { ...cfg0, from: `"${store.replace(/"/g, "")}" <${cfg0.from.trim()}>` } : cfg0;
   const payload: MailPayload = { text: opts.text, html: opts.html, replyTo: opts.replyTo, ...opts.payload };

@@ -37,8 +37,8 @@ export function MovementPicker({ kind = "movement" }: { kind?: "movement" | "ful
     ? new Date(day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })
     : mode === "month" && month ? new Date(month + "-01T12:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })
     : from && to ? `${short(from)} – ${short(to)} ${to.slice(0, 4)}` : "";
-  const tab = (on: boolean) => clsx("flex-1 rounded-xl px-3 py-1.5 text-sm font-semibold transition", on ? "bg-[#111111] text-white shadow" : "text-[#111111]/60 hover:text-[#111111]");
-  const input = "h-12 w-full rounded-2xl border border-black/10 bg-paper px-3 text-[15px] font-semibold text-[#111111] focus:border-[#111111] focus:outline-none";
+  const tab = (on: boolean) => clsx("flex-1 rounded-xl px-3 py-1.5 text-sm font-semibold transition", on ? "bg-burgundy text-white shadow" : "text-ink/60 hover:text-ink");
+  const input = "h-12 w-full rounded-2xl border border-black/10 bg-paper px-3 text-[15px] font-semibold text-ink focus:border-burgundy focus:outline-none";
 
   return (
     <div className="mt-5 rounded-2xl bg-canvas/70 p-3 ring-1 ring-black/[0.05]" data-testid={`${kind}-picker`}>
@@ -67,7 +67,7 @@ export function MovementPicker({ kind = "movement" }: { kind?: "movement" | "ful
 
       <div className="mt-3 flex gap-2">
         <a href={query ? link(query) : undefined} aria-disabled={!query} data-testid={`${kind}-pdf`}
-          className={clsx("group flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#111111] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2b2b2b] active:scale-[.98]", !query && "pointer-events-none opacity-40")}>
+          className={clsx("group flex flex-1 items-center justify-center gap-2 rounded-2xl bg-burgundy px-4 py-3 text-sm font-semibold text-white transition hover:bg-burgundy-hover active:scale-[.98]", !query && "pointer-events-none opacity-40")}>
           <Download className="size-4 transition group-hover:translate-y-0.5" /> {what} PDF{label ? ` · ${label}` : ""}
         </a>
         <a href={query ? link(query, "xlsx") : undefined} aria-disabled={!query}

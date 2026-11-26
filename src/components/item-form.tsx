@@ -290,7 +290,7 @@ export function ItemForm({
       {mode === "create" && (
         <section className="glass rounded-[var(--radius-card)] p-4 sm:p-6">
           <div className="mb-5 flex items-center gap-4">
-            <label className="group relative flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[20px] bg-[#111111] text-white transition hover:scale-[1.03]" data-testid="new-photo">
+            <label className="group relative flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[20px] bg-burgundy text-white transition hover:scale-[1.03]" data-testid="new-photo">
               {photoUrl
                 // eslint-disable-next-line @next/next/no-img-element
                 ? <img src={photoUrl} alt="" className="size-full object-cover grayscale" />

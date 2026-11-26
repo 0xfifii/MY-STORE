@@ -8,7 +8,7 @@ import { signupSettings } from "@/lib/signup";
 import { listLinks } from "@/lib/transfers";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "ÌṢÚRA admin" };
+export const metadata = { title: "Palm Store admin" };
 
 export default async function IsuraAdminPage() {
   const me = await requirePlatformAdmin("page");
@@ -32,7 +32,7 @@ export default async function IsuraAdminPage() {
   }));
   return (
     <div>
-      <PageHeader title="ÌṢÚRA admin" description="Your businesses, their subscriptions and who owns them. Only you can see this page." />
+      <PageHeader title="Palm Store admin" description="Your businesses, their subscriptions and who owns them. Only you can see this page." />
       <IsuraAdmin
         businesses={businesses}
         payments={payments}

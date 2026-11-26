@@ -45,7 +45,7 @@ const SETUP: NavItem[] = [
   { href: "/units", label: "Units", icon: Ruler, perm: "page.setup", hint: "Measuring units and conversions" },
   { href: "/users", label: "Users", icon: Users, perm: "users.manage", hint: "Logins and permissions", keywords: ["accounts", "staff"] },
   { href: "/settings", label: "Store Settings", icon: Settings, perm: "settings.write", hint: "Name, email and automatic reports" },
-  { href: "/isura", label: "ÌṢÚRA admin", icon: ShieldCheck, adminOnly: true, hint: "Businesses and subscriptions", keywords: ["isura", "billing"] },
+  { href: "/isura", label: "Palm Store admin", icon: ShieldCheck, adminOnly: true, hint: "Businesses and subscriptions", keywords: ["isura", "billing"] },
 ];
 
 const BOTTOM: NavItem[] = [
@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <ActivityProvider>
     <div className="min-h-dvh lg:pl-[17.5rem]">
       {/* Desktop sidebar: a floating white panel */}
-      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-paper text-[#111111] shadow-[0_20px_50px_-30px_rgb(0_0_0/0.35)] ring-1 ring-black/[0.06] lg:flex">
+      <aside className="fixed inset-y-3 left-3 z-30 hidden w-64 flex-col overflow-hidden rounded-[28px] bg-paper text-ink shadow-[0_20px_50px_-30px_rgb(0_0_0/0.35)] ring-1 ring-black/[0.06] lg:flex">
         <div className="relative flex h-full flex-col">{nav}</div>
       </aside>
 
@@ -102,8 +102,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {drawer && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="finder-fade absolute inset-0 bg-black/30 backdrop-blur-[3px]" onClick={() => setDrawer(false)} />
-          <aside className="menu-slide absolute inset-y-2 right-2 flex w-[19rem] max-w-[88vw] flex-col overflow-hidden rounded-[28px] bg-paper text-[#111111] shadow-[0_30px_70px_-30px_rgb(0_0_0/0.5)]">
-            <button onClick={() => setDrawer(false)} className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full bg-black/[0.05] transition hover:rotate-90 hover:bg-[#111111] hover:text-white active:scale-90" aria-label="Close menu">
+          <aside className="menu-slide absolute inset-y-2 right-2 flex w-[19rem] max-w-[88vw] flex-col overflow-hidden rounded-[28px] bg-paper text-ink shadow-[0_30px_70px_-30px_rgb(0_0_0/0.5)]">
+            <button onClick={() => setDrawer(false)} className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full bg-black/[0.05] transition hover:rotate-90 hover:bg-burgundy hover:text-white active:scale-90" aria-label="Close menu">
               <X className="size-4" />
             </button>
             {nav}
@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-90", active ? "nav-active bg-gradient-to-br from-[#111111] to-claret text-white shadow-md" : "text-muted hover:text-ink")}
+              className={clsx("flex flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-90", active ? "nav-active bg-gradient-to-br from-burgundy to-claret text-white shadow-md" : "text-muted hover:text-ink")}
               aria-current={active ? "page" : undefined}
             >
               <span className="flex h-6 items-center justify-center">
@@ -157,7 +157,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
     if (!visible.length) return null;
     return (
       <div className="mt-5">
-        <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#111111]/40">{label}</p>
+        <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">{label}</p>
         <ul className="space-y-0.5">
           {visible.map((item) => {
             const active = isActive(pathname, item);
@@ -169,7 +169,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
                   aria-current={active ? "page" : undefined}
                   className={clsx(
                     "group flex items-center gap-3 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200",
-                    active ? "bg-[#111111] text-white shadow-[0_10px_22px_-12px_rgb(0_0_0/0.7)]" : "text-[#111111]/70 hover:translate-x-1 hover:bg-black/[0.05] hover:text-[#111111]",
+                    active ? "bg-burgundy text-white shadow-[0_10px_22px_-12px_rgb(0_0_0/0.7)]" : "text-ink/70 hover:translate-x-1 hover:bg-black/[0.05] hover:text-ink",
                   )}
                 >
                   <Icon className="size-[18px] transition-transform duration-200 group-hover:scale-110" />
@@ -193,11 +193,11 @@ function SidebarNav({ pathname }: { pathname: string }) {
       {group("Setup", SETUP)}
       <div className="mt-auto rounded-3xl bg-black/[0.04] px-4 py-3">
         <p className="truncate text-sm font-semibold">{app.user.name}</p>
-        <p className="truncate text-xs text-[#111111]/50">{ROLE_LABELS[app.user.role]} · {app.storeName}</p>
+        <p className="truncate text-xs text-ink/50">{ROLE_LABELS[app.user.role]} · {app.storeName}</p>
         <AccountSwitcher />
         <div className="mt-3 flex items-center justify-between gap-2">
-          <Link href="/profile" className="text-sm font-semibold text-[#111111] underline-offset-2 hover:underline" data-testid="edit-profile">Edit profile</Link>
-          <button onClick={logout} disabled={busy} className="flex items-center gap-2 text-sm font-medium text-[#111111]/70 hover:text-[#111111]">
+          <Link href="/profile" className="text-sm font-semibold text-ink underline-offset-2 hover:underline" data-testid="edit-profile">Edit profile</Link>
+          <button onClick={logout} disabled={busy} className="flex items-center gap-2 text-sm font-medium text-ink/70 hover:text-ink">
             <LogOut className="size-4" /> Sign out
           </button>
         </div>
@@ -227,7 +227,7 @@ function AccountSwitcher() {
   };
   return (
     <div className="mt-3 border-t border-black/10 pt-2" data-testid="account-switcher">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#111111]/40">Switch account</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/40">Switch account</p>
       <ul className="mt-1 space-y-0.5">
         {app.linked.map((a) => (
           <li key={a.id}>
@@ -238,10 +238,10 @@ function AccountSwitcher() {
               className="flex w-full items-center gap-2 rounded-full px-2 py-1.5 text-left text-sm hover:bg-black/[0.05] disabled:opacity-60"
               data-testid="switch-account"
             >
-              <RefreshCcw className="size-4 shrink-0 text-[#111111]/50" />
+              <RefreshCcw className="size-4 shrink-0 text-ink/50" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{a.business}</span>
-                <span className="block truncate text-xs text-[#111111]/50">{busy === a.id ? "Switching…" : a.name}{a.locked ? " · paused" : ""}</span>
+                <span className="block truncate text-xs text-ink/50">{busy === a.id ? "Switching…" : a.name}{a.locked ? " · paused" : ""}</span>
               </span>
             </button>
           </li>

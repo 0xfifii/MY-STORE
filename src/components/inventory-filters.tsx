@@ -61,14 +61,14 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
   const allCount = categories.reduce((a, c) => a + c.count, 0);
   const tile = (on: boolean) => clsx(
     "group flex h-[92px] w-[92px] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-[22px] text-[13px] font-semibold transition duration-200 active:scale-95",
-    on ? "chip-pop bg-[#111111] text-white shadow-[0_14px_26px_-14px_rgb(0_0_0/0.8)]" : "bg-paper text-[#111111] ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_-16px_rgb(0_0_0/0.5)]",
+    on ? "chip-pop bg-burgundy text-white shadow-[0_14px_26px_-14px_rgb(0_0_0/0.8)]" : "bg-paper text-ink ring-1 ring-black/5 hover:-translate-y-0.5 hover:shadow-[0_12px_22px_-16px_rgb(0_0_0/0.5)]",
   );
 
   return (
     <div className="space-y-4" data-testid="inventory-filters">
       {/* Search */}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#111111]/60" aria-hidden />
+        <Search className="pointer-events-none absolute left-5 top-1/2 size-5 -translate-y-1/2 text-ink/60" aria-hidden />
         <input
           ref={box}
           type="search"
@@ -86,7 +86,7 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
           placeholder="Search items by name or code"
           aria-label="Search items by name or code"
           autoComplete="off"
-          className="h-14 w-full rounded-[20px] border border-transparent bg-paper pl-14 pr-28 text-[16px] text-[#111111] shadow-[0_10px_30px_-22px_rgb(0_0_0/0.6)] ring-1 ring-black/5 transition placeholder:text-[#111111]/40 focus:border-[#111111] focus:outline-none focus:ring-4 focus:ring-black/5 [&::-webkit-search-cancel-button]:hidden"
+          className="h-14 w-full rounded-[20px] border border-transparent bg-paper pl-14 pr-28 text-[16px] text-ink shadow-[0_10px_30px_-22px_rgb(0_0_0/0.6)] ring-1 ring-black/5 transition placeholder:text-ink/40 focus:border-burgundy focus:outline-none focus:ring-4 focus:ring-black/5 [&::-webkit-search-cancel-button]:hidden"
         />
         {pending && <Spinner className={`absolute top-1/2 size-4 -translate-y-1/2 ${q ? "right-[5.5rem]" : "right-5"}`} />}
         {q && <ClearSearchButton onClear={() => { setQ(""); setFocused(true); box.current?.focus(); }} />}
@@ -101,14 +101,14 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
         <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Categories">
           <button type="button" onClick={() => push({ category: "" })} className={tile(!category)} aria-pressed={!category}>
             <LayoutDashboard className="size-6" />
-            <span>All <span className={clsx("font-medium", !category ? "text-white/60" : "text-[#111111]/45")}>{allCount}</span></span>
+            <span>All <span className={clsx("font-medium", !category ? "text-white/60" : "text-ink/45")}>{allCount}</span></span>
           </button>
           {categories.map((c) => {
             const on = category === String(c.id);
             const initials = c.name.replace(/[^\p{L} ]/gu, " ").split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
             return (
               <button key={c.id} type="button" onClick={() => push({ category: on ? "" : String(c.id) })} className={tile(on)} aria-pressed={on} title={c.name}>
-                <span className={clsx("flex size-8 items-center justify-center rounded-xl text-[12px] font-bold transition group-hover:scale-110", on ? "bg-paper text-[#111111]" : "bg-[#111111] text-white")}>{initials}</span>
+                <span className={clsx("flex size-8 items-center justify-center rounded-xl text-[12px] font-bold transition group-hover:scale-110", on ? "bg-paper text-ink" : "bg-burgundy text-white")}>{initials}</span>
                 <span className="max-w-[80px] truncate">{c.name}</span>
               </button>
             );
@@ -123,15 +123,15 @@ export function InventoryFilters({ categories, sorts, total }: { categories: Cat
             const on = status === v;
             return (
               <button key={v || "all"} type="button" role="tab" aria-selected={on} onClick={() => push({ status: v })}
-                className={clsx("relative shrink-0 pb-1.5 text-[17px] font-bold tracking-[-0.01em] transition", on ? "text-[#111111]" : "text-[#111111]/30 hover:text-[#111111]/60")}>
+                className={clsx("relative shrink-0 pb-1.5 text-[17px] font-bold tracking-[-0.01em] transition", on ? "text-ink" : "text-ink/30 hover:text-ink/60")}>
                 {label}
-                <span className={clsx("absolute inset-x-0 -bottom-0.5 h-[3px] rounded-full bg-[#111111] transition-transform duration-300", on ? "scale-x-100" : "scale-x-0")} />
+                <span className={clsx("absolute inset-x-0 -bottom-0.5 h-[3px] rounded-full bg-burgundy transition-transform duration-300", on ? "scale-x-100" : "scale-x-0")} />
               </button>
             );
           })}
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-[#111111]/50">{total} item{total === 1 ? "" : "s"}</span>
+          <span className="text-ink/50">{total} item{total === 1 ? "" : "s"}</span>
           <Select aria-label="Sort" value={sp.get("sort") ?? ""} onChange={(e) => push({ sort: e.target.value })}
             className="h-10 w-44 rounded-xl border-transparent bg-paper text-sm font-semibold ring-1 ring-black/5">
             {sorts.map(([value, label]) => <option key={value} value={value}>{label}</option>)}

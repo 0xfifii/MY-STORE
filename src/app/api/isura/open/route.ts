@@ -6,7 +6,7 @@ import { getBusiness } from "@/lib/businesses";
 import { SESSION_COOKIE, forgetSessionStore, hashToken, query, withStore } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 
-/** The ÌṢÚRA admin switches which business they are looking at (for support). */
+/** The Palm Store admin switches which business they are looking at (for support). */
 export const POST = handle(async (req) => {
   await requirePlatformAdmin();
   const { store_id } = z.object({ store_id: z.coerce.number().int().positive() }).parse(await readJson(req));

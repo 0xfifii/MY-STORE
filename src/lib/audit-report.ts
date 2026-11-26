@@ -34,7 +34,7 @@ export async function buildAuditReport(month: string, generatedBy: string): Prom
 
 export const auditFileName = (month: string, ext: string) => `isura-monthly-audit-${month}.${ext}`;
 
-const BURGUNDY = "#111111";
+const BURGUNDY = "#006D77";
 type Cell = Record<string, unknown> | string;
 
 export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
@@ -202,7 +202,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
   return renderPdf({
     pageSize: "A4", pageOrientation: "landscape", pageMargins: [36, 36, 36, 40],
     info: { title: `${s.store_name}: Monthly Audit Report, ${a.label}`, author: s.store_name },
-    defaultStyle: { fontSize: 8, color: "#111" },
+    defaultStyle: { fontSize: 8, color: "#0F2A2E" },
     styles: {
       brand: { fontSize: 20, bold: true, color: BURGUNDY }, title: { fontSize: 12, bold: true, margin: [0, 2, 0, 0] },
       h2: { fontSize: 11, bold: true, color: BURGUNDY, margin: [0, 14, 0, 5] }, th: { bold: true, color: "#FFFFFF", fillColor: BURGUNDY, fontSize: 7.5 },

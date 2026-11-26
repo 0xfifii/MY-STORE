@@ -72,7 +72,7 @@ export function BulkAdd({ categories, units, canNewCategory }: { categories: { i
             <ul className="mt-2 space-y-1 text-sm">{result.skipped.map((s) => <li key={s.name}><strong>{s.name}</strong>: {s.reason}</li>)}</ul>
           </div>
         )}
-        <p className="mt-5 text-sm text-[#111111]/60">Prices are 0 for now. Set each one later with the ₦ button on the item&apos;s card or on its edit page.</p>
+        <p className="mt-5 text-sm text-ink/60">Prices are 0 for now. Set each one later with the ₦ button on the item&apos;s card or on its edit page.</p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Button onClick={() => router.push("/inventory")}>Go to Inventory</Button>
           <Button variant="secondary" onClick={() => { setResult(null); setText(""); setRemoved(new Set()); }}>Add another list</Button>
@@ -116,7 +116,7 @@ export function BulkAdd({ categories, units, canNewCategory }: { categories: { i
         <section className="rounded-[28px] bg-paper p-6 ring-1 ring-black/5" data-testid="bulk-preview">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="font-semibold">Preview · {kept.length} item{kept.length === 1 ? "" : "s"}{unit ? ` · ${total} ${unit.symbol}` : ""}</h2>
-            <p className="text-xs text-[#111111]/50">Opening stock is recorded now; prices start at 0.</p>
+            <p className="text-xs text-ink/50">Opening stock is recorded now; prices start at 0.</p>
           </div>
           <ul className="mt-3 divide-y divide-black/5">
             {rows.map((r, i) => (
@@ -126,7 +126,7 @@ export function BulkAdd({ categories, units, canNewCategory }: { categories: { i
                   {r.ok ? <span className="tabular-nums">{r.quantity} {unit?.symbol ?? ""}</span> : <span className="text-sm text-bad">{r.note}</span>}
                   {r.ok && (
                     <button type="button" aria-label={`Leave out ${r.name}`} onClick={() => setRemoved((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n; })}
-                      className="rounded-lg p-1.5 text-[#111111]/40 hover:bg-black/5 hover:text-[#111111]"><Trash2 className="size-4" /></button>
+                      className="rounded-lg p-1.5 text-ink/40 hover:bg-black/5 hover:text-ink"><Trash2 className="size-4" /></button>
                   )}
                 </span>
               </li>

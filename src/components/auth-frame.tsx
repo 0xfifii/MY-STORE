@@ -23,7 +23,7 @@ export function AuthFrame({
             <Wordmark className="h-16 w-auto sm:h-20" title={storeName} />
             {corner}
           </div>
-          <div className="mt-6 flex items-center gap-3 rounded-2xl bg-[#111111] p-3 text-white md:hidden">
+          <div className="mt-6 flex items-center gap-3 rounded-2xl bg-burgundy p-3 text-white md:hidden">
             <Cowry tone="white" className="size-12 shrink-0" />
             <p className="text-sm font-semibold leading-snug">{greeting}.<br /><span className="font-normal text-white/70">{TAGLINE}</span></p>
           </div>
@@ -32,7 +32,7 @@ export function AuthFrame({
           <div className="mt-7">{children}</div>
         </section>
 
-        <section className="relative hidden min-h-[34rem] flex-col overflow-hidden rounded-[32px] bg-[#111111] p-9 text-white shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] md:flex">
+        <section className="relative hidden min-h-[34rem] flex-col overflow-hidden rounded-[32px] bg-burgundy p-9 text-white shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] md:flex">
           {/* big white cowry with soft rings */}
           <div aria-hidden className="pointer-events-none absolute -right-16 -top-10 size-[24rem] rounded-full border border-white/10" />
           <div aria-hidden className="pointer-events-none absolute -right-4 top-2 size-[17rem] rounded-full border border-white/10" />
@@ -46,7 +46,7 @@ export function AuthFrame({
                 <span className="size-1.5 rounded-full bg-white/30" /><span className="size-1.5 rounded-full bg-white/30" />
                 <span className="h-1.5 w-5 rounded-full bg-paper" /><span className="size-1.5 rounded-full bg-white/30" />
               </div>
-              <span className="flex size-12 items-center justify-center rounded-full bg-paper text-[#111111]" aria-hidden>
+              <span className="flex size-12 items-center justify-center rounded-full bg-paper text-ink" aria-hidden>
                 <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
               </span>
             </div>

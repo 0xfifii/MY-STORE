@@ -10,7 +10,7 @@ import { MIGRATIONS } from "./migrations.generated";
  * Every query runs with the current business in the database setting isura.store_id, inside a
  * transaction (so it also works through connection poolers). Row-level security in the database then
  * only shows that business's rows. The business comes from:
- *   1. an explicit withStore(id, ...) block (scheduled jobs, webhooks, sign-in, the ÌṢÚRA admin), or
+ *   1. an explicit withStore(id, ...) block (scheduled jobs, webhooks, sign-in, the Palm Store admin), or
  *   2. the signed-in person's session cookie (every normal page and API call).
  * With no business (signed out), business data is simply invisible.
  */
@@ -19,7 +19,7 @@ export const hashToken = (t: string) => createHash("sha256").update(t).digest("h
 
 const storeCtx = new AsyncLocalStorage<{ storeId: number | null }>();
 
-/** Runs fn with an explicit business (null = none, e.g. sign-in or the ÌṢÚRA admin's overview). */
+/** Runs fn with an explicit business (null = none, e.g. sign-in or the Palm Store admin's overview). */
 export function withStore<T>(storeId: number | null, fn: () => Promise<T>): Promise<T> {
   return storeCtx.run({ storeId }, fn);
 }
@@ -121,7 +121,7 @@ async function prepareIsolation(client: PoolClient): Promise<Isolation> {
 async function setStore(client: PoolClient, storeId: number | null) {
   const iso = globalThis.__isuraIsolation;
   if (iso?.mode === "unsafe") {
-    throw new Error("The database login can see every business's data and ÌṢÚRA couldn't restrict it, so business data is switched off. " + (iso.detail ?? ""));
+    throw new Error("The database login can see every business's data and Palm Store couldn't restrict it, so business data is switched off. " + (iso.detail ?? ""));
   }
   const role = iso?.mode === "restricted_role" ? `SET LOCAL ROLE ${RESTRICTED_ROLE}; ` : "";
   // storeId is always an integer we produced ourselves, never user text.

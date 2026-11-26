@@ -18,7 +18,7 @@ const schema = z.object({
 export const POST = handle(async (req) => {
   const input = schema.parse(await readJson(req));
   const s = await signupSettings();
-  if (!s.allow) throw new AppError("SIGNUP_CLOSED", "New accounts can't be created right now. Please contact ÌṢÚRA.", 403);
+  if (!s.allow) throw new AppError("SIGNUP_CLOSED", "New accounts can't be created right now. Please contact Palm Store.", 403);
   const hash = await hashPassword(input.password);
 
   const userId = await withStore(null, () => withTransaction(async (c) => {

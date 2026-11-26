@@ -23,11 +23,11 @@ export function PayButton({ monthly }: { monthly: number }) {
   return (
     <div>
       <h2 className="font-semibold">Renew</h2>
-      <p className="mt-0.5 text-sm text-[#111111]/60">{formatMoney(monthly, "₦")} per month. Pay by card, bank transfer or USSD through Paystack.</p>
+      <p className="mt-0.5 text-sm text-ink/60">{formatMoney(monthly, "₦")} per month. Pay by card, bank transfer or USSD through Paystack.</p>
       <div className="mt-4 grid grid-cols-4 gap-2" role="radiogroup" aria-label="How many months">
         {OPTIONS.map((m) => (
           <button key={m} type="button" role="radio" aria-checked={months === m} onClick={() => setMonths(m)}
-            className={clsx("rounded-2xl px-2 py-3 text-center text-sm font-semibold ring-1 transition active:scale-95", months === m ? "bg-[#111111] text-white ring-[#111111]" : "bg-paper ring-black/10 hover:ring-black/30")}>
+            className={clsx("rounded-2xl px-2 py-3 text-center text-sm font-semibold ring-1 transition active:scale-95", months === m ? "bg-burgundy text-white ring-burgundy" : "bg-paper ring-black/10 hover:ring-black/30")}>
             {m} month{m === 1 ? "" : "s"}
           </button>
         ))}

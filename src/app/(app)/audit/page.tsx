@@ -124,7 +124,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         <div className="flex w-max gap-1 rounded-full bg-white/60 p-1 ring-1 ring-white">
           {TABS.map(([k, l]) => (
             <Link key={k} href={tabHref(k)} scroll={false} aria-current={tab === k ? "page" : undefined}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-[#111111] to-[#000000] text-white shadow-md" : "text-muted hover:bg-paper hover:text-ink"}`}>
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 active:scale-95 ${tab === k ? "bg-gradient-to-br from-burgundy to-burgundy text-white shadow-md" : "text-muted hover:bg-paper hover:text-ink"}`}>
               {l}
             </Link>
           ))}
@@ -219,7 +219,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
       >
         <div className="grid grid-cols-2 gap-px border-b border-white/80 bg-white/60 sm:grid-cols-4">
           <MiniStat label="Total stocked in" value={m(inTotal)} dot="#6b6b6b" />
-          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#111111" />
+          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#006D77" />
           <MiniStat label={`Average in per ${word}`} value={m(periods.length ? inTotal / periods.length : 0)} />
           <MiniStat label={`Average out per ${word}`} value={m(periods.length ? outTotal / periods.length : 0)} />
         </div>
@@ -228,7 +228,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
             {periods.map((p) => (
               <div key={p.period} className="group relative flex h-full min-w-0 flex-1 items-end justify-center gap-[1px]">
                 <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#6b6b6b]" style={{ height: `${Math.max(Number(p.in_value) ? 2 : 0, (Number(p.in_value) / maxBar) * 100)}%` }} />
-                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-[#111111]" style={{ height: `${Math.max(Number(p.out_value) ? 2 : 0, (Number(p.out_value) / maxBar) * 100)}%` }} />
+                <div className="w-1/2 max-w-5 rounded-t-[3px] bg-burgundy" style={{ height: `${Math.max(Number(p.out_value) ? 2 : 0, (Number(p.out_value) / maxBar) * 100)}%` }} />
                 <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-xl bg-night px-2.5 py-1.5 text-[11px] leading-snug text-white group-hover:block">
                   <strong>{periodName(p.period, group)}</strong><br />In {m(p.in_value)} · Out {m(p.out_value)}
                 </span>
@@ -239,7 +239,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
             <span>{periods[0] ? periodName(periods[0].period, group, true) : ""}</span>
             <span className="flex gap-3">
               <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#6b6b6b]" /> Stock in</span>
-              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#111111]" /> Stock out</span>
+              <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-burgundy" /> Stock out</span>
             </span>
             <span>{periods.length ? periodName(periods[periods.length - 1].period, group, true) : ""}</span>
           </div>

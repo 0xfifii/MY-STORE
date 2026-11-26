@@ -60,7 +60,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
   const save = async () => {
     setBusy(true); setErr(null); setSteps(null);
     try {
-      const fromDefault = provider === "brevo" || provider === "brevo_api" ? "" : a.smtp_user ? `ÌṢÚRA <${a.smtp_user.trim()}>` : "";
+      const fromDefault = provider === "brevo" || provider === "brevo_api" ? "" : a.smtp_user ? `Palm Store <${a.smtp_user.trim()}>` : "";
       const d = await api<{ account: MailAccount }>("/api/settings/email", {
         method: "PUT",
         json: { ...a, smtp_user: provider === "brevo_api" ? "" : a.smtp_user.trim(), smtp_host: a.smtp_host.trim(), smtp_port: Number(a.smtp_port), smtp_from: a.smtp_from.trim() || fromDefault },
@@ -87,7 +87,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
       {active ? (
         <p className="mb-4 flex items-start gap-2 rounded-2xl bg-ok-bg px-3 py-2 text-sm text-ok">
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-          <span>Emails are sent from <strong>{active.from}</strong>{fromServer ? " (set on the server). Saving an account below will replace it." : active.source === "isura" ? " (ÌṢÚRA's shared account). Save your own below to send from your address instead." : "."}</span>
+          <span>Emails are sent from <strong>{active.from}</strong>{fromServer ? " (set on the server). Saving an account below will replace it." : active.source === "isura" ? " (Palm Store's shared account). Save your own below to send from your address instead." : "."}</span>
         </p>
       ) : (
         <p className="mb-4 rounded-2xl bg-warn-bg px-3 py-2 text-sm text-warn">Not set up yet. Until it is, the app can&apos;t send receipts, reports, messages or welcome emails.</p>
@@ -142,7 +142,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
         </Field>
         <div className="hidden sm:block" />
         <Field label="Send as (name and address)" htmlFor="sm-from" required={provider === "brevo" || provider === "brevo_api"}
-          hint={provider === "brevo" || provider === "brevo_api" ? "Must be the email you verified in Brevo, e.g. ÌṢÚRA <you@gmail.com>" : "Optional. Leave empty to send from the login address."}>
+          hint={provider === "brevo" || provider === "brevo_api" ? "Must be the email you verified in Brevo, e.g. Palm Store <you@gmail.com>" : "Optional. Leave empty to send from the login address."}>
           <Input id="sm-from" name="isura-smtp-from" autoComplete="off" value={a.smtp_from} onChange={(e) => setA({ ...a, smtp_from: e.target.value })} placeholder="The Velvet Store <yourstore@gmail.com>" />
         </Field>
         <button type="submit" className="hidden" />

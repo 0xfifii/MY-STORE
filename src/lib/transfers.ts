@@ -16,7 +16,7 @@ import { positiveQty, uuid } from "./validation";
  * (a stock in at the same cost) in ONE database transaction: either both sides are recorded or neither.
  * On the receiving side the item is matched by name; if it isn't there yet it's created with the same
  * name, unit, category, price and photo.
- * Who can send where: the ÌṢÚRA admin to any business; everyone else (with Stock Out permission)
+ * Who can send where: the Palm Store admin to any business; everyone else (with Stock Out permission)
  * only to businesses the admin has linked to theirs.
  */
 
@@ -57,7 +57,7 @@ export async function transferTargets(user: SessionUser): Promise<Target[]> {
 
 async function assertCanSend(user: SessionUser, to: number) {
   const ok = (await transferTargets(user)).find((t) => t.id === to);
-  if (!ok) throw new AppError("TRANSFER_NOT_ALLOWED", "You can't send stock to that account. Ask the ÌṢÚRA admin to link it to this one.", 403);
+  if (!ok) throw new AppError("TRANSFER_NOT_ALLOWED", "You can't send stock to that account. Ask the Palm Store admin to link it to this one.", 403);
   return ok;
 }
 
@@ -252,7 +252,7 @@ export async function listTransfers(limit = 30) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Links (set by the ÌṢÚRA admin)
+// Links (set by the Palm Store admin)
 // ---------------------------------------------------------------------------------------------
 export const listLinks = () => withStore(null, () => query<{ store_a: number; store_b: number }>("SELECT store_a, store_b FROM store_links ORDER BY 1, 2"));
 

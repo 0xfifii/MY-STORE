@@ -23,10 +23,10 @@ export const POST = handle(async (req) => {
     const { rows: [u] } = await c.query<{ id: string; store_id: number; is_platform_admin: boolean; name: string }>(
       "SELECT id, store_id, is_platform_admin, name FROM users WHERE lower(email) = $1 AND deleted_at IS NULL FOR UPDATE", [input.email]);
     if (!u) throw new AppError("NOT_FOUND", "No account with that email.", 404);
-    if (u.is_platform_admin) throw new AppError("NOT_ALLOWED", "That's your own ÌṢÚRA admin account; it can't be moved.", 400);
+    if (u.is_platform_admin) throw new AppError("NOT_ALLOWED", "That's your own Palm Store admin account; it can't be moved.", 400);
     const { rows: [store] } = await c.query<{ id: number }>(
       `INSERT INTO stores (name, price_kobo, interval_months, paid_until, billing_email, created_via, notes)
-       VALUES ($1, $2, 1, now() + make_interval(days => $3), $4, 'admin', 'Given its own business by the ÌṢÚRA admin') RETURNING id`,
+       VALUES ($1, $2, 1, now() + make_interval(days => $3), $4, 'admin', 'Given its own business by the Palm Store admin') RETURNING id`,
       [input.company_name, s.priceKobo, s.trialDays, input.email]);
     await c.query("UPDATE users SET store_id = $1, role = 'owner', allowed_category_ids = NULL, updated_at = now() WHERE id = $2", [store.id, u.id]);
     await c.query("UPDATE sessions SET active_store_id = NULL WHERE user_id = $1", [u.id]);

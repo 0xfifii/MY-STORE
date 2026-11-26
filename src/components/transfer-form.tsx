@@ -162,8 +162,8 @@ export function TransferForm({ targets, onSent }: { targets: Target[]; onSent?: 
       <div className="rounded-2xl bg-black/[0.03] p-5 text-sm">
         <p className="font-semibold">There&apos;s no other account to send to yet.</p>
         <p className="mt-1 text-muted">{app.user.is_platform_admin
-          ? "Add another business on the ÌṢÚRA admin page first."
-          : "Ask the ÌṢÚRA admin to link this account to the one you want to send stock to."}</p>
+          ? "Add another business on the Palm Store admin page first."
+          : "Ask the Palm Store admin to link this account to the one you want to send stock to."}</p>
       </div>
     );
   }

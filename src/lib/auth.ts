@@ -19,11 +19,11 @@ export type SessionUser = {
   permissions: string[] | null;
   /** Categories this user may stock in/out (null = all). */
   allowed_category_ids: number[] | null;
-  /** The ÌṢÚRA admin: above every business owner, never locked out. */
+  /** The Palm Store admin: above every business owner, never locked out. */
   is_platform_admin: boolean;
   /** The business this person is working in right now. */
   store_id: number;
-  /** Their own business (differs from store_id when the ÌṢÚRA admin is viewing another). */
+  /** Their own business (differs from store_id when the Palm Store admin is viewing another). */
   home_store_id: number;
   store_name: string;
   store_status: "active" | "paused";
@@ -91,7 +91,7 @@ export async function requireApiUser(action: Action = "view", opts: { allowLocke
   const user = await getCurrentUser();
   if (!user) throw new AppError("UNAUTHENTICATED", "Please sign in again.", 401);
   if (user.locked && !opts.allowLocked) {
-    throw new AppError("SUBSCRIPTION_ENDED", "This ÌṢÚRA account is paused. Renew the subscription to continue.", 402);
+    throw new AppError("SUBSCRIPTION_ENDED", "This Palm Store account is paused. Renew the subscription to continue.", 402);
   }
   if (!can(user, action)) {
     throw new AppError("FORBIDDEN", "You don't have permission to do this.", 403);
@@ -127,7 +127,7 @@ export async function recordLoginAttempt(email: string, success: boolean) {
   await query("INSERT INTO login_attempts (email, success) VALUES ($1, $2)", [email, success]);
 }
 
-/** Only the ÌṢÚRA admin. */
+/** Only the Palm Store admin. */
 export async function requirePlatformAdmin(kind: "api" | "page" = "api"): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) {
@@ -136,7 +136,7 @@ export async function requirePlatformAdmin(kind: "api" | "page" = "api"): Promis
   }
   if (!user.is_platform_admin) {
     if (kind === "page") redirect("/dashboard?denied=1");
-    throw new AppError("FORBIDDEN", "Only the ÌṢÚRA admin can do this.", 403);
+    throw new AppError("FORBIDDEN", "Only the Palm Store admin can do this.", 403);
   }
   return user;
 }

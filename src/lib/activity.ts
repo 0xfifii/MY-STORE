@@ -141,6 +141,6 @@ export async function unreadActivity(userId: string, limit = 5) {
 }
 
 export async function markActivitySeen(userId: string) {
-  // The person's own row, whichever business they're looking at (the ÌṢÚRA admin may be in another).
+  // The person's own row, whichever business they're looking at (the Palm Store admin may be in another).
   await withStore(null, () => query("UPDATE users SET activity_seen_at = now() WHERE id = $1", [userId]));
 }

@@ -24,7 +24,7 @@ export const PATCH = handle(async (req) => {
      s.auto_report_covers, s.auto_report_formats, s.email_enabled, s.email_recipients,
      s.auto_weekly_enabled, s.auto_monthly_enabled],
   );
-  // Keep the business's name in the ÌṢÚRA business list the same as the store name.
+  // Keep the business's name in the Palm Store business list the same as the store name.
   await query("UPDATE stores SET name = $1 WHERE id = current_store()", [s.store_name]);
   await audit(user.id, "settings.update", "settings", 1, { before, after: s });
   return ok();

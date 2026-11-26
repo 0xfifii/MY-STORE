@@ -13,12 +13,12 @@ export default async function SignupPage() {
   if (await getCurrentUser()) redirect("/dashboard");
   const s = await signupSettings();
   return (
-    <AuthFrame storeName="ÌṢÚRA" title="Create an account"
+    <AuthFrame storeName="Palm Store" title="Create an account"
       subtitle={s.allow
-        ? `Set up ÌṢÚRA for your company. ${s.trialDays > 0 ? `Free for ${s.trialDays} days.` : ""} You can add your staff afterwards.`
+        ? `Set up Palm Store for your company. ${s.trialDays > 0 ? `Free for ${s.trialDays} days.` : ""} You can add your staff afterwards.`
         : "New accounts can't be created right now."}>
       {s.allow ? <SignupForm /> : (
-        <p className="rounded-2xl bg-rose px-4 py-3 text-sm">Please contact ÌṢÚRA to get an account, or <Link href="/login" className="font-semibold underline">sign in</Link> if you already have one.</p>
+        <p className="rounded-2xl bg-rose px-4 py-3 text-sm">Please contact Palm Store to get an account, or <Link href="/login" className="font-semibold underline">sign in</Link> if you already have one.</p>
       )}
     </AuthFrame>
   );

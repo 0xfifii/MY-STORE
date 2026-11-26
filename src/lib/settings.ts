@@ -20,7 +20,7 @@ export type StoreSettings = {
 };
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  store_name: "ÌṢÚRA", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos", costing_method: "weighted_average",
+  store_name: "Palm Store", currency_code: "NGN", currency_symbol: "₦", timezone: "Africa/Lagos", costing_method: "weighted_average",
   auto_report_enabled: false, auto_report_time: "07:00:00", auto_report_covers: "previous_day", auto_weekly_enabled: false,
   auto_monthly_enabled: false, auto_report_formats: ["pdf", "xlsx"], email_enabled: false, email_recipients: [],
   welcome_email_enabled: true, updated_at: new Date(0).toISOString(),

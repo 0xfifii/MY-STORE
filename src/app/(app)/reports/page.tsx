@@ -327,11 +327,11 @@ const Td = ({ children, right, wide }: { children?: React.ReactNode; right?: boo
 /** One-tap PDFs plus a day / month / range picker, for the movement report or the full report. */
 function QuickReports({ kind }: { kind: "movement" | "full" }) {
   const link = (q: string) => `/api/reports/export?format=pdf&kind=${kind}&${q}`;
-  const btn = "group flex items-center justify-between gap-3 rounded-2xl bg-[#111111] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2b2b2b] hover:shadow-[0_12px_22px_-12px_rgb(0_0_0/0.7)] active:scale-[.98]";
+  const btn = "group flex items-center justify-between gap-3 rounded-2xl bg-burgundy px-4 py-3 text-sm font-semibold text-white transition hover:bg-burgundy-hover hover:shadow-[0_12px_22px_-12px_rgb(0_0_0/0.7)] active:scale-[.98]";
   return (
     <section className="rounded-[var(--radius-card)] bg-paper p-5 ring-1 ring-black/[0.06] shadow-[0_18px_36px_-28px_rgb(0_0_0/0.5)]" data-testid={kind === "movement" ? "movement-quick" : "full-quick"}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#111111]/50">{kind === "movement" ? "Stock movement report" : "Full report"}</p>
-      <p className="mt-1 max-w-xl text-sm text-[#111111]/70">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/50">{kind === "movement" ? "Stock movement report" : "Full report"}</p>
+      <p className="mt-1 max-w-xl text-sm text-ink/70">
         {kind === "movement"
           ? <>Only the items that moved (stock in or stock out), each with its quantity and value, and the total. Items that didn&apos;t move are left out.</>
           : <>Every item: opening stock, stock in, stock out, corrections and closing balance, with stock value, low stock and who took what.</>}

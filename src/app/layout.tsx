@@ -1,20 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/inter/opsz.css"; // brand typeface: Inter (weight + optical size), has Ì Ṣ Ú and ₦ built in
+import "@fontsource-variable/plus-jakarta-sans"; // text: close to Garnett, has the ₦ sign
+import "@fontsource-variable/fraunces/full.css"; // headings and the wordmark: heavy soft serif (SOFT axis)
+import "@fontsource-variable/inter/opsz.css"; // fallback for anything Plus Jakarta Sans lacks
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
-  title: { default: "ÌṢÚRA", template: "%s · ÌṢÚRA" },
-  description: "ÌṢÚRA. Every Valuable, Accounted For.",
+  title: { default: "Palm Store", template: "%s · Palm Store" },
+  description: "Palm Store. Every Valuable, Accounted For.",
   icons: {
-    icon: [{ url: "/icon.svg?v=isura1", type: "image/svg+xml" }, { url: "/favicon-32.png?v=isura1", sizes: "32x32", type: "image/png" }],
-    apple: "/apple-touch-icon.png?v=isura1",
+    icon: [{ url: "/icon.svg?v=palm1", type: "image/svg+xml" }, { url: "/favicon-32.png?v=palm1", sizes: "32x32", type: "image/png" }],
+    apple: "/apple-touch-icon.png?v=palm1",
   },
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111111",
+  themeColor: "#006D77",
   width: "device-width",
   initialScale: 1,
 };

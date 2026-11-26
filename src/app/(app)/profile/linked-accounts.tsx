@@ -64,7 +64,7 @@ export function LinkedAccounts({ initial }: { initial: Account[] }) {
   return (
     <div className="space-y-5" data-testid="linked-accounts">
       <p className="text-sm text-muted">
-        Have a separate ÌṢÚRA account for another business? Link it here once with its email and password, then switch
+        Have a separate Palm Store account for another business? Link it here once with its email and password, then switch
         between your businesses from the menu without signing out. Each account keeps its own items, stock and reports.
       </p>
       {accounts.length > 0 && (
