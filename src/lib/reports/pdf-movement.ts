@@ -2,7 +2,7 @@ import type { ReportData } from "./engine";
 import { formatDateTime, formatMoney, formatQty, reasonLabel } from "../format";
 import { renderPdf } from "./pdf";
 
-const INK = "#006D77";
+const INK = "#C4553A";
 const GOLD = "#C9A227";
 const GOLD_BG = "#F7EFD6";
 const GOLD_DEEP = "#8A6A10";

@@ -74,7 +74,7 @@ export function LineChart({ series, format, symbol = "", unit = "", height = 240
         {labels.map((l, i) => (i % step === 0 || i === labels.length - 1) && (
           <text key={i} x={X(i)} y={height - 8} textAnchor={i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"} fontSize="11" fill="#6b6b6b">{l}</text>
         ))}
-        {hover !== null && <line x1={X(hover)} x2={X(hover)} y1={padT} y2={padT + ih} stroke="#006D77" strokeOpacity="0.3" />}
+        {hover !== null && <line x1={X(hover)} x2={X(hover)} y1={padT} y2={padT + ih} stroke="#C4553A" strokeOpacity="0.3" />}
         {series.map((s) => {
           let d = "", pen = false;
           s.points.forEach((p, i) => {

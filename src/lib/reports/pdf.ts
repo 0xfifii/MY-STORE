@@ -8,7 +8,7 @@ import { statusText } from "./csv";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const PdfPrinter = require("pdfmake");
 
-const BURGUNDY = "#006D77";
+const BURGUNDY = "#C4553A";
 const fontDir = join(process.cwd(), "assets", "fonts");
 export const PDF_FONTS = {
   Inter: {
@@ -221,7 +221,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
     pageOrientation: "landscape",
     pageMargins: [36, 36, 36, 40],
     info: { title: `${r.settings.store_name}: ${r.title}, ${r.periodLabel}`, author: r.settings.store_name },
-    defaultStyle: { font: "Inter", fontSize: 8, color: "#0F2A2E" },
+    defaultStyle: { font: "Inter", fontSize: 8, color: "#2E1E16" },
     styles: {
       brand: { fontSize: 20, bold: true, color: BURGUNDY },
       title: { fontSize: 12, bold: true, margin: [0, 2, 0, 0] },

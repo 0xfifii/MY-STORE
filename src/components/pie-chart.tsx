@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 // Categorical slots (validated for colour-blind separation, adjacent pairs); "Other" is neutral grey.
-const COLORS = ["#006D77", "#F4A261", "#83C5BE", "#E76F51", "#0F2A2E", "#C9E5E4"];
+const COLORS = ["#C4553A", "#F4A261", "#006D77", "#E9C9A6", "#2E1E16", "#83C5BE"];
 const OTHER = "#a8988f";
 
 export type Slice = { label: string; value: number; detail: string; href?: string };

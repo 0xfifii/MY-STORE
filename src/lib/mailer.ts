@@ -119,19 +119,19 @@ export function emailHtml(storeName: string, title: string, text: string, button
     .map((p) => `<p style="margin:0 0 14px;line-height:1.6;font-size:15px">${esc(p).replace(/\n/g, "<br>")}</p>`)
     .join("");
   const btn = button
-    ? `<p style="margin:24px 0 6px"><a href="${esc(button.href)}" style="display:inline-block;background:#006D77;color:#ffffff;text-decoration:none;padding:13px 26px;border-radius:14px;font-weight:700;font-size:15px">${esc(button.label)}</a></p>`
+    ? `<p style="margin:24px 0 6px"><a href="${esc(button.href)}" style="display:inline-block;background:#C4553A;color:#ffffff;text-decoration:none;padding:13px 26px;border-radius:14px;font-weight:700;font-size:15px">${esc(button.label)}</a></p>`
     : "";
-  const logo = `<img src="${base}/email-logo.png?v=palm1" width="260" height="110" alt="Palm Store. Every Valuable, Accounted For." style="display:block;margin:0 auto;width:260px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;color:#0F2A2E;font-size:22px;font-weight:700">`;
+  const logo = `<img src="${base}/email-logo.png?v=palm3" width="260" height="110" alt="Palm Store. Every Valuable, Accounted For." style="display:block;margin:0 auto;width:260px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;color:#2E1E16;font-size:22px;font-weight:700">`;
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
-<body style="margin:0;background:#EDF6F9;font-family:Inter,'Segoe UI',Arial,Helvetica,sans-serif;color:#0F2A2E">
+<body style="margin:0;background:#F4ECE1;font-family:Inter,'Segoe UI',Arial,Helvetica,sans-serif;color:#2E1E16">
 <div style="display:none;max-height:0;overflow:hidden">${esc(title)} from ${esc(storeName)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EDF6F9;padding:28px 12px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4ECE1;padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #ead8c6">
-<tr><td style="height:6px;background:#006D77;font-size:0;line-height:0">&nbsp;</td></tr>
+<tr><td style="height:6px;background:#C4553A;font-size:0;line-height:0">&nbsp;</td></tr>
 <tr><td align="center" style="padding:20px 26px 10px;background:#ffffff">${logo}</td></tr>
-<tr><td style="padding:0 26px"><div style="height:2px;background:#006D77;opacity:.15;font-size:0;line-height:0">&nbsp;</div></td></tr>
+<tr><td style="padding:0 26px"><div style="height:2px;background:#C4553A;opacity:.15;font-size:0;line-height:0">&nbsp;</div></td></tr>
 <tr><td style="padding:24px 26px 10px"><h1 style="margin:0 0 16px;font-size:21px;font-weight:700;color:#000000;letter-spacing:-0.2px">${esc(title)}</h1>${paras}${btn}</td></tr>
-<tr><td style="padding:16px 26px 22px;background:#006D77;color:#ffffff;font-size:12px;line-height:1.5">
+<tr><td style="padding:16px 26px 22px;background:#C4553A;color:#ffffff;font-size:12px;line-height:1.5">
 <strong style="font-size:13px">${esc(storeName)}</strong><br>Sent from Palm Store, Every Valuable, Accounted For. If you weren't expecting this email you can ignore it.</td></tr>
 </table></td></tr></table></body></html>`;
 }

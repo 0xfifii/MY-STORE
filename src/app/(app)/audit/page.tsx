@@ -219,7 +219,7 @@ async function UsageTab({ r, f, sym, group, spendBy, link }: {
       >
         <div className="grid grid-cols-2 gap-px border-b border-white/80 bg-white/60 sm:grid-cols-4">
           <MiniStat label="Total stocked in" value={m(inTotal)} dot="#6b6b6b" />
-          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#006D77" />
+          <MiniStat label="Total stocked out" value={m(outTotal)} dot="#C4553A" />
           <MiniStat label={`Average in per ${word}`} value={m(periods.length ? inTotal / periods.length : 0)} />
           <MiniStat label={`Average out per ${word}`} value={m(periods.length ? outTotal / periods.length : 0)} />
         </div>

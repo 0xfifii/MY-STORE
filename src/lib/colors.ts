@@ -1,15 +1,15 @@
-/** Teal and orange accents for the Palm Store look; a category always gets the same one. */
+/** Terracotta, teal and sand accents for the Palm Store look; a category always gets the same one. */
 export const ACCENTS = [
-  { solid: "#006D77", soft: "#DDEFF0", text: "#00565E" },
-  { solid: "#F4A261", soft: "#FDEEDF", text: "#9A4A1C" },
-  { solid: "#83C5BE", soft: "#E3F2F1", text: "#1F5F5A" },
-  { solid: "#E76F51", soft: "#FCE6DF", text: "#A33B22" },
-  { solid: "#0F2A2E", soft: "#E1EAEB", text: "#0F2A2E" },
-  { solid: "#3A9AA3", soft: "#E0F1F2", text: "#145960" },
+  { solid: "#C4553A", soft: "#F8E1D8", text: "#A8452E" },
+  { solid: "#006D77", soft: "#DCEDEC", text: "#00565E" },
+  { solid: "#F4A261", soft: "#FCEBD9", text: "#9A4A1C" },
+  { solid: "#8B5E3C", soft: "#F1E4D4", text: "#6B4529" },
+  { solid: "#2E1E16", soft: "#EDE3D8", text: "#2E1E16" },
+  { solid: "#D98E6E", soft: "#F9E6DC", text: "#93452B" },
 ];
 
 export function accentFor(key: string | number | null | undefined) {
-  if (key === null || key === undefined || key === "") return { solid: "#557074", soft: "#E8F0F1", text: "#3D5559" };
+  if (key === null || key === undefined || key === "") return { solid: "#7A6556", soft: "#EFE5DA", text: "#5C4A3E" };
   const s = String(key);
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;

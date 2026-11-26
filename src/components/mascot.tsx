@@ -6,7 +6,7 @@
 export type MascotMood = "happy" | "wave" | "excited" | "worried" | "sleepy" | "thinking";
 
 export function Mascot({ mood = "happy", className = "size-28", label }: { mood?: MascotMood; className?: string; label?: string }) {
-  const ink = "#006D77";
+  const ink = "#C4553A";
   const eyes =
     mood === "excited" ? (
       <g fill="none" stroke={ink} strokeWidth="3.6" strokeLinecap="round">
