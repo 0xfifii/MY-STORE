@@ -3,6 +3,7 @@ import type { ReportData } from "./engine";
 import { sectionsFor } from "./engine";
 import { formatDateTime, formatMoney, formatQty, formatUnitCost, reasonLabel } from "../format";
 import { statusText } from "./csv";
+import { reportBrand } from "./logo";
 
 // pdfmake 0.2 server-side printer (CommonJS).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -33,7 +34,7 @@ export async function reportToPdf(r: ReportData): Promise<Buffer> {
   content.push({
     columns: [
       [
-        { text: r.settings.store_name, style: "brand" },
+        ...reportBrand(r.settings.store_name, 170),
         { text: r.title, style: "title" },
       ],
       {

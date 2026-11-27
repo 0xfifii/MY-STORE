@@ -4,6 +4,7 @@ import { getSettings, type StoreSettings } from "./settings";
 import { formatDateTime, formatMoney, formatQty, formatUnitCost, reasonLabel } from "./format";
 import { renderPdf } from "./reports/pdf";
 import { AppError } from "./errors";
+import { reportBrand } from "./reports/logo";
 
 const BURGUNDY = "#C65A29";
 
@@ -43,7 +44,7 @@ export async function receiptPdf(t: TxnRow, s: StoreSettings): Promise<Buffer> {
   const content: unknown[] = [
     {
       columns: [
-        [{ text: s.store_name, fontSize: 18, bold: true, color: BURGUNDY }, { text: receiptTitle(t), fontSize: 11, bold: true, margin: [0, 2, 0, 0] }],
+        [...reportBrand(s.store_name, 130, 10), { text: receiptTitle(t), fontSize: 11, bold: true, margin: [0, 2, 0, 0] }],
         {
           width: "auto",
           stack: [

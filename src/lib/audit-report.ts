@@ -9,6 +9,7 @@ import { renderPdf, tableBlock } from "./reports/pdf";
 import { statusText } from "./reports/csv";
 import { getSettings, type StoreSettings } from "./settings";
 import { formatDateTime, formatMoney, formatQty, formatUnitCost, reasonLabel } from "./format";
+import { reportBrand } from "./reports/logo";
 
 export type AuditReportData = {
   month: string; label: string; settings: StoreSettings; generatedAt: string; generatedBy: string;
@@ -51,7 +52,7 @@ export async function auditReportPdf(a: AuditReportData): Promise<Buffer> {
 
   content.push({
     columns: [
-      [{ text: s.store_name, style: "brand" }, { text: "Monthly Audit Report", style: "title" }],
+      [...reportBrand(s.store_name, 160), { text: "Monthly Audit Report", style: "title" }],
       {
         width: "auto",
         stack: [

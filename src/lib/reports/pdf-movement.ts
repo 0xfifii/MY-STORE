@@ -1,11 +1,12 @@
 import type { ReportData } from "./engine";
 import { formatDateTime, formatMoney, formatQty, reasonLabel } from "../format";
 import { renderPdf } from "./pdf";
+import { reportBrand } from "./logo";
 
 const INK = "#C65A29";
-const GOLD = "#C9A227";
-const GOLD_BG = "#F7EFD6";
-const GOLD_DEEP = "#8A6A10";
+const GOLD = "#C65A29";   // Palmspring orange (lines and highlights)
+const GOLD_BG = "#FBEFE7";
+const GOLD_DEEP = "#A84A20";
 
 type Cell = Record<string, unknown> | string;
 type Row = { name: string; sku: string; unit: string; opening: string; in: string; in_value: string; out: string; out_value: string; closing: string };
@@ -25,7 +26,7 @@ export async function movementToPdf(r: ReportData): Promise<Buffer> {
   content.push({
     columns: [
       [
-        { text: r.settings.store_name, style: "brand" },
+        ...reportBrand(r.settings.store_name, 150, 10),
         { text: isDay ? "Daily Stock Movement" : r.periodType === "month" ? "Monthly Stock Movement" : r.periodType === "week" ? "Weekly Stock Movement" : "Stock Movement", style: "title" },
         { text: "Only the items that moved: what came in, what went out, and what it was worth.", fontSize: 8, color: "#666", margin: [0, 2, 0, 0] },
       ],
@@ -52,7 +53,7 @@ export async function movementToPdf(r: ReportData): Promise<Buffer> {
   const topen = r.balances.reduce((a, b) => a + Number(b.opening_value), 0);
   const card = (label: string, value: string, dark = false) => ({
     stack: [
-      { text: label.toUpperCase(), fontSize: 6.5, bold: true, color: dark ? GOLD : "#666" },
+      { text: label.toUpperCase(), fontSize: 6.5, bold: true, color: dark ? "#FBE3D3" : "#666" },
       { text: value, fontSize: 11, bold: true, color: dark ? "#FFFFFF" : INK, margin: [0, 3, 0, 0] },
     ],
     margin: [6, 7, 6, 7],
