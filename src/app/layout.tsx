@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   title: { default: "Palm Store", template: "%s · Palm Store" },
   description: "Palm Store. Every Valuable, Accounted For.",
   icons: {
-    icon: [{ url: "/icon.svg?v=palm4", type: "image/svg+xml" }, { url: "/favicon-32.png?v=palm4", sizes: "32x32", type: "image/png" }],
-    apple: "/apple-touch-icon.png?v=palm4",
+    icon: [{ url: "/icon.svg?v=palm5", type: "image/svg+xml" }, { url: "/favicon-32.png?v=palm5", sizes: "32x32", type: "image/png" }],
+    apple: "/apple-touch-icon.png?v=palm5",
   },
   manifest: "/manifest.webmanifest",
 };
