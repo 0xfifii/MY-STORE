@@ -1,52 +1,52 @@
 @import "tailwindcss";
 
 /*
-  Palm Store: terracotta, cream beige and a little teal.
-  Cream beige canvas, warm white cards, terracotta buttons and accents, sandy orange highlights
-  (the inventory worth figure, the active-page dot, running-low markers), teal kept small: success states and the logo.
-  Type: Plus Jakarta Sans for text (close to Garnett, and it has the naira sign), Fraunces for big headings.
+  Palm Store, aligned with Palmspring Social Eatery: burnt orange #C65A29 on white, charcoal text, soft greys.
+  White canvas with a faint warm tint, white cards, orange buttons and highlights, charcoal for strong surfaces.
+  Type: Plus Jakarta Sans for text (close to Palmspring's Poppins, and it has the naira sign),
+  Playfair Display for big headings (as on palmspringsocialeatery.com), Times New Roman in the sidebar menu.
   Token names (burgundy, claret, paper...) are kept from earlier themes so every screen follows.
 */
 @theme {
-  --color-claret: #A8452E;
-  --color-claret-deep: #7E3220;
-  --color-burgundy: #C4553A;   /* brand terracotta */
-  --color-burgundy-hover: #A8452E;
-  --color-glow: #F4A261;
-  --color-rose: #F7EDE1;       /* soft beige surface */
-  --color-rose-strong: #F0E2D1;
-  --color-ink: #2E1E16;        /* text: warm dark brown */
-  --color-night: #C4553A;      /* dark surfaces and primary buttons: terracotta */
-  --color-muted: #7A6556;
-  --color-line: #EEE1D1;
-  --color-paper: #FFFDF9;      /* cards and panels */
+  --color-claret: #A84A20;
+  --color-claret-deep: #7F3615;
+  --color-burgundy: #C65A29;   /* Palmspring burnt orange */
+  --color-burgundy-hover: #A84A20;
+  --color-glow: #E89A6C;
+  --color-rose: #FBEFE7;       /* soft orange tint */
+  --color-rose-strong: #F6DFD0;
+  --color-ink: #2B2B2B;        /* charcoal text */
+  --color-night: #C65A29;      /* primary buttons and strong cards */
+  --color-muted: #6F6F6F;
+  --color-line: #ECE7E2;
+  --color-paper: #FFFFFF;      /* cards and panels */
   --color-white: #ffffff;
-  --color-canvas: #FBF6EE;     /* bright cream beige, the main background */
-  --color-kraft: #F0E4D5;
-  --color-ok: #006D77;         /* the little bit of teal */
-  --color-ok-bg: #DCEDEC;
+  --color-canvas: #FAF8F5;     /* near-white with a hint of warmth */
+  --color-kraft: #F2EDE8;
+  --color-ok: #2F7D4F;
+  --color-ok-bg: #E5F2EA;
   --color-warn: #9A4A1C;
-  --color-warn-bg: #FBE7D4;
+  --color-warn-bg: #FBEBDD;
   --color-bad: #B42318;
   --color-bad-bg: #FBE9E7;
-  --color-gold: #F4A261;       /* sandy orange */
-  --color-gold-bg: #FCEBD9;
-  --color-gold-deep: #A8452E;
-  --color-sky: #006D77;
-  --color-sky-bg: #DCEDEC;
-  --color-mint: #83C5BE;
-  --color-mint-bg: #E3F0EE;
-  --color-plum: #2E1E16;
-  --color-plum-bg: #F1E4D4;
-  --color-coral: #E76F51;
-  --color-coral-bg: #FBE3DA;
-  --color-orange: #F4A261;
-  --color-terracotta: #C4553A;
-  --color-teal: #006D77;
-  --color-seafoam: #83C5BE;
+  --color-gold: #E89A6C;       /* light orange highlight */
+  --color-gold-bg: #FCEEE5;
+  --color-gold-deep: #A84A20;
+  --color-sky: #2B2B2B;
+  --color-sky-bg: #F2EFEC;
+  --color-mint: #989898;
+  --color-mint-bg: #F2F2F2;
+  --color-plum: #2B2B2B;
+  --color-plum-bg: #F2EFEC;
+  --color-coral: #C65A29;
+  --color-coral-bg: #FBE6DA;
+  --color-orange: #C65A29;
+  --color-terracotta: #C65A29;
+  --color-teal: #2B2B2B;
+  --color-seafoam: #D4D4D4;
 
   --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces Variable", "Fraunces", Georgia, serif;
+  --font-display: "Playfair Display Variable", "Playfair Display", Georgia, serif;
 
   --radius-card: 1.5rem;
 }
@@ -76,29 +76,29 @@ body {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(40rem 30rem at 90% -10%, rgb(255 251 245 / 0.9), transparent 70%),
-    radial-gradient(32rem 26rem at -10% 110%, rgb(196 85 58 / 0.07), transparent 70%),
+    radial-gradient(40rem 30rem at 90% -10%, rgb(255 255 255 / 0.9), transparent 70%),
+    radial-gradient(32rem 26rem at -10% 110%, rgb(198 90 41 / 0.06), transparent 70%),
     var(--color-canvas);
 }
 
 /* Frosted glass surface */
 .glass {
-  background: rgb(255 251 245 / 0.72);
-  border: 1px solid rgb(255 251 245 / 0.85);
-  box-shadow: 0 1px 0 rgb(255 251 245 / 0.6) inset, 0 12px 32px -18px rgb(0 0 0 / 0.28);
+  background: rgb(255 255 255 / 0.72);
+  border: 1px solid rgb(255 255 255 / 0.85);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 12px 32px -18px rgb(0 0 0 / 0.28);
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
 }
 .glass-strong {
-  background: rgb(255 251 245 / 0.88);
-  border: 1px solid rgb(255 251 245 / 0.9);
+  background: rgb(255 255 255 / 0.88);
+  border: 1px solid rgb(255 255 255 / 0.9);
   box-shadow: 0 16px 40px -20px rgb(0 0 0 / 0.3);
   backdrop-filter: blur(22px) saturate(1.2);
   -webkit-backdrop-filter: blur(22px) saturate(1.2);
 }
 /* Soft dark sphere used behind the sign-in art */
 .glow-orb {
-  background: radial-gradient(circle at 40% 40%, #F4A261 0%, #C4553A 38%, rgb(196 85 58 / 0.35) 62%, transparent 72%);
+  background: radial-gradient(circle at 40% 40%, #E89A6C 0%, #C65A29 38%, rgb(198 90 41 / 0.35) 62%, transparent 72%);
   filter: blur(6px);
 }
 
@@ -110,8 +110,7 @@ body {
 
 .font-display {
   font-family: var(--font-display);
-  font-variation-settings: "SOFT" 100, "WONK" 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 :focus-visible:not(input):not(textarea):not(select) {
@@ -171,19 +170,19 @@ select::-ms-expand { display: none; }
 /* Cards and glass panels respond to the pointer. */
 .lift { transition: transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms ease; }
 @media (hover: hover) {
-  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 251 245 / 0.6) inset, 0 22px 40px -22px rgb(0 0 0 / 0.45); }
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 22px 40px -22px rgb(0 0 0 / 0.45); }
 }
 .lift:active { transform: translateY(0) scale(0.99); }
 
 /* Table rows highlight under the pointer. */
 tbody tr { transition: background-color 150ms ease; }
-@media (hover: hover) { tbody tr:hover { background-color: rgb(255 251 245 / 0.55); } }
+@media (hover: hover) { tbody tr:hover { background-color: rgb(255 255 255 / 0.55); } }
 
 /* Shine across primary buttons on hover. */
 .btn-shine { position: relative; overflow: hidden; isolation: isolate; }
 .btn-shine::after {
   content: ""; position: absolute; inset: 0; z-index: -1; transform: translateX(-120%);
-  background: linear-gradient(110deg, transparent 30%, rgb(255 251 245 / 0.22) 50%, transparent 70%);
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.22) 50%, transparent 70%);
   transition: transform 600ms ease;
 }
 @media (hover: hover) { .btn-shine:hover::after { transform: translateX(120%); } }
@@ -254,7 +253,7 @@ main tbody tr:nth-child(8) { animation-delay: 175ms; } main tbody tr:nth-child(n
 input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea {
   transition: border-color 180ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), background-color 180ms ease;
 }
-input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgb(196 85 58 / .18), 0 10px 24px -16px rgb(0 0 0 / .45); }
+input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgb(198 90 41 / .2), 0 10px 24px -16px rgb(0 0 0 / .45); }
 
 /* Bottom bar: the active tab pops, its icon bounces */
 @keyframes nav-pop { 0% { transform: scale(.82); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
@@ -277,7 +276,7 @@ input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:
 /* Loading skeleton shimmer */
 .skeleton { position: relative; overflow: hidden; background: rgb(0 0 0 / .06); border-radius: 22px; }
 .skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgb(255 251 245 / .7), transparent); animation: shimmer 1.2s infinite; }
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .7), transparent); animation: shimmer 1.2s infinite; }
 @keyframes shimmer { to { transform: translateX(100%); } }
 
 /* Number badges pulse once when they change */
@@ -294,7 +293,7 @@ input:not([type=checkbox]):not([type=radio]):not(.bg-transparent):focus, select:
 @media (prefers-reduced-motion: reduce) { .chip-pop { animation: none; } }
 
 /* Cowry gold touches */
-.gold-figure { background: linear-gradient(100deg, #FFF3E2 0%, #F8D9B4 45%, #FFF7EC 60%, #F8D9B4 80%); background-size: 220% 100%;
+.gold-figure { background: linear-gradient(100deg, #FFFFFF 0%, #FBE3D3 45%, #FFFFFF 60%, #FBE3D3 80%); background-size: 220% 100%;
   -webkit-background-clip: text; background-clip: text; color: transparent; animation: gold-sheen 5s ease-in-out 1.2s infinite; }
 @keyframes gold-sheen { 0%, 70%, 100% { background-position: 100% 0; } 85% { background-position: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .gold-figure { animation: none; } }
@@ -321,6 +320,6 @@ main thead tr { box-shadow: inset 0 -1px 0 rgb(0 0 0 / .12); }
 @keyframes menu-slide { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .menu-slide { animation: none; } }
 
-/* Light text on terracotta or dark surfaces is warm cream, not pure white. */
-.text-white { color: #FFF7EE; }
-::selection { background: rgb(244 162 97 / 0.35); }
+/* Light text on orange or dark surfaces is a soft white. */
+.text-white { color: #FFFBF7; }
+::selection { background: rgb(198 90 41 / 0.22); }

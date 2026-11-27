@@ -173,7 +173,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 /** Burgundy-led with a black shadow, or black-led with a burgundy shadow. */
 const TONE = {
   /** solid black card, white text */
-  burgundy: "bg-[radial-gradient(120%_120%_at_0%_0%,#D8694C_0%,#C4553A_45%,#8E3B26_100%)] text-white shadow-[0_22px_40px_-22px_rgb(120_45_25/0.9)]",
+  burgundy: "bg-[radial-gradient(120%_120%_at_0%_0%,#D46A3A_0%,#C65A29_45%,#8C3C18_100%)] text-white shadow-[0_22px_40px_-22px_rgb(120_45_25/0.9)]",
   /** white card, black text */
   black: "bg-paper text-ink ring-1 ring-black/5 shadow-[0_18px_36px_-26px_rgb(0_0_0/0.6)]",
 };

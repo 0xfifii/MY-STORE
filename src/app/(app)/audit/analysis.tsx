@@ -136,7 +136,7 @@ function DailySpending({ daily, allDaily, period, sym, ditem, link }: { daily: D
       >
         {chart.length > 1 && daily.length > 0 && (
           <div className="mb-5">
-            <LineChart format="money" symbol={sym} height={200} series={[{ name: itemName ? `Spent on ${itemName}` : "Spent per day", color: "#C4553A", points: chart }]} />
+            <LineChart format="money" symbol={sym} height={200} series={[{ name: itemName ? `Spent on ${itemName}` : "Spent per day", color: "#C65A29", points: chart }]} />
           </div>
         )}
         {days.length ? (
@@ -289,7 +289,7 @@ export async function PricesTab({ r, period, sym, q, dir, pitem, link }: { r: R;
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <div>
               <LineChart format="money" symbol={sym} markChanges zeroBase={false}
-                series={[{ name: "Price", color: "#C4553A", points: sel.points.map((p) => ({ x: formatDate(p.day).replace(/ \d{4}$/, ""), y: p.price, note: `${formatQty(String(p.qty))} ${sel.unit}${p.supplier ? ` · ${p.supplier}` : ""}` })) }]} />
+                series={[{ name: "Price", color: "#C65A29", points: sel.points.map((p) => ({ x: formatDate(p.day).replace(/ \d{4}$/, ""), y: p.price, note: `${formatQty(String(p.qty))} ${sel.unit}${p.supplier ? ` · ${p.supplier}` : ""}` })) }]} />
               {sel.points.length === 1 && <p className="mt-2 text-xs text-muted">Only one purchase in this period{sel.historyBefore ? ` (plus ${sel.historyBefore} earlier)` : ""}. Pick a longer period to see a trend.</p>}
             </div>
             <div className="space-y-2 text-sm">

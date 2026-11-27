@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile top bar */}
       <header className="glass-strong sticky top-2 z-30 mx-3 mt-2 flex h-14 items-center justify-between rounded-full pl-5 pr-2 lg:hidden">
         <Link href="/dashboard" className="flex items-center" aria-label={app.storeName}>
-          <VelvetWordmark className="h-8 w-auto" tagline={false} title={app.storeName} />
+          <VelvetWordmark className="h-6 w-auto" tagline={false} title={app.storeName} />
         </Link>
         <div className="flex items-center gap-2">
           <BellButton />
@@ -187,7 +187,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
   return (
     <div className="flex h-full flex-col overflow-y-auto px-3 py-5">
       <Link href="/dashboard" className="mt-2 block px-3" aria-label={app.storeName}>
-        <VelvetWordmark className="h-[64px] w-auto" title={app.storeName} />
+        <VelvetWordmark className="h-auto w-full max-w-[210px]" tagline={false} title={app.storeName} />
       </Link>
       {group("Daily work", MAIN)}
       {group("Reports", REPORTS)}

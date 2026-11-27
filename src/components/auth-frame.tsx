@@ -20,7 +20,7 @@ export function AuthFrame({
       <div className="relative mx-auto grid min-h-dvh max-w-5xl items-center gap-5 px-4 py-8 md:grid-cols-[1fr_1fr] md:px-8">
         <section className="glass-strong page-enter rounded-[32px] p-6 sm:p-9">
           <div className="flex items-start justify-between gap-3">
-            <Wordmark className="h-16 w-auto sm:h-20" title={storeName} />
+            <Wordmark className="h-auto w-full max-w-[300px]" title={storeName} />
             {corner}
           </div>
           <div className="mt-6 flex items-center gap-3 rounded-2xl bg-burgundy p-3 text-white md:hidden">

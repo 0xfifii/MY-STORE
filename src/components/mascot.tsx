@@ -1,12 +1,12 @@
 /**
- * The Palm Store helper: a cheerful shopping bag (the brand mark) with a teal handle, drawn in terracotta line on cream.
+ * The Palm Store helper: a cheerful shopping bag (the brand mark) with a charcoal handle, drawn in Palmspring orange line on white.
  * Pure SVG + CSS animation (blink, bob, wave, jump), so it costs nothing to load and respects
  * reduced-motion settings.
  */
 export type MascotMood = "happy" | "wave" | "excited" | "worried" | "sleepy" | "thinking";
 
 export function Mascot({ mood = "happy", className = "size-28", label }: { mood?: MascotMood; className?: string; label?: string }) {
-  const ink = "#C4553A";
+  const ink = "#C65A29";
   const eyes =
     mood === "excited" ? (
       <g fill="none" stroke={ink} strokeWidth="3.6" strokeLinecap="round">
@@ -52,18 +52,18 @@ export function Mascot({ mood = "happy", className = "size-28", label }: { mood?
           <circle cx={113} cy={mood === "wave" || mood === "excited" ? 67 : 104} r="4" fill="#ffffff" stroke={ink} strokeWidth="3" />
         </g>
         {/* teal handle */}
-        <path d="M44 54V41a16 16 0 0 1 32 0v13" fill="none" stroke="#006D77" strokeWidth="5" strokeLinecap="round" />
+        <path d="M44 54V41a16 16 0 0 1 32 0v13" fill="none" stroke="#2B2B2B" strokeWidth="5" strokeLinecap="round" />
         {/* shopping bag body */}
         <path d="M27 50h66a4.5 4.5 0 0 1 4.5 4.2l4.6 72.8a6.5 6.5 0 0 1-6.5 7H23.4a6.5 6.5 0 0 1-6.5-7l4.6-72.8A4.5 4.5 0 0 1 27 50z"
-          fill="#FFFBF5" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
+          fill="#FFFFFF" stroke={ink} strokeWidth="4" strokeLinejoin="round" />
         {/* folded top band and handle holes */}
         <path d="M21.2 61h77.6" fill="none" stroke={ink} strokeWidth="3" strokeLinecap="round" opacity=".35" />
         <circle cx="44" cy="56" r="2.6" fill={ink} /><circle cx="76" cy="56" r="2.6" fill={ink} />
         {/* soft shine */}
         <path d="M27 70v40" fill="none" stroke={ink} strokeWidth="2.4" strokeLinecap="round" opacity=".15" />
         {/* face */}
-        <ellipse cx="39" cy="90" rx="6" ry="3.6" fill="#F4A261" opacity="0.55" />
-        <ellipse cx="81" cy="90" rx="6" ry="3.6" fill="#F4A261" opacity="0.55" />
+        <ellipse cx="39" cy="90" rx="6" ry="3.6" fill="#E89A6C" opacity="0.5" />
+        <ellipse cx="81" cy="90" rx="6" ry="3.6" fill="#E89A6C" opacity="0.5" />
         {brows}
         {eyes}
         {mouth}

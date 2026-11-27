@@ -103,7 +103,7 @@ export async function ItemTab({ itemId, month, sym, tz }: { itemId: string | nul
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Panel title={`Stock balance · last 12 months (${u})`}>
-          <LineChart format="qty" unit={u} series={[{ name: "Closing stock", color: "#C4553A", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.closing })) }]} />
+          <LineChart format="qty" unit={u} series={[{ name: "Closing stock", color: "#C65A29", points: d.trend.map((t) => ({ x: mLabel(t.month, true), y: t.closing })) }]} />
         </Panel>
         <Panel title={`Average purchase price · last 12 months (per ${u})`}>
           <LineChart format="money" symbol={sym} markChanges zeroBase={false} emptyText="No purchases in the last 12 months."

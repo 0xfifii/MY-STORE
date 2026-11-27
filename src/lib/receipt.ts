@@ -5,7 +5,7 @@ import { formatDateTime, formatMoney, formatQty, formatUnitCost, reasonLabel } f
 import { renderPdf } from "./reports/pdf";
 import { AppError } from "./errors";
 
-const BURGUNDY = "#C4553A";
+const BURGUNDY = "#C65A29";
 
 export function receiptTitle(t: TxnRow) {
   if (t.txn_type === "stock_out") return t.source === "count" ? "Stock count adjustment (shortage)" : "Stock-out receipt";
@@ -98,7 +98,7 @@ export async function receiptPdf(t: TxnRow, s: StoreSettings): Promise<Buffer> {
     pageSize: "A5",
     pageMargins: [30, 30, 30, 36],
     info: { title: `${s.store_name}: ${receiptTitle(t)} ${t.txn_no}`, author: s.store_name },
-    defaultStyle: { fontSize: 9, color: "#2E1E16" },
+    defaultStyle: { fontSize: 9, color: "#2B2B2B" },
     styles: { th: { bold: true, color: "#FFFFFF", fillColor: BURGUNDY, fontSize: 8 } },
     content,
     footer: () => ({ text: `${s.store_name} · ${t.txn_no} · printed ${formatDateTime(new Date().toISOString(), s.timezone)}`, fontSize: 7, color: "#888", margin: [30, 10, 30, 0] }),
