@@ -97,3 +97,14 @@ export const ROLE_LABELS: Record<Role, string> = {
   staff: "Staff",
   viewer: "Viewer / Manager (read-only)",
 };
+
+/** What a blocked page or action is called, for the "you can't open that" message. */
+export function deniedLabel(action: string): string {
+  if (action === "admin") return "the Palm Store admin page";
+  const t = TOGGLEABLE.find((x) => x.action === action);
+  if (t) return t.label;
+  const other: Record<string, string> = {
+    "settings.write": "Settings", "users.manage": "Users", "stock.move": "Stock In and Stock Out", "conversion.global": "unit conversions",
+  };
+  return other[action] ?? "that page";
+}

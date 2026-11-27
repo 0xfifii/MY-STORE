@@ -8,7 +8,7 @@ import { StockButtons } from "@/components/stock-dialog";
 import { PieChart } from "@/components/pie-chart";
 import { Mascot } from "@/components/mascot";
 import { requirePageUser } from "@/lib/auth";
-import { can } from "@/lib/permissions";
+import { can, ROLE_LABELS, deniedLabel } from "@/lib/permissions";
 import { dashboardStats } from "@/lib/inventory";
 import { toSlices, usageAnalysis } from "@/lib/analytics";
 import { getSettings } from "@/lib/settings";
@@ -42,7 +42,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div>
       {denied && (
-        <p className="mb-4 rounded-2xl bg-warn-bg px-4 py-3 text-sm text-warn">You don&apos;t have permission to open that page. Ask the store owner.</p>
+        <div className="mb-4 rounded-2xl bg-warn-bg px-4 py-3 text-sm text-warn" role="alert" data-testid="denied">
+          {denied === "admin" ? (
+            <p><b>Only the Palm Store admin can open the admin page.</b> You&apos;re signed in as {user.email} ({user.store_name}).
+              {" "}If you have the admin login, use <b>Switch account</b> in the sidebar or sign in with it.</p>
+          ) : (
+            <p><b>{user.store_name}: your access doesn&apos;t include {deniedLabel(denied)}.</b> You&apos;re signed in as {user.email}
+              {" "}({ROLE_LABELS[user.role]}). The owner of {user.store_name} can turn it on for you under <b>Users</b>.</p>
+          )}
+        </div>
       )}
       <PageHeader
         title={`${greeting}, ${firstName}`}

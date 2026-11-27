@@ -1727,3 +1727,17 @@ describe("99h. Search forgives spelling mistakes", () => {
     expect((await names("xyz")).length).toBe(0);
   });
 });
+
+describe("99i. The no-access message says what was blocked", () => {
+  it("names the page and the account", async () => {
+    const r = await viewer.get("/stock-out");
+    expect(r.status).toBe(307);
+    expect(r.headers.get("location")).toContain("/dashboard?denied=stock.out");
+    const page = (await viewer.get("/dashboard?denied=stock.out")).data.toString();
+    expect(page).toContain("your access doesn");
+    expect(page).toContain("Record Stock Out");
+    const a = await staff.get("/isura");
+    expect(a.headers.get("location")).toContain("/dashboard?denied=admin");
+    expect((await staff.get("/dashboard?denied=admin")).data.toString()).toContain("Only the Palm Store admin can open the admin page");
+  });
+});

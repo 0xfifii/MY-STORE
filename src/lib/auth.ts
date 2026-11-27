@@ -104,7 +104,7 @@ export async function requirePageUser(action: Action = "view", opts: { allowLock
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (user.locked && !opts.allowLocked) redirect("/billing");
-  if (!can(user, action)) redirect("/dashboard?denied=1");
+  if (!can(user, action)) redirect(`/dashboard?denied=${encodeURIComponent(action)}`);
   return user;
 }
 
@@ -135,7 +135,7 @@ export async function requirePlatformAdmin(kind: "api" | "page" = "api"): Promis
     throw new AppError("UNAUTHENTICATED", "Please sign in again.", 401);
   }
   if (!user.is_platform_admin) {
-    if (kind === "page") redirect("/dashboard?denied=1");
+    if (kind === "page") redirect("/dashboard?denied=admin");
     throw new AppError("FORBIDDEN", "Only the Palm Store admin can do this.", 403);
   }
   return user;
