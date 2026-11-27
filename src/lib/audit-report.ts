@@ -32,7 +32,7 @@ export async function buildAuditReport(month: string, generatedBy: string): Prom
   return { month, label: monthLabel(month), settings: s, generatedAt: new Date().toISOString(), generatedBy, report, summary, purchases, prices, issues, counts, trend };
 }
 
-export const auditFileName = (month: string, ext: string) => `isura-monthly-audit-${month}.${ext}`;
+export const auditFileName = (month: string, ext: string) => `palm-store-monthly-audit-${month}.${ext}`;
 
 const BURGUNDY = "#C65A29";
 type Cell = Record<string, unknown> | string;

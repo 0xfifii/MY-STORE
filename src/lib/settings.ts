@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { currentStoreId, queryOne } from "./db";
 
 export type StoreSettings = {
@@ -27,14 +28,20 @@ export const DEFAULT_SETTINGS: StoreSettings = {
 };
 
 /** The current business's settings (defaults when no business is selected, e.g. the sign-in page). */
+/** This business's settings, read once per request. */
 export async function getSettings(): Promise<StoreSettings> {
-  if ((await currentStoreId()) === null) return { ...DEFAULT_SETTINGS };
+  const id = await currentStoreId();
+  if (id === null) return { ...DEFAULT_SETTINGS };
+  return { ...(await loadSettings(id)) };
+}
+
+const loadSettings = cache(async (_storeId: number): Promise<StoreSettings> => {
   const s = await queryOne<StoreSettings & Record<string, unknown>>("SELECT * FROM settings LIMIT 1");
   if (!s) throw new Error("Settings row missing for this business.");
   // The mail account (and its password) never leaves the server through general settings.
   for (const k of ["smtp_host", "smtp_port", "smtp_user", "smtp_pass", "smtp_from"]) delete s[k];
   return s;
-}
+});
 
 export type MailAccount = {
   smtp_host: string | null; smtp_port: number | null; smtp_user: string | null; smtp_from: string | null;

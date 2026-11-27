@@ -1,5 +1,5 @@
 import "server-only";
-import { createSession, destroySession, isLoginThrottled, recordLoginAttempt, verifyPassword, type SessionUser } from "./auth";
+import { replaceSession, isLoginThrottled, recordLoginAttempt, verifyPassword, type SessionUser } from "./auth";
 import { query, queryOne, withStore } from "./db";
 import { AppError } from "./errors";
 
@@ -91,8 +91,6 @@ export async function unlinkAccount(me: SessionUser, otherId: string): Promise<L
 export async function switchAccount(me: SessionUser, targetId: string) {
   const target = (await linkedAccounts(me.id)).find((a) => a.id === targetId);
   if (!target) throw new AppError("NOT_LINKED", "That account isn't linked to this one.", 404);
-  await destroySession();
-  await createSession(target.id);
-  await withStore(null, () => query("UPDATE users SET last_login_at = now() WHERE id = $1", [target.id]));
+  await replaceSession(target.id);
   return target;
 }

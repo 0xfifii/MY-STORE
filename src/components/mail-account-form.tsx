@@ -143,7 +143,7 @@ export function MailAccountForm({ initial, active, ownerEmail }: {
         <div className="hidden sm:block" />
         <Field label="Send as (name and address)" htmlFor="sm-from" required={provider === "brevo" || provider === "brevo_api"}
           hint={provider === "brevo" || provider === "brevo_api" ? "Must be the email you verified in Brevo, e.g. Palm Store <you@gmail.com>" : "Optional. Leave empty to send from the login address."}>
-          <Input id="sm-from" name="isura-smtp-from" autoComplete="off" value={a.smtp_from} onChange={(e) => setA({ ...a, smtp_from: e.target.value })} placeholder="The Velvet Store <yourstore@gmail.com>" />
+          <Input id="sm-from" name="isura-smtp-from" autoComplete="off" value={a.smtp_from} onChange={(e) => setA({ ...a, smtp_from: e.target.value })} placeholder="Palm Store <yourstore@gmail.com>" />
         </Field>
         <button type="submit" className="hidden" />
       </form>

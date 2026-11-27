@@ -420,12 +420,12 @@ describe("11. Reports reconcile with the ledger (acceptance 10, 11)", () => {
 
   it("weekly and monthly reports cover the right dates and are named accordingly", async () => {
     const w = await owner.get("/api/reports/export?format=csv&preset=this_week");
-    expect(w.headers.get("content-disposition")).toMatch(/isura-weekly-report-\d{4}-\d{2}-\d{2}(_to_\d{4}-\d{2}-\d{2})?\.csv/);
+    expect(w.headers.get("content-disposition")).toMatch(/palm-store-weekly-report-\d{4}-\d{2}-\d{2}(_to_\d{4}-\d{2}-\d{2})?\.csv/);
     const wText = (w.data as Buffer).toString();
     expect(wText).toContain("Weekly Inventory Report");
     const m = await owner.get(`/api/reports/export?format=csv&preset=month&month=${today.slice(0, 7)}`);
     const mText = (m.data as Buffer).toString();
-    expect(m.headers.get("content-disposition")).toContain(`isura-monthly-report-${today.slice(0, 8)}01_to_`);
+    expect(m.headers.get("content-disposition")).toContain(`palm-store-monthly-report-${today.slice(0, 8)}01_to_`);
     expect(mText).toContain("Monthly Inventory Report");
     // The month's closing equals today's closing (same end state)
     const get = (csv: string, label: string) => csv.split("\r\n").find((l) => l.startsWith(label))!.split(",")[1];
@@ -443,7 +443,7 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
   it("xlsx has General Report / Stock Sheet / Stock In & Out sheets with matching totals", async () => {
     const r = await owner.get("/api/reports/export?format=xlsx&preset=today");
     expect(r.status).toBe(200);
-    expect(r.headers.get("content-disposition")).toMatch(/isura-report-\d{4}-\d{2}-\d{2}\.xlsx/);
+    expect(r.headers.get("content-disposition")).toMatch(/palm-store-report-\d{4}-\d{2}-\d{2}\.xlsx/);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(r.data);
     const names = wb.worksheets.map((w) => w.name);
@@ -473,7 +473,7 @@ describe("12. Downloads: CSV, Excel and PDF (acceptance 12)", () => {
     const f = join(dir, "r.pdf");
     writeFileSync(f, r.data);
     const text = execFileSync("pdftotext", ["-layout", f, "-"]).toString();
-    expect(text).toContain("ÌṢÚRA"); // the business name stored in this test database
+    expect(text).toContain("Palm Store"); // old product names are renamed to Palm Store
     expect(text).toContain("Inventory Report");
     expect(text).toMatch(/Page 1 of \d+/);
     expect(text).toContain("Stock sheet");
@@ -523,10 +523,10 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
     const first = await call();
     expect(first.status).toBe("ran");
     expect(first.generated).toHaveLength(15); // daily + weekly + monthly full, plus daily + monthly movement, 3 formats each
-    expect(first.generated.some((f: string) => f.startsWith("isura-movement-report-"))).toBe(true);
-    expect(first.generated.some((f: string) => f.startsWith("isura-monthly-movement-report-"))).toBe(true);
-    expect(first.generated.some((f: string) => f.startsWith("isura-weekly-report-"))).toBe(true);
-    expect(first.generated.some((f: string) => f.startsWith("isura-monthly-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("palm-store-movement-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("palm-store-monthly-movement-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("palm-store-weekly-report-"))).toBe(true);
+    expect(first.generated.some((f: string) => f.startsWith("palm-store-monthly-report-"))).toBe(true);
     const second = await call();
     expect(second.generated).toHaveLength(0); // once per day per format
     const { rows } = await db.query("SELECT format, status, delivery_status, period_type FROM generated_reports WHERE trigger='scheduled'");
@@ -542,9 +542,9 @@ describe("13. Report history and automatic daily reports (acceptance 17)", () =>
       const raw = readFileSync(join(MAIL_DIR, mails[mails.length - 1]), "utf8");
       expect(raw).toMatch(/Daily.*Weekly.*Monthly/s);
       expect(raw).toContain("To: owner@mystore.test");
-      for (const ext of ["pdf", "xlsx", "csv"]) expect(raw).toMatch(new RegExp(`isura-report-\\d{4}-\\d{2}-\\d{2}\\.${ext}`));
-      expect(raw).toContain("isura-weekly-report-");
-      expect(raw).toContain("isura-monthly-report-");
+      for (const ext of ["pdf", "xlsx", "csv"]) expect(raw).toMatch(new RegExp(`palm-store-report-\\d{4}-\\d{2}-\\d{2}\\.${ext}`));
+      expect(raw).toContain("palm-store-weekly-report-");
+      expect(raw).toContain("palm-store-monthly-report-");
     } else {
       expect(existsSync("/")).toBe(true);
     }
@@ -733,7 +733,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     const id = out.data.txn.id;
     const pdf = await staff.get(`/api/transactions/${id}/receipt`);
     expect(pdf.status).toBe(200);
-    expect(pdf.headers.get("content-disposition")).toContain(`isura-receipt-${out.data.txn.txn_no}.pdf`);
+    expect(pdf.headers.get("content-disposition")).toContain(`palm-store-receipt-${out.data.txn.txn_no}.pdf`);
     const dir = mkdtempSync(join(tmpdir(), "rcp-"));
     writeFileSync(join(dir, "r.pdf"), pdf.data);
     const text = execFileSync("pdftotext", ["-layout", join(dir, "r.pdf"), "-"]).toString();
@@ -748,7 +748,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     if (MAIL_DIR) {
       expect(sent.status, JSON.stringify(sent.data)).toBe(200);
       const m = mails().find((x) => x.includes("kitchen@mystore.test") && x.includes("receipt"));
-      expect(m).toContain(`isura-receipt-${out.data.txn.txn_no}.pdf`);
+      expect(m).toContain(`palm-store-receipt-${out.data.txn.txn_no}.pdf`);
       const log = await db.query("SELECT status, kind FROM email_log WHERE kind = 'receipt' ORDER BY id DESC LIMIT 1");
       expect(log.rows[0]).toEqual({ status: "sent", kind: "receipt" });
     }
@@ -759,7 +759,7 @@ describe("17. Email, receipts, stock counts and the audit dashboard", () => {
     const r = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Monthly audit", message: "Please review.", attach: { kind: "audit", month, format: "pdf" } });
     if (MAIL_DIR) {
       expect(r.status, JSON.stringify(r.data)).toBe(200);
-      expect(r.data.attachments).toEqual([`isura-monthly-audit-${month}.pdf`]);
+      expect(r.data.attachments).toEqual([`palm-store-monthly-audit-${month}.pdf`]);
       const r2 = await owner.post("/api/mail/send", { to: "boss@mystore.test", subject: "Today", message: "Hi", attach: { kind: "report", preset: "today", format: "xlsx" } });
       expect(r2.status).toBe(200);
     }
@@ -874,7 +874,7 @@ describe("18. Resending emails and welcome emails", () => {
       const row = (await db.query("SELECT status, resend_of::text, attachments FROM email_log ORDER BY id DESC LIMIT 1")).rows[0];
       expect(row.status).toBe("sent");
       expect(row.resend_of).toBe(String(last.id));
-      expect(row.attachments[0]).toMatch(/^isura-receipt-TXN-/);
+      expect(row.attachments[0]).toMatch(/^palm-store-receipt-TXN-/);
     }
     expect((await owner.post("/api/mail/resend/999999", {})).status).toBe(404);
   });
@@ -915,7 +915,7 @@ describe("19. Brevo API email (most reliable on Vercel)", () => {
     const mails = sent();
     expect(mails.some((m) => m.to[0].email === "me@velvet.test" && m.sender.email === "store@velvet.test" && m.sender.name === "Palm Store")).toBe(true);
     const receipt = mails.find((m) => m.to[0].email === "chef@velvet.test");
-    expect(receipt.attachment[0].name).toMatch(/^isura-receipt-TXN-\d+\.pdf$/);
+    expect(receipt.attachment[0].name).toMatch(/^palm-store-receipt-TXN-\d+\.pdf$/);
     expect(Buffer.from(receipt.attachment[0].content, "base64").subarray(0, 4).toString()).toBe("%PDF");
     expect(mails.some((m) => m.to[0].email === "brevo.person@velvet.test" && m.htmlContent.includes("/login"))).toBe(true);
     expect((await owner.req("DELETE", "/api/settings/email")).status).toBe(200);

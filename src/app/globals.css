@@ -323,3 +323,62 @@ main thead tr { box-shadow: inset 0 -1px 0 rgb(0 0 0 / .12); }
 /* Light text on orange or dark surfaces is a soft white. */
 .text-white { color: #FFFBF7; }
 ::selection { background: rgb(198 90 41 / 0.22); }
+
+/* ---------- Dark mode ----------
+   Chosen per device with the Light / Dark / Auto switch in the sidebar (Auto follows the phone or computer).
+   Same Palmspring orange; warm charcoal surfaces instead of white. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-claret: #E07A4C;
+  --color-claret-deep: #F0A27A;
+  --color-burgundy: #D2642F;
+  --color-burgundy-hover: #E07A4C;
+  --color-glow: #E89A6C;
+  --color-rose: #2E2420;
+  --color-rose-strong: #3B2C24;
+  --color-ink: #F1ECE6;
+  --color-night: #C65A29;
+  --color-muted: #A9A29A;
+  --color-line: #36312D;
+  --color-paper: #1F1D1B;
+  --color-white: #262321;
+  --color-canvas: #151413;
+  --color-kraft: #2D2926;
+  --color-ok: #6CC793;
+  --color-ok-bg: #1D3026;
+  --color-warn: #F2AE78;
+  --color-warn-bg: #3A2A1D;
+  --color-bad: #F28B82;
+  --color-bad-bg: #3B1F1D;
+  --color-gold: #E89A6C;
+  --color-gold-bg: #3A281D;
+  --color-gold-deep: #F0A27A;
+  --color-sky: #F1ECE6;
+  --color-sky-bg: #2D2926;
+  --color-mint: #9A9A9A;
+  --color-mint-bg: #2A2826;
+  --color-plum: #F1ECE6;
+  --color-plum-bg: #2D2926;
+  --color-coral: #E07A4C;
+  --color-coral-bg: #3A2519;
+  --color-orange: #E07A4C;
+  --color-terracotta: #D2642F;
+  --color-teal: #F1ECE6;
+  --color-seafoam: #4A4440;
+  /* Faint black tints (hovers, borders, rings) become faint light tints so they still show. */
+  --color-black: #ffffff;
+}
+:root[data-theme="dark"] body { color: var(--color-ink); }
+:root[data-theme="dark"] .app-backdrop {
+  background:
+    radial-gradient(40rem 30rem at 90% -10%, rgb(198 90 41 / 0.10), transparent 70%),
+    var(--color-canvas);
+}
+:root[data-theme="dark"] .glass { background: rgb(31 29 27 / 0.78); border-color: rgb(255 255 255 / 0.06); box-shadow: 0 12px 32px -18px rgb(0 0 0 / 0.7); }
+:root[data-theme="dark"] .glass-strong { background: rgb(31 29 27 / 0.9); border-color: rgb(255 255 255 / 0.07); }
+:root[data-theme="dark"] .lift:hover { box-shadow: 0 22px 40px -22px rgb(0 0 0 / 0.9); }
+@media (hover: hover) { :root[data-theme="dark"] tbody tr:hover { background-color: rgb(255 255 255 / 0.04); } }
+:root[data-theme="dark"] .skeleton { background: rgb(255 255 255 / .06); }
+:root[data-theme="dark"] .text-white { color: #FFF7F0; }
+:root[data-theme="dark"] input, :root[data-theme="dark"] select, :root[data-theme="dark"] textarea { color: var(--color-ink); }
+:root[data-theme="dark"] img.invert-dark { filter: invert(1); }

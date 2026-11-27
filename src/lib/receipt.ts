@@ -14,7 +14,7 @@ export function receiptTitle(t: TxnRow) {
 }
 
 export function receiptFileName(t: TxnRow) {
-  return `isura-receipt-${t.txn_no}.pdf`;
+  return `palm-store-receipt-${t.txn_no}.pdf`;
 }
 
 export async function loadReceipt(id: string) {

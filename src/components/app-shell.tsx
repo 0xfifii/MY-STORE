@@ -15,6 +15,7 @@ import { ActivityProvider, BellButton, UnreadBadge } from "./activity-bell";
 import { BusinessBanner } from "./business-banner";
 import { useApp } from "./app-context";
 import { PalmMark, VelvetWordmark } from "./logo";
+import { ThemeToggle } from "./theme-toggle";
 import { switchAccountAction } from "@/app/actions/switch-account";
 import { StockDialogProvider } from "./stock-dialog";
 import { api } from "@/lib/client";
@@ -196,6 +197,7 @@ function SidebarNav({ pathname }: { pathname: string }) {
         <p className="truncate text-sm font-semibold">{app.user.name}</p>
         <p className="truncate text-xs text-ink/50">{ROLE_LABELS[app.user.role]} · {app.storeName}</p>
         <AccountSwitcher />
+        <ThemeToggle className="mt-3" />
         <div className="mt-3 flex items-center justify-between gap-2">
           <Link href="/profile" className="text-sm font-semibold text-ink underline-offset-2 hover:underline" data-testid="edit-profile">Edit profile</Link>
           <button onClick={logout} disabled={busy} className="flex items-center gap-2 text-sm font-medium text-ink/70 hover:text-ink">

@@ -38,12 +38,12 @@ export async function uploadPhoto(itemId: string, file: File) {
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Couldn't upload the photo.");
 }
 
-/** Placeholder art when an item has no photo: a light tile with a black cowry and the item's initials. */
+/** Placeholder art when an item has no photo: a soft tile with the palm and the item's initials. */
 export function PhotoPlaceholder({ name, className = "" }: { name: string; className?: string }) {
   // "Rice (50kg bag)" -> "R", "Table water 75cl" -> "TW": letters only, ignoring sizes in brackets.
   const initials = name.replace(/\(.*?\)/g, " ").replace(/[^\p{L} ]/gu, " ").split(/\s+/).filter((w) => w.length > 1).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
   return (
-    <div className={`relative flex items-center justify-center overflow-hidden bg-[#eae3d4] text-ink ${className}`}>
+    <div className={`relative flex items-center justify-center overflow-hidden bg-rose text-ink ${className}`}>
       <div aria-hidden className="absolute -right-10 -top-10 size-40 rounded-full border border-black/[0.06]" />
       <div aria-hidden className="absolute -bottom-14 -left-8 size-44 rounded-full border border-black/[0.06]" />
       <Cowry tone="black" className="absolute right-3 top-3 size-8 opacity-90" />

@@ -4,6 +4,7 @@ import "@fontsource-variable/playfair-display"; // headings, as on palmspringsoc
 import "@fontsource-variable/inter/opsz.css"; // fallback for anything Plus Jakarta Sans lacks
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
+import { THEME_BOOT } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: { default: "Palm Store", template: "%s · Palm Store" },
@@ -23,7 +24,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light" suppressHydrationWarning>
+      <head>
+        {/* Applies the saved Light / Dark / Auto choice before the first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body className="min-h-dvh antialiased">
         <div className="app-backdrop" aria-hidden />
         <ToastProvider>{children}</ToastProvider>

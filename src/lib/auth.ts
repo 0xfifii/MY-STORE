@@ -1,9 +1,10 @@
 import "server-only";
+import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE, forgetSessionStore, hashToken, query, queryOne } from "./db";
+import { SESSION_COOKIE, forgetSessionStore, hashToken, query, queryOne, withStore } from "./db";
 import { AppError } from "./errors";
 import { can, type Action, type Role } from "./permissions";
 
@@ -66,10 +67,40 @@ export async function destroySession() {
   jar.delete(SESSION_COOKIE);
 }
 
+/**
+ * Signs in as another user in place of the current session, in ONE database round trip
+ * (removes the old session, adds the new one, notes the sign-in time). Used by Switch account.
+ */
+export async function replaceSession(userId: string) {
+  const jar = await cookies();
+  const old = jar.get(SESSION_COOKIE)?.value;
+  const token = randomBytes(32).toString("base64url");
+  const expires = new Date(Date.now() + SESSION_DAYS * 86400_000);
+  await withStore(null, () => query(
+    `WITH gone AS (DELETE FROM sessions WHERE token_hash = $1),
+          added AS (INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($2, $3, $4))
+     UPDATE users SET last_login_at = now() WHERE id = $3`,
+    [old ? hashToken(old) : "", hashToken(token), userId, expires],
+  ));
+  if (old) forgetSessionStore(hashToken(old));
+  jar.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production" && !process.env.APP_URL?.startsWith("http://"),
+    path: "/",
+    expires,
+  });
+}
+
+/** The signed-in user. Looked up once per request (layout, page and checks share the answer). */
 export async function getCurrentUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
+  return loadUser(token);
+}
+
+const loadUser = cache(async (token: string): Promise<SessionUser | null> => {
   const u = await queryOne<SessionUser>(
     `SELECT u.id, u.name, u.email,
             CASE WHEN u.is_platform_admin THEN 'owner' ELSE u.role END AS role,
@@ -84,7 +115,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     [hashToken(token)],
   );
   return u;
-}
+});
 
 /** For API routes: throws 401/403 instead of redirecting (402 when the subscription has ended). */
 export async function requireApiUser(action: Action = "view", opts: { allowLocked?: boolean } = {}): Promise<SessionUser> {

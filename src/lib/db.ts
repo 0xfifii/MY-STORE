@@ -1,7 +1,9 @@
 import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
-import { Pool, type PoolClient, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
+// @ts-expect-error: pg ships no types for its internal helpers; this is the same conversion it uses for parameters.
+import { prepareValue } from "pg/lib/utils";
 import { MIGRATIONS } from "./migrations.generated";
 
 /*
@@ -213,12 +215,65 @@ export function pool(): Pool {
   return rawPool();
 }
 
+/**
+ * Puts the parameter values into the SQL as quoted literals, so a whole "begin, set the business, run the
+ * query, commit" goes to the database in ONE round trip instead of three. The values are converted exactly
+ * as the driver would send them (prepareValue) and quoted with the driver's own escaping (escapeLiteral);
+ * an untyped quoted literal is resolved by Postgres the same way an untyped parameter is.
+ * $n inside quotes, comments or dollar-quoted text is left alone.
+ */
+function inlineParams(text: string, params: unknown[], escape: (s: string) => string): string {
+  const lit = (v: unknown) => {
+    const pv = prepareValue(v as never) as unknown;
+    if (pv === null || pv === undefined) return "NULL";
+    return escape(Buffer.isBuffer(pv) ? `\\x${pv.toString("hex")}` : String(pv));
+  };
+  let out = "";
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    const c = text[i];
+    if (c === "'" || c === '"') {
+      const j = text.indexOf(c, i + 1);
+      let k = j;
+      while (k !== -1 && text[k + 1] === c) k = text.indexOf(c, k + 2);
+      const end = k === -1 ? n : k + 1;
+      out += text.slice(i, end); i = end; continue;
+    }
+    if (c === "-" && text[i + 1] === "-") { const e = text.indexOf("\n", i); const end = e === -1 ? n : e; out += text.slice(i, end); i = end; continue; }
+    if (c === "/" && text[i + 1] === "*") { const e = text.indexOf("*/", i + 2); const end = e === -1 ? n : e + 2; out += text.slice(i, end); i = end; continue; }
+    if (c === "$") {
+      const m = /^\$(\d+)/.exec(text.slice(i));
+      const prev = i > 0 ? text[i - 1] : "";
+      if (m && !/[A-Za-z0-9_]/.test(prev)) {
+        const idx = Number(m[1]) - 1;
+        if (idx < 0 || idx >= params.length) throw new Error(`query has $${m[1]} but only ${params.length} values`);
+        out += lit(params[idx]); i += m[0].length; continue;
+      }
+      const tag = /^\$[A-Za-z_]*\$/.exec(text.slice(i));
+      if (tag) { const e = text.indexOf(tag[0], i + tag[0].length); const end = e === -1 ? n : e + tag[0].length; out += text.slice(i, end); i = end; continue; }
+    }
+    out += c; i++;
+  }
+  return out;
+}
+
 export async function query<T extends QueryResultRow = QueryResultRow>(text: string, params: unknown[] = []) {
   const storeId = await currentStoreId();
   // No business and a login that can't skip the rules: one plain round trip (business data is invisible anyway).
   if (storeId === null && (await db(), globalThis.__isuraIsolation?.mode === "native")) return (await rawPool().query<T>(text, params)).rows;
   const client = await (await db()).connect();
   try {
+    if (process.env.DB_ONE_TRIP !== "false") {
+      // One round trip: BEGIN; [role]; set the business; the query; COMMIT.
+      const iso = globalThis.__isuraIsolation;
+      if (iso?.mode === "unsafe") await setStore(client, storeId); // throws the clear "switched off" error
+      const role = iso?.mode === "restricted_role" ? `SET LOCAL ROLE ${RESTRICTED_ROLE}; ` : "";
+      const body = inlineParams(text, params, (v) => client.escapeLiteral(v)).trim().replace(/;\s*$/, "");
+      const sql = `BEGIN; ${role}SELECT set_config('isura.store_id', '${storeId === null ? "" : Math.trunc(storeId)}', true); ${body}; COMMIT`;
+      const res = (await client.query(sql)) as unknown as QueryResult<T>[];
+      return res[res.length - 2].rows;
+    }
     await setStore(client, storeId);
     const res = await client.query<T>(text, params);
     await client.query("COMMIT");
