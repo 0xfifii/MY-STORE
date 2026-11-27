@@ -212,13 +212,22 @@ function AccountSwitcher() {
   const app = useApp();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Once the new account has loaded, clear the "Switching…" state (this part of the page stays mounted).
+  useEffect(() => { setBusy(null); setError(null); }, [app.user.id, app.storeName]);
   if (!app.linked.length) return null;
   const go = (id: string) => {
     setBusy(id);
     setError(null);
     // One round trip: the server action swaps the session and sends back the new dashboard in the same response.
     startTransition(async () => {
-      const r = await switchAccountAction(id).catch((e: Error) => ({ error: e.message }));
+      let r: { error: string } | undefined;
+      try {
+        r = await switchAccountAction(id);
+      } catch (e) {
+        // The server's "go to the dashboard" arrives as a special error; it's the switch working, not a failure.
+        if (String((e as { digest?: string })?.digest ?? (e as Error)?.message ?? "").startsWith("NEXT_REDIRECT")) return;
+        r = { error: "Couldn't switch account. Check your connection and try again." };
+      }
       if (r && "error" in r) { setError(r.error); setBusy(null); }
     });
   };
