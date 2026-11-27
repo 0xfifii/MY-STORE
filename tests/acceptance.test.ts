@@ -1741,3 +1741,42 @@ describe("99i. The no-access message says what was blocked", () => {
     expect((await staff.get("/dashboard?denied=admin")).data.toString()).toContain("Only the Palm Store admin can open the admin page");
   });
 });
+
+describe("99j. Transfer report", () => {
+  it("lists what this account sent and received, and downloads as PDF, Excel and CSV", async () => {
+    const r = await owner.get("/api/transfers/report?preset=month");
+    expect(r.status).toBe(200);
+    const rep = r.data.report;
+    // Earlier tests sent plates and cups to Palmbite and got 5 plates back.
+    expect(rep.totals.transfers).toBeGreaterThanOrEqual(3);
+    expect(rep.lines.some((l: { direction: string }) => l.direction === "sent")).toBe(true);
+    expect(rep.lines.some((l: { direction: string }) => l.direction === "received")).toBe(true);
+    const plate = rep.items.find((i: { name: string }) => i.name === "Takeaway Plate");
+    expect(plate).toMatchObject({ sent_qty: 30, received_qty: 5 });
+    // Only what was sent.
+    const sent = (await owner.get("/api/transfers/report?preset=month&direction=sent")).data.report;
+    expect(sent.lines.every((l: { direction: string }) => l.direction === "sent")).toBe(true);
+    expect(sent.totals.received_value).toBe(0);
+    // The other side sees the same transfers the other way round.
+    const { rows: [pb] } = await db.query("SELECT store_id FROM users WHERE email = 'owner@palmbite.test'");
+    expect(pb).toBeTruthy();
+    // Downloads
+    const pdf = await owner.get("/api/transfers/report?preset=month&format=pdf");
+    expect((pdf.data as Buffer).subarray(0, 4).toString()).toBe("%PDF");
+    expect(pdf.headers.get("content-disposition")).toMatch(/palm-store-transfers-\d{4}-\d{2}-\d{2}_to_\d{4}-\d{2}-\d{2}\.pdf/);
+    const dir = mkdtempSync(join(tmpdir(), "trf-"));
+    writeFileSync(join(dir, "t.pdf"), pdf.data);
+    const text = execFileSync("pdftotext", ["-layout", join(dir, "t.pdf"), "-"]).toString();
+    expect(text).toContain("Transfer Report");
+    expect(text).toContain("Takeaway Plate");
+    const x = await owner.get("/api/transfers/report?preset=month&format=xlsx");
+    expect((x.data as Buffer).subarray(0, 2).toString()).toBe("PK");
+    const c = await owner.get("/api/transfers/report?preset=month&format=csv");
+    expect((c.data as Buffer).toString()).toContain("Takeaway Plate");
+    // Viewers with Reports can see it; nobody outside the two accounts sees these transfers.
+    expect((await viewer.get("/api/transfers/report?preset=month")).status).toBe(200);
+    const other = new Session();
+    await other.post("/api/auth/signup", { company_name: "Report Outsider", name: "O", email: "o@outsider.test", password: "outsider-pass-1" });
+    expect((await other.get("/api/transfers/report?preset=month")).data.report.lines).toEqual([]);
+  });
+});

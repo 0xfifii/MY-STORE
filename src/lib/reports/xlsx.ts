@@ -4,7 +4,7 @@ import { sectionsFor } from "./engine";
 import { formatDateTime, formatQty, reasonLabel } from "../format";
 import { statusText } from "./csv";
 
-const BURGUNDY = "ff111111";
+const BURGUNDY = "ffC65A29"; // Palmspring orange
 const LIGHT = "fff7ebe0";
 
 /** Formatted workbook: General Report, Stock Sheet, Stock In & Out, Corrections, Low Stock, By Worker, Most Stocked. */

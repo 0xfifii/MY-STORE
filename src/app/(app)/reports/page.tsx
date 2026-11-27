@@ -32,7 +32,10 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   return (
     <div>
       <PageHeader title="Reports" description="Daily, weekly or monthly. Pick a period and filters, then view or download."
-        actions={<Link href="/reports/history" className="text-sm font-semibold text-burgundy hover:underline">Report History</Link>} />
+        actions={<div className="flex gap-4">
+          <Link href="/transfers#report" className="text-sm font-semibold text-burgundy hover:underline">Transfer report</Link>
+          <Link href="/reports/history" className="text-sm font-semibold text-burgundy hover:underline">Report History</Link>
+        </div>} />
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
         <QuickReports kind="movement" />
         <QuickReports kind="full" />
